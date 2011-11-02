@@ -1,0 +1,10 @@
+{
+	"id": "com.ericblade.xo",
+	"version": "0.1.0",
+	"vendor": "Eric Blade",
+	"type": "web",
+	"main": "index.html",
+	"title": "XO",
+	"icon": "icon.png",
+	"uiRevision":2
+}
