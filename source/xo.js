@@ -34,6 +34,8 @@ enyo.kind({
 	kind: enyo.VFlexBox,
 	components:
         [
+            { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
+            { name: "AppManService", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open"},
             { name: "ssAPI", kind: "WebService", onFailure: "apiFailure", components:
                 [
                     { contentType: "charset=utf-8" },
@@ -58,7 +60,7 @@ enyo.kind({
                     { name: "deleteUser", file: "deleteUser.view", },
                     { name: "getChatMessages", file: "getChatMessages.view", },
                     { name: "addChatMessage", file: "addChatMessage.view", },
-                    { name: "getAlbumList", file: "getAlbumList.view", },
+                    { name: "getAlbumList", file: "getAlbumList.view", onSuccess: "albumListReceived" },
                     { name: "getRandomSongs", file: "getRandomSongs.view", },
                     { name: "getLyrics", file: "getLyrics.view", },
                     { name: "jukeboxControl", file: "jukeboxControl.view", },
@@ -70,38 +72,93 @@ enyo.kind({
                     { name: "setRating", file: "setRating.view", },
                 ]
             },
-            {name: "slidingPane", kind: "SlidingPane", flex: 1, components: [
-                    {name: "left", width: "320px", kind:"SlidingView", components: [
-                                    {kind: "Header", content:"Artists"},
-                                    {kind: "Scroller", flex: 1, components:
+            {name: "slidingPane", kind: "SlidingPane", flex: 1, components:
+                [
+                    { name: "left", width: "320px", kind:"SlidingView", components:
+                        [
+                            { kind: "TabGroup", onChange: "leftTabChange", components:
+                                [
+                                    { caption: "Artists" },
+                                    { caption: "Albums", },
+                                    { caption: "Random" },
+                                ]
+                            },
+                            { name: "LeftPane", kind: "Pane", transitionKind:enyo.transitions.LeftRightFlyin, flex: 1, components:
+                                [
+                                    { name: "ArtistView", kind: "VFlexBox", components:
                                         [
-                                            { name: "IndexRepeater", kind: "VirtualRepeater", onSetupRow: "loadIndex", components:
+                                            {kind: "Scroller", flex: 1, components:
                                                 [
-                                                    { name: "IndexDrawer", kind: "DividerDrawer", onOpenChanged: "drawerOpened", components:
+                                                    { name: "IndexRepeater", kind: "VirtualRepeater", onSetupRow: "loadIndex", components:
                                                         [
-                                                            { name: "ArtistRepeater", kind: "ArtistRepeater", onArtistClicked: "artistClicked" },
+                                                            { name: "IndexDrawer", kind: "DividerDrawer", onOpenChanged: "drawerOpened", components:
+                                                                [
+                                                                    { name: "ArtistRepeater", kind: "ArtistRepeater", onArtistClicked: "artistOrAlbumClicked" },
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                        ]
+                                    },
+                                    { name: "AlbumView", kind: "VFlexBox", components:
+                                        [
+                                            { kind: "Scroller", flex: 1, components:
+                                                [
+                                                    { name: "AlbumRepeater", kind: "VirtualRepeater", onSetupRow: "loadAlbum", onclick: "albumClicked", components:
+                                                        [
+                                                            { kind: "HFlexBox", components:
+                                                                [
+                                                                    { name: "AlbumArt", height: "48px", width: "48px", kind: enyo.Image },
+                                                                    { name: "AlbumItem", kind: "Item" },
+                                                                ]
+                                                            }
                                                         ]
                                                     }
                                                 ]
                                             }
                                         ]
-                                    },
-                                    {kind: "Toolbar", components: [
-                                            {kind: "GrabButton"}
-                                    ]}
-                    ]},
+                                    },                                    
+                                    { name: "RandomView", kind: "VFlexBox", components:
+                                        [
+                                            { kind: "Scroller", flex: 1, components:
+                                                [
+                                                    { name: "RandomRepeater", kind: "VirtualRepeater", onSetupRow: "loadRandom", components:
+                                                        [
+                                                            { name: "RandomItem", kind: "Item" },
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            { kind: "Toolbar", components:
+                                [
+                                    {kind: "GrabButton"}
+                                ]
+                            }
+                        ]
+                    },
                     {name: "middle", width: "320px", kind:"SlidingView", peekWidth: 50, components: [
                                     {kind: "Header", content:"Songs/Albums"},
                                     {kind: "Scroller", flex: 1, components:
                                         [
-                                            { name: "songListRepeater", kind: "VirtualRepeater", onSetupRow: "loadSongList", components:
+                                            { name: "songListRepeater", kind: "VirtualRepeater", onSetupRow: "loadSongList", onclick: "songClicked", components:
                                                 [
-                                                    { kind: "Item", components:
+                                                    { kind: "HFlexBox", components:
                                                         [
-                                                            { name: "Title", kind: "Control", },
-                                                            { name: "Album", kind: "Control", },
+                                                            { name: "CoverArt", kind: enyo.Image, height: "48px", width: "48px", },
+                                                            { name: "SongItem", kind: "Item", components:
+                                                                [
+                                                                    { name: "Title", kind: "Control", },
+                                                                    { name: "Album", kind: "Control", },
+                                                                ]
+                                                            }
                                                         ]
-                                                    }
+                                                    },
                                                 ]
                                             }    
                                         ]
@@ -116,7 +173,8 @@ enyo.kind({
                                         { name: "junk", kind: "HtmlContent", allowHtml: true, },
                                     ]},
                                     {kind: "Toolbar", components: [
-                                            {kind: "GrabButton"}
+                                            {kind: "GrabButton"},
+                                            { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
                                     ]}
                     ]}
             ]}
@@ -148,14 +206,20 @@ enyo.kind({
             params.p = password;
             params.v = "1.6.0";
             params.c = "XO(webOS)(development)";
-            params.f = "json";
-            if(!req.getUrl() || req.getUrl == "")
+            if(!params.f)
+                params.f = "json";
+            if(!req.getUrl() || req.getUrl() == "")
             {
-                req.setUrl("http://192.168.1.124:88/rest/" + req.file);
-                req.setHandleAs("json");
+                req.setUrl("http://www.ericbla.de:88/rest/" + req.file);
+                req.setHandleAs( params.f == "json" ? "json" : "xml");
             }
             this.log("** calling: ", req.getUrl, params);
             req.call(params);
+        },
+        leftTabChange: function(inSender)
+        {
+            this.log("Selected Tab " + inSender.getValue());
+            this.$.LeftPane.selectViewByIndex(inSender.getValue());
         },
         ready: function()
         {
@@ -163,7 +227,9 @@ enyo.kind({
             this.seturls("http://subsonic.org/rest/");
             this.callApi(this.$.ping);
             this.callApi(this.$.getLicense);
-            this.callApi(this.$.getIndexes);
+            this.callApi(this.$.getIndexes, { f: "xml", });
+            this.callApi(this.$.getAlbumList, { type: "newest", size: "50" }); // TODO: make this load over time ?
+            //this.log("musicplayer=", this.$.MusicPlayer);
         },
         apiFailure: function(inSender, x, y, z)
         {
@@ -215,63 +281,89 @@ enyo.kind({
         },
         directoryReceived: function(inSender, inResponse)
         {
-            var dirlist = inResponse.getElementsByTagName("directory");
-            var counto = 0;
-            this.directories = new Array();
-            for(var index in dirlist)
+/*
+    {
+        "subsonic-response":
+        {
+            "directory":
             {
-                if(dirlist.hasOwnProperty(index) && dirlist[index].getAttribute)
+                "child":
                 {
-                    this.directories[counto] = { };
-                    this.directories[counto].id = dirlist[index].getAttribute("id");
-                    this.directories[counto].id = dirlist[index].getAttribute("parent");
-                    this.directories[counto].id = dirlist[index].getAttribute("name");
-                    
-                    var children = dirlist[index].getElementsByTagName("child");
-                    this.directories[counto].children = new Array();
-                    var counti = 0;
-                    this.debug("name=" + this.directories[counto].name + ", id=" + this.directories[counto].id + ", parent=" + this.directories[counto].parent);
-                    for(var child in children)
-                    {
-                        if(children.hasOwnProperty(child) && children[child].getAttribute)
-                        {
-                            this.directories[counto].children[counti] = { };
-                            this.directories[counto].children[counti].id = children[child].getAttribute("id");
-                            this.directories[counto].children[counti].parent = children[child].getAttribute("parent");
-                            this.directories[counto].children[counti].title = children[child].getAttribute("title");
-                            this.directories[counto].children[counti].isDir = children[child].getAttribute("isDir");
-                            this.directories[counto].children[counti].album = children[child].getAttribute("album");
-                            this.directories[counto].children[counti].artist = children[child].getAttribute("artist");
-                            this.directories[counto].children[counti].track = children[child].getAttribute("track");
-                            this.directories[counto].children[counti].genre = children[child].getAttribute("genre");
-                            this.directories[counto].children[counti].coverArt = children[child].getAttribute("coverArt");
-                            this.directories[counto].children[counti].size = children[child].getAttribute("size");
-                            this.directories[counto].children[counti].contentType = children[child].getAttribute("contentType");
-                            this.directories[counto].children[counti].suffix = children[child].getAttribute("suffix");
-                            this.directories[counto].children[counti].duration = children[child].getAttribute("duration");
-                            this.directories[counto].children[counti].bitRate = children[child].getAttribute("bitRate");
-                            this.directories[counto].children[counti].path = children[child].getAttribute("path");
-                            this.directories[counto].children[counti].transcodedContentType = children[child].getAttribute("transcodedContentType");
-                            this.directories[counto].children[counti].transcodedSuffix = children[child].getAttribute("transcodedSuffix");
-                            
-                            this.debug(this.directories[counto].children[counti].title);
-                            counti++;
-                        }
-                    }
-                    this.$.songListRepeater.directory = this.directories[counto];
-                    this.$.songListRepeater.render();
-                }
-            }
+                    "artist":"Alice In Chains",
+                    "coverArt":"633a5c6d757369635c416c6963655f496e5f436861696e735c426c61636b2047697665732057617920546f20426c75655c436f7665722e6a7067",
+                    "id":"633a5c6d757369635c416c6963655f496e5f436861696e735c426c61636b2047697665732057617920546f20426c7565",
+                    "isDir":true,
+                    "parent":"633a5c6d757369635c416c6963655f496e5f436861696e73",
+                    "title":"Black Gives Way To Blue"
+                },
+                "id":"633a5c6d757369635c416c6963655f496e5f436861696e73",
+                "name":"Alice_In_Chains"
+            },
+            "status":"ok",
+            "version":"1.6.0",
+            "xmlns":"http://subsonic.org/restapi"
+        }
+    }
+    
+    {
+        "subsonic-response":
+        {
+            "directory":
+            {
+                "child":
+                {
+                    "album":"Emotive",
+                    "artist":"Perfect Circle",
+                    "bitRate":214,
+                    "contentType":"audio/mpeg",
+                    "coverArt":"633a5c6d757369635c415f506572666563745f436972636c655c466f6c6465722e6a7067",
+                    "duration":288,
+                    "genre":"Hard Rock",
+                    "id":"633a5c6d757369635c415f506572666563745f436972636c655c41205065726665637420436972636c65202d20496d6167696e652e6d7033",
+                    "isDir":false,
+                    "isVideo":false,
+                    "parent":"633a5c6d757369635c415f506572666563745f436972636c65",
+                    "path":"A_Perfect_Circle/A Perfect Circle - Imagine.mp3",
+                    "size":7821312,
+                    "suffix":"mp3",
+                    "title":"Imagine",
+                    "track":2,
+                    "year":2005
+                },
+                "id":"633a5c6d757369635c415f506572666563745f436972636c65",
+                "name":"A_Perfect_Circle"
+            },
+            "status":"ok",
+            "version":"1.6.0",
+            "xmlns":"http://subsonic.org/restapi"
+        }
+    }
+*/
+            this.log(inResponse);
+            this.$.songListRepeater.directory = inResponse["subsonic-response"].directory;
+            this.$.songListRepeater.render();
         },
         loadSongList: function(inSender, inRow)
         {
             var dir = this.$.songListRepeater.directory;
-            var song = dir ? dir.children[inRow] : undefined;
+            // we get a single child object if there's only one, otherwise we get an array.
+            // if single object, and we're not on row 0, we want undefined, so it passes through. otherwise, set song to the single object, or the requested array element
+            var song;
+            if(dir && dir.child)
+            {
+                if(dir.child[inRow])
+                    song = dir.child[inRow];
+                else if(inRow == 0)
+                    song = dir.child;
+            } // TODO: and then in some cases, we just don't get anything useful back, just an id and a Name .. wtf?
+            //var song = dir && dir.child ? (dir.child[inRow] ? dir.child[inRow] : (inRow == 0 ? dir.child : undefined)) : undefined;
+            this.log(dir, song);
             if(song)
             {
-                if(song.isDir)
-                    this.$.Title.setContent(song.title + (song.isDir == "true" ? "\\" : ""));
+                this.$.Title.setContent(song.title + (song.isDir ? "\\" : ""));
                 this.$.Album.setContent(song.album);
+                this.$.CoverArt.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.coverArt+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)");
+                this.$.SongItem.song = song;
                 return true;
             }
             return false;
@@ -293,9 +385,82 @@ enyo.kind({
             this.log(inSender, inEvent);
             //inSender.$.ArtistRepeater.render();        
         },
-        artistClicked: function(inSender, artist)
+        artistOrAlbumClicked: function(inSender, artist)
         {            
-            this.debug("clicked " + artist.name);
+            if(artist.name) // name might be null if we're getting an album .. grr.
+                this.debug("clicked " + artist.name);
             this.callApi(this.$.getMusicDirectory, { id: artist.id });
+        },
+        albumClicked: function(inSender, inEvent)
+        {
+            this.debug("clicked " + this.$.AlbumRepeater.albumList[inEvent.rowIndex].id);
+            this.artistOrAlbumClicked(inSender, this.$.AlbumRepeater.albumList[inEvent.rowIndex]);
+        },
+        songClicked: function(inSender, inEvent)
+        {
+            var inRow = inEvent.rowIndex;
+            var dir = this.$.songListRepeater.directory;
+            var song = dir ? (dir.child[inRow] ? dir.child[inRow] : (inRow == 0 ? dir.child : undefined)) : undefined;
+            
+            if(song)
+            {
+                this.debug("clicked " + song.title);
+                if(song.isDir)
+                {
+                    this.artistOrAlbumClicked(inSender, song);
+                } else {
+                    /*            params.u = userid;
+            params.p = password;
+            params.v = "1.6.0";
+            params.c = "XO(webOS)(development)";
+                    */
+                    //this.$.AppManService.call( { target: "http://192.168.1.124:88/rest/stream.view?id="+song.id+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)"});
+                    this.log("this=", this);
+                    this.$.MusicPlayer.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.id+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)");
+                    this.$.MusicPlayer.play();
+                }
+            }
+        },
+        stopAudio: function(inSender, inEvent)
+        {
+            if(!this.$.MusicPlayer.audio.paused)
+                this.$.MusicPlayer.audio.pause();
+            else
+                this.$.MusicPlayer.audio.play();
+        },
+        albumListReceived: function(inSender, inResponse)
+        {
+/*
+    {
+        "subsonic-response":
+        {
+            "albumList":
+            {
+                "album":
+                    [
+                        {
+                            "artist":"Guns N' Roses",
+                            "coverArt":"633a5c6d757369635c47756e735f6e5f526f7365735c416c62756d735c31393938202d2055736520796f757220496c6c7573696f6e5c466f6c6465722e6a7067","id":"633a5c6d757369635c47756e735f6e5f526f7365735c416c62756d735c31393938202d2055736520796f757220496c6c7573696f6e",
+                            "isDir":true,
+                            "parent":"633a5c6d757369635c47756e735f6e5f526f7365735c416c62756d73",
+                            "title":"1998 - Use your Illusion"
+                        },
+*/
+            this.log(inResponse);
+            this.$.AlbumRepeater.albumList = inResponse["subsonic-response"].albumList.album;
+            this.$.AlbumRepeater.albumList.sort( function(i1, i2) { return (i1.title && i1.title.localeCompare) ? i1.title.localeCompare(i2.title) : 0 ; });
+            this.$.AlbumRepeater.render();
+        },
+        loadAlbum: function(inSender, inRow)
+        {
+            var album;
+            if(this.$.AlbumRepeater.albumList && this.$.AlbumRepeater.albumList[inRow])
+            {
+                album = this.$.AlbumRepeater.albumList[inRow];
+                this.$.AlbumItem.setContent(album.title);
+                this.$.AlbumArt.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+album.coverArt+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)")
+                return true;
+            }
+            return false;
         }
 });
