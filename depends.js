@@ -1,7 +1,11 @@
 enyo.depends(
+        "source/globals.js",
         "source/base64.js",
 	"source/morf.js",
 	"source/transitions.js",
+        "source/Popups.js",
+        "source/Views.js",
+        "source/subsonicApi.js",
 	"source/xo.js",
 	"source/xo.css"
 );

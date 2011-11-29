@@ -1,8 +1,3 @@
-function isLargeScreen()
-{
-    return window.screen.availWidth > 480;
-}
-
 enyo.kind({
     name: "ArtistRepeater",
     kind: "VFlexBox",
@@ -74,6 +69,12 @@ enyo.kind({
     transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [
         { kind: "ApplicationEvents", onBack: "doBack" },
+        { name: "LogView", kind: "LogView", },
+        { name: "api", kind: "subsonic.api",
+            onLicenseReceived: "receivedLicense",
+            onAlbumListReceived: "receivedAlbumList",
+            onDirectoryReceived: "receivedDirectory",
+        },
         { name: "slider", kind: "SlidingPane", components:
             [
                 { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true, onSelectView: "leftViewSelected", components:
@@ -88,219 +89,101 @@ enyo.kind({
                         },
                         { name: "LeftPane", flex: 1,kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                             [
-                                { name: "HomeView", kind: "VFlexBox", components:
-                                    [
-                                        { kind: "Scroller", flex: 1, components:
-                                            [
-                                                { kind: "Item", content: "Server: UI Demonstration", onclick: "openServerDialog" },
-                                                { kind: "Divider", caption: "Albums" },
-                                                { kind: "Item", content: "Recently added", onclick: "selectMusicView", },
-                                                { kind: "Item", content: "Random", onclick: "selectMusicView",  },
-                                                { kind: "Item", content: "Top rated", onclick: "selectMusicView",  },
-                                                { kind: "Item", content: "Recently played", onclick: "selectMusicView",  },
-                                                { kind: "Item", content: "Most played", onclick: "selectMusicView", },
-                                            ]
-                                        },
-                                    ]
-                                },
-                                { name: "MusicView", kind: "VFlexBox", components:
-                                    [
-                                        { kind: "Item", onclick: "selectPlayerView", components:
-                                            [
-                                                { kind: "HFlexBox", components:
-                                                    [
-                                                        { name: "AlbumArt", /*style: "display: inline;",*/ height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
-                                                        { name: "AlbumItem", style: "padding-left: 5px; ",pack: "center", kind: "HFlexBox", components:
-                                                            [
-                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
-                                                                    [
-                                                                        { content: "Album Name One", },
-                                                                        { content: "Artist Name One", className: "enyo-item-ternary" },
-                                                                    ]
-                                                                },
-                                                            ]
-                                                        },
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                        { kind: "Item", onclick: "selectPlayerView", components:
-                                            [
-                                                { kind: "HFlexBox", components:
-                                                    [
-                                                        { name: "AlbumArtTwo", /*style: "display: inline;",*/ height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
-                                                        { name: "AlbumItemTwo", style: "padding-left: 5px; ", pack: "center", kind: "HFlexBox", components:
-                                                            [
-                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
-                                                                    [
-                                                                        { content: "Album Name Two", },
-                                                                        { content: "Artist Name Two", className: "enyo-item-ternary" },
-                                                                    ]
-                                                                },
-                                                            ]
-                                                        },
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                    ]
-                                },
-                                { name: "SearchView", kind: "VFlexBox", components:
-                                    [
-                                        { kind: "SearchInput", },
-                                        { kind: "Divider", caption: "Artists" },
-                                        { kind: "Item", content: "Artist 1", onclick: "selectMusicView", },
-                                        { kind: "Item", content: "Artist 2", onclick: "selectMusicView", },
-                                        { kind: "Divider", caption: "Albums" },
-                                        { kind: "Item", onclick: "selectPlayerView", components:
-                                            [
-                                                { kind: "HFlexBox", components:
-                                                    [
-                                                        { height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
-                                                        { style: "padding-left: 5px; ", pack: "center", kind: "HFlexBox", components:
-                                                            [
-                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
-                                                                    [
-                                                                        { content: "Album Name One", },
-                                                                        { content: "Artist Name One", className: "enyo-item-ternary" },
-                                                                    ]
-                                                                },
-                                                            ]
-                                                        },
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                        { kind: "Divider", caption: "Songs" },
-                                        { kind: "Item", onclick: "selectPlayerView", components:
-                                            [
-                                                { content: "Song Name 1" },
-                                                { kind: "HFlexBox", components:
-                                                    [
-                                                        { content: "Song Artist", className: "enyo-item-ternary" },
-                                                        { kind: "Spacer" },
-                                                        { content: "Song Album", className: "enyo-item-ternary"  },
-                                                        { kind: "Spacer", },
-                                                        { content: "128kbps mp3", className: "enyo-item-ternary"  },
-                                                        { kind: "Spacer", },
-                                                        { content: "5:42", className: "enyo-item-ternary" },
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                { name: "PlaylistView", kind: "VFlexBox", components:
-                                    [
-                                        { kind: "Item", content: "Playlist 1", onclick: "selectPlayerView", },
-                                        { kind: "Item", content: "Playlist 2", onclick: "selectPlayerView", },
-                                        { kind: "Item", content: "Playlist 3", onclick: "selectPlayerView", },
-                                    ]
-                                },
+                                { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
+                                { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "loadSong", },
+                                { name: "SearchView", kind: "subsonic.SearchView", },
+                                { name: "PlaylistsView", kind: "subsonic.PlaylistView", },
                             ]
                         },
-                        /*{ kind: "Toolbar", components:
-                            [
-                                {kind: "GrabButton"},
-                                { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
-                            ]
-                        }*/
                     ]
                 },
                 { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
                     [
-                        { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", controls: "True", },
-                        { kind: "VFlexBox", style: "background: black;", flex: 1, components:
+                        { kind: "TabGroup", onChange: "rightTabChange", components:
                             [
-                                { kind: "HFlexBox", components:
+                                { caption: "Playlist" },
+                                { caption: "Player" },
+                                { caption: "Lyrics" },
+                            ]
+                        },
+                        
+                        { name: "RightPane", kind: "Pane", height: "100%", components:
+                            [
+                                { name: "PlaylistView", kind: "VFlexBox", components:
                                     [
-                                        { kind: "Spacer", },
-                                        { kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
-                                        { kind: "Spacer", },
+                                        { content: "Current Playlist Here", },
                                     ]
                                 },
-                                { kind: "Spacer", },
-                                { kind: "HFlexBox", components:
+                                { name: "MusicPlayerView", height: "100%", kind: "VFlexBox", components:
                                     [
-                                        { name: "ArtistNameLabel", content: "Artist Name", style: "color: white", },
-                                        { kind: "Spacer", },
-                                        { name: "AlbumNameLabel", content: "Album Name", style: "color: white", },
+                                        { content: "wtf" },
+                                        { kind: "subsonic.MusicPlayerView" },
+                                        { content: "fh" },
                                     ]
                                 },
-                                { kind: "HFlexBox", components:
+                                { name: "LyricsView", kind: "VFlexBox", components:
                                     [
-                                        { kind: "Spacer", },
-                                        { name: "SongNameLabel", content: "Song Name", style: "color: white", },
-                                        { kind: "Spacer", },
+                                        { content: "Lyrics View Here" },
                                     ]
-                                },
-                                { kind: "VFlexBox", components:
-                                    [
-                                        { kind: "ProgressSlider", barPosition: 10, altBarPosition: 10, position: 10, style: "padding-left: 2px; padding-right: 2px;" },
-                                        { kind: "HFlexBox", components:
-                                            [
-                                                { content: "0:00", className: "enyo-item-ternary", pack: "center" },
-                                                { kind: "Spacer", },
-                                                { name: "MediaLengthLabel", content: "5:43", pack: "center", className: "enyo-item-ternary" },                                                
-                                            ]
-                                        }
-                                    ]
-                                },
-                                { kind: "HFlexBox", components:
-                                    [
-                                        { kind: "Spacer", },
-                                        { kind: "Button", caption: "Prev", },
-                                        { kind: "Button", caption: "Play/Pause", },
-                                        { kind: "Button", caption: "Next", },
-                                        { kind: "Spacer", },
-                                    ]
-                                },
-                                /*{ kind: "Toolbar", components:
-                                    [
-                                        {kind: "GrabButton"},
-                                        { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
-                                    ]
-                                }                                */
-                            ]                            
-                        },                        
+                                }
+                            ]
+                        },
                     ]
                 }
             ]
         },
         { kind: "VFlexBox", components:
             [
-                { name: "serverDialog", style: "max-width: 50%; width: 320px", kind: "Dialog", flyInFrom: "bottom", components:
-                    [
-                        { kind: "VFlexBox", components:
-                            [
-                                { content: "Server Address", },
-                                { kind: "Spacer", },
-                                { kind: "Input", value: "uidemo.com:88", },
-                            ]
-                        },
-                        { kind: "VFlexBox", components:
-                            [
-                                { content: "Username", },
-                                { kind: "Spacer", },
-                                { kind: "Input", value: "uiuser", },
-                            ]
-                        },
-                        { kind: "VFlexBox", components:
-                            [
-                                { content: "Password", },
-                                { kind: "Spacer", },
-                                { kind: "Input", value: "uipassword" },
-                            ]
-                        },
-                    ]
+                { name: "serverDialog", kind: "subsonic.ServerDialog",
+                    onServerChanged: "changedServer",
                 },
             ]
         },
-
     ],
+    receivedLicense: function(inSender, inLicense)
+    {
+        this.log(inLicense);
+        this.$.HomeView.setLicenseData(inLicense);
+        this.$.HomeView.$.ServerSpinner.hide();
+    },
+    create: function()
+    {
+        this.inherited(arguments);
+        prefs.def("serverip","www.ericbla.de:88");
+        prefs.def("username","admin");
+        prefs.def("password","subgame");
+    },
+    pingServer: function()
+    {
+        this.$.api.call("ping");
+    },
+    getServerLicense: function()
+    {
+        this.$.api.call("getLicense");
+    },
+    changedServer: function()
+    {
+        this.$.api.serverChanged();
+        this.$.HomeView.setLicenseData();
+        this.$.HomeView.$.ServerSpinner.show();
+        this.pingServer();
+        this.getServerLicense();
+        //this.$.api.call("getIndexes");        
+    },
+    delayedStartup: function()
+    {
+        this.changedServer();
+    },
+    rendered: function()
+    {
+        this.inherited(arguments);
+        this.selectViewByName("slider");
+        
+        enyo.asyncMethod(this, "delayedStartup");
+    },
     openServerDialog: function()
     {
-        this.$.serverDialog.openAtCenter();
+        this.$.serverDialog.open();
     },
     doBack: function(inSender, inEvent)
     {
@@ -309,17 +192,68 @@ enyo.kind({
         inEvent.preventDefault();
         return -1;
     },
+    loadMusicView: function(inSender, inType)
+    {
+        var apicall;
+        var type;
+        switch(inType)
+        {
+            case "recentlyadded":
+                type = "newest";
+                apicall = "getAlbumList";
+                break;
+            case "random": // TODO: getRandomSongs.view can give us criteria based randomness
+                type = "random";
+                apicall = "getAlbumList";
+                break;
+            case "toprated": 
+                type = "highest";
+                apicall = "getAlbumList";
+                break;
+            case "recentlyplayed":
+                type = "recent";
+                apicall = "getAlbumList";
+            case "mostplayed":
+                type = "frequent";
+                apicall = "getAlbumList";
+                break;
+        }
+        this.$.HomeView.$.ServerSpinner.show();
+        this.$.api.call(apicall, { type: type, size: 20 }); // TODO: Must support loading pages, using the offset parameter!
+    },
+    receivedAlbumList: function(inSender, inAlbumList)
+    {
+        this.log();
+        this.$.HomeView.$.ServerSpinner.hide();
+        this.$.MusicView.setMusic(inAlbumList);
+        this.selectMusicView();
+    },
+    receivedDirectory: function(inSender, inDirectory)
+    {
+        this.log();
+        this.$.MusicView.setMusic(inDirectory);
+    },
+    loadAlbum: function(inSender, inEvent, inId)
+    {
+        this.$.api.call("getMusicDirectory", { id: inId });
+    },
+    loadSong: function(inSender, inEvent, inSongData)
+    {
+        this.$.MusicPlayerView.setSong(inSongData);
+        this.selectPlayerView(); // TODO: 
+    },
     selectMusicView: function()
     {
+        this.log();
         this.$.LeftPane.selectViewByName("MusicView");
     },
     selectSearchView: function()
     {
         this.$.LeftPane.selectViewByName("SearchView");
     },
-    selectPlaylistView: function()
+    selectPlaylistsView: function()
     {
-        this.$.LeftPane.selectViewByName("PlaylistView");
+        this.$.LeftPane.selectViewByName("PlaylistsView");
     },
     selectHomeView: function()
     {
@@ -327,13 +261,19 @@ enyo.kind({
     },
     selectPlayerView: function()
     {
-        this.$.RightView.show();
+        //this.$.RightView.show();
         this.$.slider.selectViewByName("RightView");
+        this.$.RightPane.selectViewByName("MusicPlayerView");        
     },
     leftTabChange: function(inSender)
     {
         this.log("Selected Tab " + inSender.getValue());
         this.$.LeftPane.selectViewByIndex(inSender.getValue());
+    },
+    rightTabChange: function(inSender)
+    {
+        this.log("right Selected Tab " + inSender.getValue());
+        this.$.RightPane.selectViewByIndex(inSender.getValue());
     },
     leftViewSelected: function(inSender, inNewView, inPrevView)
     {
@@ -719,7 +659,7 @@ enyo.kind({
             {
                 this.$.Title.setContent(song.title + (song.isDir ? "\\" : ""));
                 this.$.Album.setContent(song.album);
-                this.$.CoverArt.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.coverArt+"&u=slow&p=slow&v=1.6.0&c=XO(webOS)(development)");
+                this.$.CoverArt.setSrc("http://www.ericbla.de:88/rest/stream.view?size=48&id="+song.coverArt+"&u=slow&p=slow&v=1.6.0&c=XO(webOS)(development)");
                 this.$.SongItem.song = song;
                 return true;
             }
