@@ -1,3 +1,8 @@
+function isLargeScreen()
+{
+    return window.screen.availWidth > 480;
+}
+
 enyo.kind({
     name: "ArtistRepeater",
     kind: "VFlexBox",
@@ -29,8 +34,328 @@ enyo.kind({
         this.doArtistClicked(this.artists[inEvent.rowIndex]);
     },
 });
+
+function stripHtml(html)
+{
+   var tmp = document.createElement("DIV");
+   tmp.innerHTML = html;
+   return tmp.textContent||tmp.innerText;
+}
+
 enyo.kind({
-	name: "xo",
+    name: "LogView",
+    kind: "VFlexBox",
+    published: {
+        logEntries: { },
+    },
+    components: [
+        { kind: "Header", content: "Captain's Log" },
+        { name: "client" },
+        { kind: "Scroller", height: "400px", allowHtml: false, components:
+            [
+                { name: "logControl", kind: "Control", allowHtml: false, content: "", },
+            ]
+        },
+    ],
+    add: function(str)
+    {
+        str = stripHtml(str);
+        if(this.$.logControl.content.length > 4096)
+            this.$.logControl.content = "";
+        this.$.logControl.content += "*** " + str + "\r\n<br>";
+        this.log(this.$.logControl.content);
+        this.render();
+    },
+})
+
+enyo.kind({
+    name: "xo",
+    kind: enyo.Pane,
+    transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+    components: [
+        { kind: "ApplicationEvents", onBack: "doBack" },
+        { name: "slider", kind: "SlidingPane", components:
+            [
+                { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true, onSelectView: "leftViewSelected", components:
+                    [
+                        { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
+                            [
+                                { caption: "Home", },
+                                { caption: "Music", },
+                                { caption: "Search", },
+                                { caption: "Playlists", },
+                            ]
+                        },
+                        { name: "LeftPane", flex: 1,kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+                            [
+                                { name: "HomeView", kind: "VFlexBox", components:
+                                    [
+                                        { kind: "Scroller", flex: 1, components:
+                                            [
+                                                { kind: "Item", content: "Server: UI Demonstration", onclick: "openServerDialog" },
+                                                { kind: "Divider", caption: "Albums" },
+                                                { kind: "Item", content: "Recently added", onclick: "selectMusicView", },
+                                                { kind: "Item", content: "Random", onclick: "selectMusicView",  },
+                                                { kind: "Item", content: "Top rated", onclick: "selectMusicView",  },
+                                                { kind: "Item", content: "Recently played", onclick: "selectMusicView",  },
+                                                { kind: "Item", content: "Most played", onclick: "selectMusicView", },
+                                            ]
+                                        },
+                                    ]
+                                },
+                                { name: "MusicView", kind: "VFlexBox", components:
+                                    [
+                                        { kind: "Item", onclick: "selectPlayerView", components:
+                                            [
+                                                { kind: "HFlexBox", components:
+                                                    [
+                                                        { name: "AlbumArt", /*style: "display: inline;",*/ height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
+                                                        { name: "AlbumItem", style: "padding-left: 5px; ",pack: "center", kind: "HFlexBox", components:
+                                                            [
+                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
+                                                                    [
+                                                                        { content: "Album Name One", },
+                                                                        { content: "Artist Name One", className: "enyo-item-ternary" },
+                                                                    ]
+                                                                },
+                                                            ]
+                                                        },
+                                                    ]
+                                                },
+                                            ]
+                                        },
+                                        { kind: "Item", onclick: "selectPlayerView", components:
+                                            [
+                                                { kind: "HFlexBox", components:
+                                                    [
+                                                        { name: "AlbumArtTwo", /*style: "display: inline;",*/ height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
+                                                        { name: "AlbumItemTwo", style: "padding-left: 5px; ", pack: "center", kind: "HFlexBox", components:
+                                                            [
+                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
+                                                                    [
+                                                                        { content: "Album Name Two", },
+                                                                        { content: "Artist Name Two", className: "enyo-item-ternary" },
+                                                                    ]
+                                                                },
+                                                            ]
+                                                        },
+                                                    ]
+                                                },
+                                            ]
+                                        },
+                                    ]
+                                },
+                                { name: "SearchView", kind: "VFlexBox", components:
+                                    [
+                                        { kind: "SearchInput", },
+                                        { kind: "Divider", caption: "Artists" },
+                                        { kind: "Item", content: "Artist 1", onclick: "selectMusicView", },
+                                        { kind: "Item", content: "Artist 2", onclick: "selectMusicView", },
+                                        { kind: "Divider", caption: "Albums" },
+                                        { kind: "Item", onclick: "selectPlayerView", components:
+                                            [
+                                                { kind: "HFlexBox", components:
+                                                    [
+                                                        { height: "48px", width: "48px", kind: enyo.Image, src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
+                                                        { style: "padding-left: 5px; ", pack: "center", kind: "HFlexBox", components:
+                                                            [
+                                                                { kind: "VFlexBox", pack: "center", flex: 1, components:
+                                                                    [
+                                                                        { content: "Album Name One", },
+                                                                        { content: "Artist Name One", className: "enyo-item-ternary" },
+                                                                    ]
+                                                                },
+                                                            ]
+                                                        },
+                                                    ]
+                                                },
+                                            ]
+                                        },
+                                        { kind: "Divider", caption: "Songs" },
+                                        { kind: "Item", onclick: "selectPlayerView", components:
+                                            [
+                                                { content: "Song Name 1" },
+                                                { kind: "HFlexBox", components:
+                                                    [
+                                                        { content: "Song Artist", className: "enyo-item-ternary" },
+                                                        { kind: "Spacer" },
+                                                        { content: "Song Album", className: "enyo-item-ternary"  },
+                                                        { kind: "Spacer", },
+                                                        { content: "128kbps mp3", className: "enyo-item-ternary"  },
+                                                        { kind: "Spacer", },
+                                                        { content: "5:42", className: "enyo-item-ternary" },
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                { name: "PlaylistView", kind: "VFlexBox", components:
+                                    [
+                                        { kind: "Item", content: "Playlist 1", onclick: "selectPlayerView", },
+                                        { kind: "Item", content: "Playlist 2", onclick: "selectPlayerView", },
+                                        { kind: "Item", content: "Playlist 3", onclick: "selectPlayerView", },
+                                    ]
+                                },
+                            ]
+                        },
+                        /*{ kind: "Toolbar", components:
+                            [
+                                {kind: "GrabButton"},
+                                { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
+                            ]
+                        }*/
+                    ]
+                },
+                { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
+                    [
+                        { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", controls: "True", },
+                        { kind: "VFlexBox", style: "background: black;", flex: 1, components:
+                            [
+                                { kind: "HFlexBox", components:
+                                    [
+                                        { kind: "Spacer", },
+                                        { kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
+                                        { kind: "Spacer", },
+                                    ]
+                                },
+                                { kind: "Spacer", },
+                                { kind: "HFlexBox", components:
+                                    [
+                                        { name: "ArtistNameLabel", content: "Artist Name", style: "color: white", },
+                                        { kind: "Spacer", },
+                                        { name: "AlbumNameLabel", content: "Album Name", style: "color: white", },
+                                    ]
+                                },
+                                { kind: "HFlexBox", components:
+                                    [
+                                        { kind: "Spacer", },
+                                        { name: "SongNameLabel", content: "Song Name", style: "color: white", },
+                                        { kind: "Spacer", },
+                                    ]
+                                },
+                                { kind: "VFlexBox", components:
+                                    [
+                                        { kind: "ProgressSlider", barPosition: 10, altBarPosition: 10, position: 10, style: "padding-left: 2px; padding-right: 2px;" },
+                                        { kind: "HFlexBox", components:
+                                            [
+                                                { content: "0:00", className: "enyo-item-ternary", pack: "center" },
+                                                { kind: "Spacer", },
+                                                { name: "MediaLengthLabel", content: "5:43", pack: "center", className: "enyo-item-ternary" },                                                
+                                            ]
+                                        }
+                                    ]
+                                },
+                                { kind: "HFlexBox", components:
+                                    [
+                                        { kind: "Spacer", },
+                                        { kind: "Button", caption: "Prev", },
+                                        { kind: "Button", caption: "Play/Pause", },
+                                        { kind: "Button", caption: "Next", },
+                                        { kind: "Spacer", },
+                                    ]
+                                },
+                                /*{ kind: "Toolbar", components:
+                                    [
+                                        {kind: "GrabButton"},
+                                        { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
+                                    ]
+                                }                                */
+                            ]                            
+                        },                        
+                    ]
+                }
+            ]
+        },
+        { kind: "VFlexBox", components:
+            [
+                { name: "serverDialog", style: "max-width: 50%; width: 320px", kind: "Dialog", flyInFrom: "bottom", components:
+                    [
+                        { kind: "VFlexBox", components:
+                            [
+                                { content: "Server Address", },
+                                { kind: "Spacer", },
+                                { kind: "Input", value: "uidemo.com:88", },
+                            ]
+                        },
+                        { kind: "VFlexBox", components:
+                            [
+                                { content: "Username", },
+                                { kind: "Spacer", },
+                                { kind: "Input", value: "uiuser", },
+                            ]
+                        },
+                        { kind: "VFlexBox", components:
+                            [
+                                { content: "Password", },
+                                { kind: "Spacer", },
+                                { kind: "Input", value: "uipassword" },
+                            ]
+                        },
+                    ]
+                },
+            ]
+        },
+
+    ],
+    openServerDialog: function()
+    {
+        this.$.serverDialog.openAtCenter();
+    },
+    doBack: function(inSender, inEvent)
+    {
+        this.$.slider.back();
+        inEvent.stopPropagation();
+        inEvent.preventDefault();
+        return -1;
+    },
+    selectMusicView: function()
+    {
+        this.$.LeftPane.selectViewByName("MusicView");
+    },
+    selectSearchView: function()
+    {
+        this.$.LeftPane.selectViewByName("SearchView");
+    },
+    selectPlaylistView: function()
+    {
+        this.$.LeftPane.selectViewByName("PlaylistView");
+    },
+    selectHomeView: function()
+    {
+        this.$.LeftPane.selectViewByName("HomeView");
+    },
+    selectPlayerView: function()
+    {
+        this.$.RightView.show();
+        this.$.slider.selectViewByName("RightView");
+    },
+    leftTabChange: function(inSender)
+    {
+        this.log("Selected Tab " + inSender.getValue());
+        this.$.LeftPane.selectViewByIndex(inSender.getValue());
+    },
+    leftViewSelected: function(inSender, inNewView, inPrevView)
+    {
+        this.log("selected view ", inNewView.index);
+    },
+    leftPaneSelected: function(inSender, inNewView, inPrevView)
+    {
+        this.log("selected pane view", inNewView, inPrevView);
+        switch(inNewView.name)
+        {
+            case "MusicView":
+                inNewView.index = 1;
+                this.ForceTabSet = true;
+                break;
+        }
+        if(inNewView.index)
+            this.$.TabBar.setValue(inNewView.index);
+    }
+})
+
+enyo.kind({
+	name: "xo.old",
 	kind: enyo.VFlexBox,
 	components:
         [
@@ -72,112 +397,125 @@ enyo.kind({
                     { name: "setRating", file: "setRating.view", },
                 ]
             },
-            {name: "slidingPane", kind: "SlidingPane", flex: 1, components:
+            { name: "MainPane", flex: 1, kind: "Pane", transitionKind: enyo.transitions.Fade, components:
                 [
-                    { name: "left", width: "320px", kind:"SlidingView", components:
+                    { name: "Log", kind: "LogView", components:
                         [
-                            { kind: "TabGroup", onChange: "leftTabChange", components:
+                            { name: "LogSpinner", kind: "SpinnerLarge" },
+                        ]
+                    },
+                    { name: "PrimaryView", flex: 1, kind: "VFlexBox", components:
+                        [
+                            {name: "slidingPane", flex: 1, kind: "SlidingPane", components:
                                 [
-                                    { caption: "Artists" },
-                                    { caption: "Albums", },
-                                    { caption: "Random" },
-                                ]
-                            },
-                            { name: "LeftPane", kind: "Pane", transitionKind:enyo.transitions.LeftRightFlyin, flex: 1, components:
-                                [
-                                    { name: "ArtistView", kind: "VFlexBox", components:
+                                    { name: "left", width: "320px", kind:"SlidingView", components:
                                         [
-                                            {kind: "Scroller", flex: 1, components:
+                                            { kind: "TabGroup", onChange: "leftTabChange", components:
                                                 [
-                                                    { name: "IndexRepeater", kind: "VirtualRepeater", onSetupRow: "loadIndex", components:
+                                                    { caption: "Artists" },
+                                                    { caption: "Albums", },
+                                                    { caption: "Random" },
+                                                ]
+                                            },
+                                            { name: "LeftPane", kind: "Pane", transitionKind:"TestTransition", flex: 1, components:
+                                                [
+                                                    { name: "ArtistView", kind: "VFlexBox", components:
                                                         [
-                                                            { name: "IndexDrawer", kind: "DividerDrawer", onOpenChanged: "drawerOpened", components:
+                                                            {kind: "Scroller", flex: 1, components:
                                                                 [
-                                                                    { name: "ArtistRepeater", kind: "ArtistRepeater", onArtistClicked: "artistOrAlbumClicked" },
+                                                                    { name: "IndexRepeater", flex: 1, kind: "VirtualRepeater", onSetupRow: "loadIndex", components:
+                                                                        [
+                                                                            { name: "IndexDrawer", kind: "DividerDrawer", onOpenChanged: "drawerOpenedOrClosed", components:
+                                                                                [
+                                                                                    { name: "ArtistRepeater", kind: "ArtistRepeater", onArtistClicked: "artistOrAlbumClicked" },
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                        ]
+                                                    },
+                                                    { name: "AlbumView", kind: "VFlexBox", components:
+                                                        [
+                                                            { kind: "Scroller", flex: 1, components:
+                                                                [
+                                                                    { name: "AlbumRepeater", kind: "VirtualRepeater", onSetupRow: "loadAlbum", onclick: "albumClicked", components:
+                                                                        [
+                                                                            { kind: "HFlexBox", components:
+                                                                                [
+                                                                                    { name: "AlbumArt", height: "48px", width: "48px", kind: enyo.Image },
+                                                                                    { name: "AlbumItem", kind: "Item" },
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },                                    
+                                                    { name: "RandomView", kind: "VFlexBox", components:
+                                                        [
+                                                            { kind: "Scroller", flex: 1, components:
+                                                                [
+                                                                    { name: "RandomRepeater", kind: "VirtualRepeater", onSetupRow: "loadRandom", components:
+                                                                        [
+                                                                            { name: "RandomItem", kind: "Item" },
+                                                                        ]
+                                                                    }
                                                                 ]
                                                             }
                                                         ]
                                                     }
                                                 ]
                                             },
+                                            { kind: "Toolbar", components:
+                                                [
+                                                    {kind: "GrabButton"}
+                                                ]
+                                            }
                                         ]
                                     },
-                                    { name: "AlbumView", kind: "VFlexBox", components:
-                                        [
-                                            { kind: "Scroller", flex: 1, components:
-                                                [
-                                                    { name: "AlbumRepeater", kind: "VirtualRepeater", onSetupRow: "loadAlbum", onclick: "albumClicked", components:
+                                    {name: "middle", width: "320px", kind:"SlidingView", peekWidth: 50, components: [
+                                                    {kind: "Header", content:"Songs/Albums"},
+                                                    {kind: "Scroller", flex: 1, components:
                                                         [
-                                                            { kind: "HFlexBox", components:
+                                                            { name: "songListRepeater", kind: "VirtualRepeater", onSetupRow: "loadSongList", onclick: "songClicked", components:
                                                                 [
-                                                                    { name: "AlbumArt", height: "48px", width: "48px", kind: enyo.Image },
-                                                                    { name: "AlbumItem", kind: "Item" },
+                                                                    { kind: "HFlexBox", components:
+                                                                        [
+                                                                            { name: "CoverArt", kind: enyo.Image, height: "48px", width: "48px", },
+                                                                            { name: "SongItem", kind: "Item", components:
+                                                                                [
+                                                                                    { name: "Title", kind: "Control", },
+                                                                                    { name: "Album", kind: "Control", },
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    },
                                                                 ]
-                                                            }
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    },                                    
-                                    { name: "RandomView", kind: "VFlexBox", components:
-                                        [
-                                            { kind: "Scroller", flex: 1, components:
-                                                [
-                                                    { name: "RandomRepeater", kind: "VirtualRepeater", onSetupRow: "loadRandom", components:
-                                                        [
-                                                            { name: "RandomItem", kind: "Item" },
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            { kind: "Toolbar", components:
-                                [
-                                    {kind: "GrabButton"}
-                                ]
-                            }
-                        ]
-                    },
-                    {name: "middle", width: "320px", kind:"SlidingView", peekWidth: 50, components: [
-                                    {kind: "Header", content:"Songs/Albums"},
-                                    {kind: "Scroller", flex: 1, components:
-                                        [
-                                            { name: "songListRepeater", kind: "VirtualRepeater", onSetupRow: "loadSongList", onclick: "songClicked", components:
-                                                [
-                                                    { kind: "HFlexBox", components:
-                                                        [
-                                                            { name: "CoverArt", kind: enyo.Image, height: "48px", width: "48px", },
-                                                            { name: "SongItem", kind: "Item", components:
-                                                                [
-                                                                    { name: "Title", kind: "Control", },
-                                                                    { name: "Album", kind: "Control", },
-                                                                ]
-                                                            }
+                                                            }    
                                                         ]
                                                     },
-                                                ]
-                                            }    
-                                        ]
-                                    },
-                                    {kind: "Toolbar", components: [
-                                            {kind: "GrabButton"}
-                                    ]}
-                    ]},
-                    {name: "right", kind:"SlidingView", flex: 1, components: [
-                                    {kind: "Header", content:"Everything Else"},
-                                    {kind: "Scroller", flex: 1, components: [
-                                        { name: "junk", kind: "HtmlContent", allowHtml: true, },
+                                                    {kind: "Toolbar", components: [
+                                                            {kind: "GrabButton"}
+                                                    ]}
                                     ]},
-                                    {kind: "Toolbar", components: [
-                                            {kind: "GrabButton"},
-                                            { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
+                                    {name: "right", kind:"SlidingView", flex: 1, components: [
+                                                    {kind: "Header", content:"Everything Else"},
+                                                    {kind: "Scroller", flex: 1, components: [
+                                                        { name: "junk", kind: "HtmlContent", allowHtml: true, },
+                                                    ]},
+                                                    {kind: "Toolbar", components: [
+                                                            {kind: "GrabButton"},
+                                                            { kind: "ToolButton", caption: "Stop", onclick: "stopAudio", }
+                                                    ]}
                                     ]}
-                    ]}
-            ]}
+                            ]},
+                        ]
+                    },
+                ]
+            }
 	],
         debug: function(str)
         {
@@ -198,8 +536,8 @@ enyo.kind({
         },
         callApi: function(req, params)
         {
-            var userid = "admin";
-            var password = "subgame";
+            var userid = "slow";
+            var password = "slow";
             if(!params)
                 params = { };
             params.u = userid;
@@ -221,15 +559,19 @@ enyo.kind({
             this.log("Selected Tab " + inSender.getValue());
             this.$.LeftPane.selectViewByIndex(inSender.getValue());
         },
-        ready: function()
+        delayedStartup: function()
+        {
+            this.$.Log.add("Setting up sonar . . .");
+            this.seturls("http://www.ericbla.de:88/rest/");
+            this.callApi(this.$.ping);
+            //this.log("musicplayer=", this.$.MusicPlayer);            
+        },
+        rendered: function()
         {
             this.inherited(arguments);
-            this.seturls("http://subsonic.org/rest/");
-            this.callApi(this.$.ping);
-            this.callApi(this.$.getLicense);
-            this.callApi(this.$.getIndexes, { f: "xml", });
-            this.callApi(this.$.getAlbumList, { type: "newest", size: "50" }); // TODO: make this load over time ?
-            //this.log("musicplayer=", this.$.MusicPlayer);
+            this.$.LogSpinner.show();
+            this.$.Log.add("Main screen turn on.");
+            enyo.asyncMethod(this, "delayedStartup");
         },
         apiFailure: function(inSender, x, y, z)
         {
@@ -237,15 +579,24 @@ enyo.kind({
         },
         pingSuccess: function(inSender, inResponse)
         {
-            
-            this.log(inResponse);
+            this.$.Log.add("Contact received."); // TODO: Play PING
+            this.callApi(this.$.getLicense);            
         },
         licenseSuccess: function(inSender, inResponse)
         {
             this.log(inResponse);
+            this.callApi(this.$.getIndexes, { f: "xml", });
+            this.$.Log.add("Comm channels open.");
+            this.$.Log.add("Receiving file index."); // TODO: Play PING
         },
-        indexReceived: function(inSender, inResponse)
+        indexReceived: function(inSender, inResponse, inRequest)
         {
+            this.$.Log.add("Processing file index . . .");
+            enyo.asyncMethod(this, "processIndex", inSender, inResponse, inRequest);
+        },
+        processIndex: function(inSender, inResponse, inRequest)
+        {
+            enyo.log(inSender, inResponse, inRequest, inRequest.xhr.readyState, inRequest.xhr.status);
             var indexlist = inResponse.getElementsByTagName("index");
             var counto = 0;
             this.indexes = new Array();
@@ -277,7 +628,13 @@ enyo.kind({
                 }
             }
             this.$.IndexRepeater.render();
-            //this.$.ArtistRepeater.render();
+            this.$.Log.add("Receiving Album list.");
+            this.callApi(this.$.getAlbumList, { type: "newest", size: "50" }); // TODO: make this load over time ?            
+            this.$.ArtistRepeater.render();
+            this.$.LogSpinner.hide();
+            this.$.Log.add("XO, you have the Conn.");
+            this.$.MainPane.selectViewByName("PrimaryView");
+            
         },
         directoryReceived: function(inSender, inResponse)
         {
@@ -362,7 +719,7 @@ enyo.kind({
             {
                 this.$.Title.setContent(song.title + (song.isDir ? "\\" : ""));
                 this.$.Album.setContent(song.album);
-                this.$.CoverArt.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.coverArt+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)");
+                this.$.CoverArt.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.coverArt+"&u=slow&p=slow&v=1.6.0&c=XO(webOS)(development)");
                 this.$.SongItem.song = song;
                 return true;
             }
@@ -380,7 +737,7 @@ enyo.kind({
             }
             return false;
         },
-        drawerOpened: function(inSender, inEvent)
+        drawerOpenedOrClosed: function(inSender, inEvent)
         {
             this.log(inSender, inEvent);
             //inSender.$.ArtistRepeater.render();        
@@ -390,6 +747,7 @@ enyo.kind({
             if(artist.name) // name might be null if we're getting an album .. grr.
                 this.debug("clicked " + artist.name);
             this.callApi(this.$.getMusicDirectory, { id: artist.id });
+            this.$.slidingPane.selectViewByName("middle");
         },
         albumClicked: function(inSender, inEvent)
         {
@@ -414,9 +772,10 @@ enyo.kind({
             params.v = "1.6.0";
             params.c = "XO(webOS)(development)";
                     */
+                    //this.log("calling streaming player");
                     //this.$.AppManService.call( { target: "http://192.168.1.124:88/rest/stream.view?id="+song.id+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)"});
                     this.log("this=", this);
-                    this.$.MusicPlayer.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.id+"&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)");
+                    this.$.MusicPlayer.setSrc("http://www.ericbla.de:88/rest/stream.view?id="+song.id+"&u=slow&p=slow&v=1.6.0&c=XO(webOS)(development)");
                     this.$.MusicPlayer.play();
                 }
             }
@@ -429,6 +788,11 @@ enyo.kind({
                 this.$.MusicPlayer.audio.play();
         },
         albumListReceived: function(inSender, inResponse)
+        {
+            this.$.Log.add("Processing album list. . .");
+            enyo.asyncMethod(this, "processAlbumList", inSender, inResponse);
+        },
+        processAlbumList: function(inSender, inResponse)
         {
 /*
     {
@@ -450,6 +814,9 @@ enyo.kind({
             this.$.AlbumRepeater.albumList = inResponse["subsonic-response"].albumList.album;
             this.$.AlbumRepeater.albumList.sort( function(i1, i2) { return (i1.title && i1.title.localeCompare) ? i1.title.localeCompare(i2.title) : 0 ; });
             this.$.AlbumRepeater.render();
+            this.$.LogSpinner.hide();
+            this.$.Log.add("XO, you have the Conn.");
+            this.$.MainPane.selectViewByName("slidingPane");
         },
         loadAlbum: function(inSender, inRow)
         {
