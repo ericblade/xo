@@ -7,6 +7,8 @@ prefs = {
     get: function(prop)
     {
         var x = localStorage.getItem(prop);
+        if(x == "false") return false;
+        else if(x == "true") return true;
         return x ? x : enyo.getCookie(prop);
     },
     del: function(prop)

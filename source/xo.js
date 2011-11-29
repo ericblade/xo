@@ -87,7 +87,7 @@ enyo.kind({
                                 { caption: "Playlists", },
                             ]
                         },
-                        { name: "LeftPane", flex: 1,kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+                        { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                             [
                                 { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
                                 { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "loadSong", },
@@ -99,7 +99,7 @@ enyo.kind({
                 },
                 { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
                     [
-                        { kind: "TabGroup", onChange: "rightTabChange", components:
+                        { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange", showing: prefs.get("righttabsshowing"), components:
                             [
                                 { caption: "Playlist" },
                                 { caption: "Player" },
@@ -107,23 +107,23 @@ enyo.kind({
                             ]
                         },
                         
-                        { name: "RightPane", kind: "Pane", height: "100%", components:
+                        { name: "RightPane", kind: "Pane", flex: 1, components:
                             [
-                                { name: "PlaylistView", kind: "VFlexBox", components:
+                                { name: "PlaylistView", kind: "VFlexBox", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab", components:
                                     [
                                         { content: "Current Playlist Here", },
+                                        { kind: "Spacer", },
                                     ]
                                 },
-                                { name: "MusicPlayerView", height: "100%", kind: "VFlexBox", components:
+                                { name: "MusicPlayerView", flex: 1, kind: "VFlexBox", components:
                                     [
-                                        { content: "wtf" },
-                                        { kind: "subsonic.MusicPlayerView" },
-                                        { content: "fh" },
+                                        { name: "MusicPlayer",  onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", style: "background: black; ", kind: "subsonic.MusicPlayerView" },
                                     ]
                                 },
                                 { name: "LyricsView", kind: "VFlexBox", components:
                                     [
-                                        { content: "Lyrics View Here" },
+                                        { content: "Lyrics View Here", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" },
+                                        { kind: "Spacer", },
                                     ]
                                 }
                             ]
@@ -140,6 +140,25 @@ enyo.kind({
             ]
         },
     ],
+    hideShowRightTabs: function()
+    {
+        var on = !this.$.RightTabs.showing;
+        this.$.RightTabs.setShowing(on);
+        prefs.set("righttabsshowing", on);
+        this.ignoreCycle = true;
+    },
+    cycleRightTab: function()
+    {
+        if(!this.ignoreCycle)
+        {
+            var curr = this.$.RightPane.getViewIndex();
+            var newind = (curr >= 2) ? 0 : curr+1;
+            this.$.RightTabs.setValue(newind);
+            //this.log(curr, newind);
+            this.$.RightPane.selectViewByIndex(newind);
+        }
+        this.ignoreCycle = false;
+    },
     receivedLicense: function(inSender, inLicense)
     {
         this.log(inLicense);
@@ -149,6 +168,8 @@ enyo.kind({
     create: function()
     {
         this.inherited(arguments);
+
+        prefs.def("righttabsshowing", true);        
         prefs.def("serverip","www.ericbla.de:88");
         prefs.def("username","admin");
         prefs.def("password","subgame");
@@ -239,7 +260,7 @@ enyo.kind({
     },
     loadSong: function(inSender, inEvent, inSongData)
     {
-        this.$.MusicPlayerView.setSong(inSongData);
+        this.$.MusicPlayer.setSong(inSongData);
         this.selectPlayerView(); // TODO: 
     },
     selectMusicView: function()
@@ -263,7 +284,9 @@ enyo.kind({
     {
         //this.$.RightView.show();
         this.$.slider.selectViewByName("RightView");
-        this.$.RightPane.selectViewByName("MusicPlayerView");        
+        this.$.RightPane.selectViewByName("MusicPlayerView");
+        this.$.RightTabs.setValue(1);
+        setTimeout(enyo.bind(this, this.$.MusicPlayer.hideTips), 5000);
     },
     leftTabChange: function(inSender)
     {

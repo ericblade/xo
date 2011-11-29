@@ -12,6 +12,7 @@ enyo.kind({
         [
             { kind: "Scroller", flex: 1, accelerated: true, components:
                 [
+                    !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
                     { name: "serverItem", kind: "Item", onclick: "doServerDialog", layoutKind: "VFlexLayout", components:
                         [
                             { kind: "HFlexBox", components:
@@ -356,43 +357,64 @@ enyo.kind({
 
 enyo.kind({
     name: "subsonic.MusicPlayerView",
-    kind: "Control",
+    kind: "VFlexBox",
+    flex: 1,
+    events: {
+        "onHideTabs": "",
+        "onCycleTab": "",
+    },
     components: [
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
-        { kind: "VFlexBox", components:
+        { kind: "VFlexBox", flex: 1, components:
             [
                 { kind: "HFlexBox", components:
                     [
                         { kind: "Spacer", },
-                        { name: "AlbumArt", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg" },
+                        { kind: "VFlexBox", components:
+                            [
+                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                                { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs", className: "enyo-item-ternary", style: "color: white;" },
+                                { name: "PlayerStatus", content: "", className: "enyo-item-ternary", style: "color: white;" },
+                                { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
+                            ]
+                        },
                         { kind: "Spacer", },
                     ]
                 },
                 { kind: "Spacer", },
-                { kind: "HFlexBox", components:
+                { name: "SongInfoBox", kind: "VFlexBox", showing: false, components:
                     [
-                        { name: "ArtistNameLabel", content: "Artist Name", style: "color: white", },
-                        { kind: "Spacer", },
-                        { name: "AlbumNameLabel", content: "Album Name", style: "color: white", },
-                    ]
-                },
-                { kind: "HFlexBox", components:
-                    [
-                        { kind: "Spacer", },
-                        { name: "SongNameLabel", content: "Song Name", style: "color: white", },
-                        { kind: "Spacer", },
-                    ]
-                },
-                { kind: "VFlexBox", components:
-                    [
-                        { kind: "ProgressSlider", barPosition: 10, altBarPosition: 10, position: 10, style: "padding-left: 2px; padding-right: 2px;" },
                         { kind: "HFlexBox", components:
                             [
-                                { content: "0:00", className: "enyo-item-ternary", pack: "center" },
+                                { name: "ArtistNameLabel", content: "Artist Name", style: "color: white", },
                                 { kind: "Spacer", },
-                                { name: "MediaLengthLabel", content: "5:43", pack: "center", className: "enyo-item-ternary" },                                                
+                                { name: "AlbumNameLabel", content: "Album Name", style: "color: white", },
                             ]
-                        }
+                        },
+                        { kind: "HFlexBox", components:
+                            [
+                                { kind: "Spacer", },
+                                { name: "SongNameLabel", content: "Song Name", style: "color: white", },
+                                { kind: "Spacer", },
+                            ]
+                        },                        
+                    ]
+                },
+                { kind: "Spacer", },
+                { name: "SliderBox", kind: "VFlexBox", components:
+                    [
+                        { kind: "VFlexBox", components:
+                            [
+                                { name: "ProgressSlider", kind: "ProgressSlider", barMinimum: 0, barMaximum: 100, barPosition: 0, altBarPosition: 0, position: 0, onChange: "progressSliderChange", style: "padding-left: 2px; padding-right: 2px;" },
+                                { kind: "HFlexBox", components:
+                                    [
+                                        { content: "0:00", className: "enyo-item-ternary", pack: "center" },
+                                        { kind: "Spacer", },
+                                        { name: "MediaLengthLabel", content: "5:43", pack: "center", className: "enyo-item-ternary" },                                                
+                                    ]
+                                }
+                            ]
+                        },
                     ]
                 },
                 { kind: "HFlexBox", components:
@@ -407,17 +429,34 @@ enyo.kind({
             ]                            
         },
     ],
+    hideTips: function() { this.log(this); this.$.MusicPlayer.$.PlayerTips.hide(); },
+    progressSliderChange: function(inSender, x)
+    {
+        this.log(x);
+        //this.log(this.$.MusicPlayer.audio.currentTime, this.$.ProgressSlider.getPosition(), (this.$.ProgressSlider.getPosition() / 100) * this.song.duration);
+        this.$.MusicPlayer.audio.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
+        //this.log(this.$.MusicPlayer.audio.currentTime);
+        return true;
+    },
     published: {
         song: "",
     },
+    rendered: function()
+    {
+        this.inherited(arguments);
+        setInterval(enyo.bind(this, this.checkStatus), 100);
+    },
     songChanged: function()
     {
+        this.$.SongInfoBox.show();
         this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
         this.$.ArtistNameLabel.setContent(this.song.artist);
         this.$.AlbumNameLabel.setContent(this.song.album);
         this.$.SongNameLabel.setContent(this.song.title);
-        this.$.MediaLengthLabel.setContent(this.song.duration);        
+        this.$.MediaLengthLabel.setContent(this.song.duration);
         this.$.MusicPlayer.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)");
+        this.$.ProgressSlider.setBarPosition(0);
+        this.$.ProgressSlider.setAltBarPosition(0);        
         this.$.MusicPlayer.play();
     },
     playPauseClicked: function(inSender, inEvent)
@@ -426,5 +465,30 @@ enyo.kind({
             this.$.MusicPlayer.audio.pause();
         else
             this.$.MusicPlayer.audio.play();
-    },    
+        inEvent.stopPropagation();
+        return true;
+    },
+    checkStatus: function()
+    {
+        //this.log(this.showing);
+        //this.$.PlayerStatus.setContent(this.$.MusicPlayer.audio.seeking + " " + this.$.MusicPlayer.audio.readyState + " " + this.$.MusicPlayer.audio.currentTime + " " + this.$.MusicPlayer.audio.paused + " " + (this.$.MusicPlayer.audio.currentTime / this.song.duration) * 100);
+        if(this.$.MusicPlayer.audio.readyState == 0)
+        {
+            this.$.SliderBox.hide();
+            if(!this.$.MusicPlayer.audio.paused && !this.$.PlayerSpinner.showing)
+            {
+                this.$.PlayerSpinner.show();
+            }
+        }
+        else
+        {
+            this.$.SliderBox.show();
+            if(this.$.PlayerSpinner.showing)
+                this.$.PlayerSpinner.hide();
+        }
+        var prog = (this.$.MusicPlayer.audio.currentTime / this.song.duration) * 100;
+        this.$.ProgressSlider.setBarPosition( prog );
+        if(!this.$.MusicPlayer.audio.seeking)
+            this.$.ProgressSlider.setPosition(prog);
+    }
 });
