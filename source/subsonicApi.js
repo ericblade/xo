@@ -44,6 +44,8 @@ enyo.kind({
         "onLicenseReceived": "",
         "onAlbumListReceived": "",
         "onDirectoryReceived": "",
+        "onReceivedPlaylists": "",
+        "onReceivedPlaylist": "",
     },
     serverChanged: function()
     {
@@ -128,10 +130,13 @@ enyo.kind({
         this.log(inResponse, inRequest);
     },
     gotPlaylists: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        //this.log(inResponse, inRequest);
+        //{"subsonic-response":{"playlists":{"playlist":{"id":"72616e646f6d20706c61796c6973742e6d3375","name":"random playlist"}},"status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}
+        this.doReceivedPlaylists(inResponse["subsonic-response"].playlists);
     },
     gotPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
+        this.doReceivedPlaylist(inResponse["subsonic-response"].playlist.entry || inResponse["subsonic-response"].playlist);
     },
     createdPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);

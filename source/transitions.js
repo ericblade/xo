@@ -22,14 +22,14 @@ enyo.kind( {
 
         Morf.transition(c, { "-webkit-transform": "translate3d("+window.screen.availWidth+"px, 0, 0)" },
                         {
-                            duration: "800ms",
+                            duration: "700ms",
                             timingFunction: "spring",
                             callback: enyo.bind(this, this.done)
                         });
         c = this.pane.transitioneeForView(this.toView).hasNode();
         Morf.transition(c, { "-webkit-transform": "translate3d(0px, 0, 0)" },
                         {
-                            duration: "800ms",
+                            duration: "700ms",
                             timingFunction: "spring",
                         });
     },

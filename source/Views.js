@@ -231,11 +231,11 @@ enyo.kind({
         "onSongClicked": "",
     },
     components: [
-        { name: "ViewPane", flex: 1, kind: "Pane", transitionKind: "TestTransition", components:
+        { name: "ViewPane", flex: 1, kind: "Pane", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
             [
                 { name: "AlbumListView", flex: 1, kind: "VFlexBox", components:
                     [
-                        { name: "AlbumListView", kind: "Scroller", flex: 1, accelerated: true, components:
+                        { kind: "Scroller", flex: 1, accelerated: true, components:
                             [
                                 { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumListItem", components:
                                     [
@@ -265,11 +265,12 @@ enyo.kind({
                                 },
                             ]
                         },
+                        isLargeScreen() ? 
                         { kind: "Toolbar", components:
                             [
                                 { caption: "Back", onclick: "goBack" },
                             ]
-                        },
+                        } : {},
                     ]
                 }
             ]
@@ -342,7 +343,8 @@ enyo.kind({
     {
         this.songList = this.songList.directory.child;
         this.$.ViewPane.selectViewByName("SongListView");
-        this.lastActivatedSpinner.hide();
+        if(this.lastActivatedSpinner)
+            this.lastActivatedSpinner.hide();
         this.$.SongList.render();
     },
     itemClicked: function(inSender, inEvent)
@@ -444,22 +446,61 @@ enyo.kind({
 enyo.kind({
     name: "subsonic.PlaylistsView",
     kind: "VFlexBox",
+    events: {
+        "onRefreshPlaylists":"",
+        "onOpenPlaylist":"",
+        "onPlayPlaylist":"",
+    },
     components: [
         { kind: "Scroller", flex: 1, components:
             [
                 { kind: "VirtualList", onSetupRow: "getPlaylistItem", components:
                     [
-                        { name: "PlaylistName", kind: "Item" },
+                        { kind: "HFlexBox", components:
+                            [
+                                { name: "PlaylistName", flex: 1, kind: "Item", onclick: "clickItem" },
+                                { caption: "Play", kind: "Button", onclick: "clickPlay" },
+                            ]
+                        }
                     ]
                 }
             ]
-        }
+        },
+        { kind: "Toolbar", components:
+            [
+                { caption: "Refresh", onclick: "doRefreshPlaylists" },
+            ]
+        },
     ],
+    clickItem: function(inSender, inEvent)
+    {
+        var row = inEvent.rowIndex;
+        this.doOpenPlaylist(inEvent, this.playlists[row].id);
+    },
+    clickPlay: function(inSender, inEvent)
+    {
+        this.log();
+        var row = inEvent.rowIndex;
+        this.doPlayPlaylist(inEvent, this.playlists[row].id);
+    },
+    addPlaylist: function(list)
+    {
+        this.log(list);
+        if(!this.playlists)
+            this.playlists = [ ];
+        this.playlists.push(list);
+    },
     getPlaylistItem: function(inSender, inRow)
     {
-        if(inRow >= 0 && inRow < 15)
+        if(this.playlists == undefined)
         {
-            this.$.PlaylistName.setContent("Playlist " + inRow);
+            this.doRefreshPlaylists();
+            return false;
+        }
+        if(this.playlists[inRow])
+        {
+            this.$.PlaylistName.setContent("Playlist: " + this.playlists[inRow].name);
+            this.$.PlaylistName.playlistID = this.playlists[inRow].id;
             return true;
         }
         return false;
@@ -675,14 +716,18 @@ enyo.kind({
         "onStartPlaylist" : "",
     },
     components: [
-        isLargeScreen() ? { content: "Drag songs from the Music list and drop them here.", className: "enyo-item-ternary" } : { },
-        { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onSetupRow: "getListItem", components:
+        isLargeScreen() ? { content: "Drag songs from the Music list and drop them here.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+        { kind: "Scroller", flex: 1, components:
             [
-                { name: "Song", kind: "subsonic.SongItem", draggable: false, },
+                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onSetupRow: "getListItem", components:
+                    [
+                        { name: "Song", kind: "subsonic.SongItem", draggable: false, },
+                    ]
+                },
             ]
         },
-        { kind: "Spacer" },
-        { kind: "Toolbar", components:
+        //{ kind: "Spacer" },
+        { kind: "Toolbar", ondragover: "scrollDown", components:
             [
                 { caption: "Play", onclick: "doStartPlaylist" },
                 { caption: "Clear", onclick: "clearPlaylist" },

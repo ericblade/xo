@@ -70,6 +70,7 @@ enyo.kind({
     kind: enyo.Pane,
     transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [
+        { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/", method: "download", onSuccess: "downloadFinished", subscribe: true },
         { kind: "ApplicationEvents", onBack: "doBack" },
         { name: "LogView", kind: "LogView", },
         { name: "api", kind: "subsonic.api",
@@ -77,6 +78,8 @@ enyo.kind({
             onLicenseError: "badLicense",
             onAlbumListReceived: "receivedAlbumList",
             onDirectoryReceived: "receivedDirectory",
+            onReceivedPlaylists: "receivedPlaylists",
+            onReceivedPlaylist: "receivedPlaylist",
         },
         { name: "slider", kind: "SlidingPane", components:
             [
@@ -95,7 +98,7 @@ enyo.kind({
                                 { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
                                 { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "loadSong", },
                                 { name: "SearchView", kind: "subsonic.SearchView", },
-                                { name: "PlaylistsView", kind: "subsonic.PlaylistsView", },
+                                { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                             ]
                         },
                     ]
@@ -143,6 +146,21 @@ enyo.kind({
             ]
         },
     ],
+    openPlaylist: function(inSender, inEvent, inID)
+    {
+        this.playPlaylist = false;
+        this.$.api.call("getPlaylist", { id: inID });
+    },
+    playPlaylist: function(inSender, inEvent, inID)
+    {
+        //this.log(inSender, inEvent, inID);
+        this.playPlaylist = true;
+        this.$.api.call("getPlaylist", { id: inID });
+    },
+    refreshPlaylists: function(inSender, inEvent)
+    {
+        this.$.api.call("getPlaylists");
+    },
     dragOverPlaylist: function(inSender, inEvent)
     {
         if(inEvent.rowIndex != enyo.application.dropIndex)
@@ -213,6 +231,18 @@ enyo.kind({
         this.$.HomeView.setLicenseData(inLicense);
         this.$.HomeView.$.ServerSpinner.hide();
     },
+    receivedPlaylists: function(inSender, inLists)
+    {
+        this.log(inLists);
+        var list = inLists.playlist || inLists;
+        
+        for(var x in list)
+        {
+            if(list[x].id)
+                this.$.PlaylistsView.addPlaylist(list[x]);
+        }
+        this.$.PlaylistsView.render();
+    },
     create: function()
     {
         this.inherited(arguments);
@@ -259,10 +289,21 @@ enyo.kind({
     },
     doBack: function(inSender, inEvent)
     {
-        this.$.slider.back();
-        inEvent.stopPropagation();
-        inEvent.preventDefault();
-        return -1;
+        if(this.$.LeftPane.getViewName() == "MusicView" && this.$.slider.getViewName() != "RightView")
+        {
+            this.$.MusicView.goBack();
+            inEvent.stopPropagation();
+            inEvent.preventDefault();
+            return -1;
+        }
+        this.log(this.$.slider.history);
+        if(this.$.slider.history.length)
+        {
+            this.$.slider.back();
+            inEvent.stopPropagation();
+            inEvent.preventDefault();
+            return -1;
+        }
     },
     loadMusicView: function(inSender, inType)
     {
@@ -304,6 +345,22 @@ enyo.kind({
     {
         this.log();
         this.$.MusicView.setSongList(inDirectory);
+    },
+    receivedPlaylist: function(inSender, inPlaylist)
+    {
+        //this.log(inPlaylist);
+        var stupid = { directory: { child: inPlaylist } }; // the subsonic api is dumb sometimes
+        if(!this.playPlaylist)
+        {
+            this.$.MusicView.setSongList(stupid);
+            this.selectMusicView();
+        } else {
+            enyo.application.playlist = inPlaylist;
+            enyo.application.playlist.index = 0;
+            this.$.PlaylistView.render();
+            this.startPlaylist();
+        }
+        this.playPlaylist = false;
     },
     loadAlbum: function(inSender, inEvent, inId)
     {
@@ -412,6 +469,20 @@ enyo.kind({
         this.log();
         // TODO: get a real popup. alert doesn't work.. lol
         window.alert("Error: " + inError.code +" " + inError.message);
+    },
+    downloadSubsonicFile: function(id, filename)
+    {
+        // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
+        this.$.fileDownload.call( {
+            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
+            mime: "audio/mpeg3",
+            targetDir: "/media/internal/xo/",
+            //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,
+            targetFilename: filename,
+            keepFilenameOnRedirect: true,
+            canHandlePause: true,
+            subscribe: true
+        });
     }
 })
 
@@ -478,7 +549,7 @@ enyo.kind({
                                                     { caption: "Random" },
                                                 ]
                                             },
-                                            { name: "LeftPane", kind: "Pane", transitionKind:"TestTransition", flex: 1, components:
+                                            { name: "LeftPane", kind: "Pane", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", flex: 1, components:
                                                 [
                                                     { name: "ArtistView", kind: "VFlexBox", components:
                                                         [
