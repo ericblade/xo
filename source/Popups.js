@@ -12,14 +12,14 @@ enyo.kind({
                     [
                         { content: "Server Address", },
                         { kind: "Spacer", },
-                        { name: "ServerInput", kind: "Input", value: "uidemo.com:88", onchange: "changedServer", value: prefs.get("serverip"), },
+                        { name: "ServerInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, value: "uidemo.com:88", onchange: "changedServer", value: prefs.get("serverip"), },
                     ]
                 },
                 { kind: "VFlexBox", components:
                     [
                         { content: "Username", },
                         { kind: "Spacer", },
-                        { name: "UserInput", kind: "Input", value: "uiuser", onchange: "changedUsername", value: prefs.get("username"), },
+                        { name: "UserInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, value: "uiuser", onchange: "changedUsername", value: prefs.get("username"), },
                     ]
                 },
                 { kind: "VFlexBox", components:

@@ -1,3 +1,5 @@
+// TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
+
 enyo.kind({
     name: "ArtistRepeater",
     kind: "VFlexBox",
@@ -72,6 +74,7 @@ enyo.kind({
         { name: "LogView", kind: "LogView", },
         { name: "api", kind: "subsonic.api",
             onLicenseReceived: "receivedLicense",
+            onLicenseError: "badLicense",
             onAlbumListReceived: "receivedAlbumList",
             onDirectoryReceived: "receivedDirectory",
         },
@@ -92,7 +95,7 @@ enyo.kind({
                                 { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
                                 { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "loadSong", },
                                 { name: "SearchView", kind: "subsonic.SearchView", },
-                                { name: "PlaylistsView", kind: "subsonic.PlaylistView", },
+                                { name: "PlaylistsView", kind: "subsonic.PlaylistsView", },
                             ]
                         },
                     ]
@@ -109,15 +112,15 @@ enyo.kind({
                         
                         { name: "RightPane", kind: "Pane", flex: 1, components:
                             [
-                                { name: "PlaylistView", kind: "VFlexBox", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab", components:
+                                /*{ name: "PlaylistView", flex: 1, kind: "VFlexBox", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab", components:
                                     [
-                                        { content: "Current Playlist Here", },
-                                        { kind: "Spacer", },
+                                        { name: "Playlist", kind: "subsonic.PlaylistView" },
                                     ]
-                                },
+                                },*/
+                                { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab",},
                                 { name: "MusicPlayerView", flex: 1, kind: "VFlexBox", components:
                                     [
-                                        { name: "MusicPlayer",  onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", style: "background: black; ", kind: "subsonic.MusicPlayerView" },
+                                        { name: "MusicPlayer", flex: 1, onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", style: "background: black; ", kind: "subsonic.MusicPlayerView" },
                                     ]
                                 },
                                 { name: "LyricsView", kind: "VFlexBox", components:
@@ -140,6 +143,51 @@ enyo.kind({
             ]
         },
     ],
+    dragOverPlaylist: function(inSender, inEvent)
+    {
+        if(inEvent.rowIndex != enyo.application.dropIndex)
+        {
+            this.log("Dragging something over Playlist row " + inEvent.rowIndex);
+            enyo.application.dropIndex = inEvent.rowIndex;
+            this.$.PlaylistView.render();
+        }
+    },
+    dragOutPlaylist: function(inSender, inEvent)
+    {
+        enyo.application.dropIndex = -1;
+        this.$.PlaylistView.render();
+    },
+    dropOnPlaylist: function(inSender, inEvent)
+    {
+        /* dispatchTarget: enyo object we're dropping onto
+           dragInfo: undefined?
+           dx: x distance of drop?
+           dy: y distance of drop?
+           horizontal: true? huh?
+           lockable: true? huh?
+           pageX: x pos of drop?
+           pageY: y pos of drop?
+           target: html element we're targetting
+           type: drop
+           vertical: false .. huh?
+        */
+        console.log(inEvent);
+        console.log("rowIndex", inEvent.rowIndex);
+        if(inEvent.dragInfo != undefined)
+        {
+            if(!enyo.application.playlist)
+            {
+                enyo.application.playlist = [ ];
+            }
+            if(inEvent.rowIndex == undefined)
+                enyo.application.playlist.push(this.$.MusicView.queryListItem(inEvent.dragInfo)); // get the info from the row from the list
+            else
+                enyo.application.playlist.insert(inEvent.rowIndex, this.$.MusicView.queryListItem(inEvent.dragInfo));
+        }
+        enyo.application.dragging = false;
+        this.$.PlaylistView.render();
+        prefs.set("playlist", enyo.application.playlist);
+    },
     hideShowRightTabs: function()
     {
         var on = !this.$.RightTabs.showing;
@@ -171,8 +219,11 @@ enyo.kind({
 
         prefs.def("righttabsshowing", true);        
         prefs.def("serverip","www.ericbla.de:88");
-        prefs.def("username","admin");
-        prefs.def("password","subgame");
+        prefs.def("username","slow");
+        prefs.def("password","slow");
+        prefs.def("playlist", []);
+        
+        enyo.application.playlist = prefs.get("playlist");
     },
     pingServer: function()
     {
@@ -240,7 +291,7 @@ enyo.kind({
                 break;
         }
         this.$.HomeView.$.ServerSpinner.show();
-        this.$.api.call(apicall, { type: type, size: 20 }); // TODO: Must support loading pages, using the offset parameter!
+        this.$.api.call(apicall, { type: type, size: 10 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
@@ -252,7 +303,7 @@ enyo.kind({
     receivedDirectory: function(inSender, inDirectory)
     {
         this.log();
-        this.$.MusicView.setMusic(inDirectory);
+        this.$.MusicView.setSongList(inDirectory);
     },
     loadAlbum: function(inSender, inEvent, inId)
     {
@@ -261,7 +312,48 @@ enyo.kind({
     loadSong: function(inSender, inEvent, inSongData)
     {
         this.$.MusicPlayer.setSong(inSongData);
-        this.selectPlayerView(); // TODO: 
+        this.selectPlayerView(); 
+    },
+    startPlaylist: function(inSender, inEvent)
+    {
+        enyo.application.playlist.index = 0;
+        this.$.MusicPlayer.setSong(enyo.application.playlist[0]);
+        this.selectPlayerView();
+    },
+    playNext: function(inSender, inEvent)
+    {
+        var currId = this.$.MusicPlayer.song.id;
+        var index = enyo.application.playlist.index;
+        var p = enyo.application.playlist[index];
+        if(p && p.id != currId)
+        {
+            index = this.findItemInPlaylist(currId);
+        }
+        enyo.application.playlist.index = index + 1;
+        this.$.MusicPlayer.setSong(enyo.application.playlist[index+1]);
+    },
+    playPrev: function(inSender, inEvent)
+    {
+        var currId = this.$.MusicPlayer.song.id;
+        var index = enyo.application.playlist.index;
+        var p = enyo.application.playlist[index];
+        if(p && p.id != currId)
+        {
+            index = this.findItemInPlaylist(currId);
+        }
+        enyo.application.playlist.index = index - 1;
+        this.$.MusicPlayer.setSong(enyo.application.playlist[index-1]);
+    },
+    findItemInPlaylist: function(itemID)
+    {
+        for(x in enyo.application.playlist)
+        {
+            if(x && enyo.application.playlist[x].id == itemID)
+            {
+                return x;
+            }
+        }
+        return false;
     },
     selectMusicView: function()
     {
@@ -314,6 +406,12 @@ enyo.kind({
         }
         if(inNewView.index)
             this.$.TabBar.setValue(inNewView.index);
+    },
+    badLicense: function(inSender, inError)
+    {
+        this.log();
+        // TODO: get a real popup. alert doesn't work.. lol
+        window.alert("Error: " + inError.code +" " + inError.message);
     }
 })
 

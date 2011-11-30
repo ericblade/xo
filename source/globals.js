@@ -1,6 +1,7 @@
 prefs = {
     set: function(prop, setting)
     {
+        setting = JSON.stringify(setting);
         localStorage.setItem(prop, setting);
         enyo.setCookie(prop, setting, { "Max-Age": 31536000 });
     },
@@ -9,7 +10,11 @@ prefs = {
         var x = localStorage.getItem(prop);
         if(x == "false") return false;
         else if(x == "true") return true;
-        return x ? x : enyo.getCookie(prop);
+        try {
+            return JSON.parse(x ? x : enyo.getCookie(prop));
+        } catch(err) {
+            return undefined;
+        }
     },
     del: function(prop)
     {
@@ -28,3 +33,29 @@ function isLargeScreen()
     return window.screen.availWidth > 480;
 }
 
+function secondsToTime(secs)
+{
+    var hours = Math.floor(secs / (60 * 60));
+   
+    var divisor_for_minutes = secs % (60 * 60);
+    var minutes = Math.floor(divisor_for_minutes / 60);
+ 
+    var divisor_for_seconds = divisor_for_minutes % 60;
+    var seconds = Math.ceil(divisor_for_seconds);
+
+    if(hours > 0)
+        return hours+":" + (minutes < 10 ? "0" : "") + minutes+":"+(seconds < 10 ? "0" : "") + seconds;
+    return (minutes < 10 ? "0" : "") + minutes+":" + (seconds < 10 ? "0" : "") + seconds;
+}
+
+// http://ejohn.org/blog/javascript-array-remove/
+Array.prototype.remove = function(from, to) {
+   var rest = this.slice((to || from) + 1 || this.length);
+   this.length = from < 0 ? this.length + from : from;
+   return this.push.apply(this, rest);
+};
+
+Array.prototype.insert = function(index, item)
+{
+    this.splice(index, 0, item);
+};

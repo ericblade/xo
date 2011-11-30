@@ -40,6 +40,7 @@ enyo.kind({
         },
     ],
     events: {
+        "onLicenseError": "",
         "onLicenseReceived": "",
         "onAlbumListReceived": "",
         "onDirectoryReceived": "",
@@ -155,7 +156,13 @@ enyo.kind({
     },
     licenseSuccess: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        this.doLicenseReceived(inResponse["subsonic-response"]);
+        if(!inResponse["subsonic-response"]) return;
+        if(inResponse["subsonic-response"].error)
+        {
+            this.doLicenseError(inResponse["subsonic-response"].error);
+        } else {
+            this.doLicenseReceived(inResponse["subsonic-response"]);
+        }
     },
     gotMusicFolders: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
