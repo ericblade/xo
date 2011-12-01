@@ -92,6 +92,56 @@ enyo.kind({
 });
 
 enyo.kind({
+    name: "ImageFallback",
+    kind: enyo.Control,
+    published: {
+        src: "",
+        fallbackSrc: "",
+        width: "",
+        height: "",
+    },
+    components: [
+        { name: "MainImage", kind: enyo.Image, src: this.src, height: this.height, width: this.width, showing: false, onload: "mainLoaded" },
+        { name: "DummyImage", kind: enyo.Image, src: this.fallbackSrc, height: this.height, width: this.width, showing: true },
+    ],
+    create: function()
+    {
+        this.inherited(arguments);
+        //this.log("image width", this.width);
+        //this.log("fallback src", this.fallbackSrc);
+        this.widthChanged();
+        this.heightChanged();
+        this.srcChanged();
+        this.fallbackSrcChanged();
+    },
+    mainLoaded: function(inSender, inEvent)
+    {
+        this.$.MainImage.show();
+        this.$.DummyImage.hide();
+    },
+    srcChanged: function()
+    {
+        this.$.DummyImage.show(); // reshow the dummy, as we're loading a new src
+        this.$.MainImage.hide();
+        this.$.MainImage.setSrc(this.src);
+    },
+    fallbackSrcChanged: function()
+    {
+        this.$.DummyImage.setSrc(this.fallbackSrc);
+    },
+    widthChanged: function()
+    {
+        this.$.MainImage.applyStyle("width", this.width);
+        this.$.DummyImage.applyStyle("width", this.width);
+    },
+    heightChanged: function()
+    {
+        this.$.MainImage.applyStyle("height", this.height);
+        this.$.DummyImage.applyStyle("height", this.height);
+    }
+});
+
+enyo.kind({
     name: "subsonic.AlbumItem",
     kind: "Item",
     layoutKind: "HFlexLayout",
@@ -100,7 +150,9 @@ enyo.kind({
         itemID: "",
     },
     components: [
-        { name: "AlbumArt",  height: "48px", width: "48px", kind: enyo.Image },
+        { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+        //{ name: "AlbumArt",  height: "48px", width: "48px", kind: enyo.Image, showing: false, onload: "AlbumArtLoaded", },
+        //{ name: "DummyArt",  height: "48px", width: "48px", kind: enyo.Image, showing: true, src: "http://img91.imageshack.us/img91/3550/nocoverni0.png"},
         { name: "AlbumItem", style: "padding-left: 5px;", pack: "center", kind: "HFlexBox", components:
             [
                 { kind: "VFlexBox", pack: "center", components:
@@ -114,7 +166,8 @@ enyo.kind({
             ]
         },
         { name: "SongItem", kind: "subsonic.SongItem", pack: "center", showing: false, },
-    ]
+    ],
+
 });
 
 /*
@@ -168,7 +221,7 @@ enyo.kind({
         draggable: isLargeScreen(),
     },
     components: [
-        { kind: "VFlexBox", onmousehold: "mousehold", ondragstart: "dragStart", ondragfinish: "dragFinish", components:
+        { kind: "VFlexBox", onmousehold: "mousehold", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
                 { kind: "HFlexBox", components:
                     [ // TODO: put album image in here?
@@ -208,13 +261,20 @@ enyo.kind({
             inEvent.dragInfo = inEvent.rowIndex;
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
+            enyo.application.setDragTracking(true, inEvent);
         }
+    },
+    dragged: function(inSender, inEvent)
+    {
+        enyo.application.dragTrack(inSender, inEvent);
     },
     dragFinish: function(inSender, inEvent)
     {
-        enyo.application.dragging = false;
-        enyo.application.dropIndex = -1;
-        console.log(inEvent);
+        // we don't need to wrap this in an if(dragging) check, since even if we were to receive it invalidly, we're just clearing the settings anyway right
+            enyo.application.dragging = false;
+            enyo.application.dropIndex = -1;
+            enyo.application.setDragTracking(false, inEvent);
+            console.log(inEvent);
     }
 });
 
@@ -526,7 +586,8 @@ enyo.kind({
                         { kind: "Spacer", },
                         { kind: "VFlexBox", components:
                             [
-                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                                //{ name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
                                 { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerStatus", content: "", className: "enyo-item-ternary", style: "color: white;" },
@@ -717,9 +778,9 @@ enyo.kind({
     },
     components: [
         isLargeScreen() ? { content: "Drag songs from the Music list and drop them here.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
-        { kind: "Scroller", flex: 1, components:
+        { name: "Scroller", kind: "Scroller", flex: 1, accelerated: true, components:
             [
-                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onSetupRow: "getListItem", components:
+                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", accelerated: true, onSetupRow: "getListItem", components:
                     [
                         { name: "Song", kind: "subsonic.SongItem", draggable: false, },
                     ]
@@ -734,10 +795,21 @@ enyo.kind({
             ]
         },
     ],
+    scrollUp: function(inSender, inEvent)
+    {
+        this.$.Scroller.scrollTo(this.$.Scroller.scrollTop - 10, this.$.Scroller.scrollLeft);
+        this.log("should be scrolling upwards");
+    },
+    scrollDown: function(inSender, inEvent)
+    {
+        this.$.Scroller.scrollTo(this.$.Scroller.scrollTop + 10, this.$.Scroller.scrollLeft);
+        this.log("should be scrolling downwards");
+    },
     getListItem: function(inSender, inRow)
     {
         if(enyo.application.playlist && enyo.application.playlist[inRow])
         {
+            this.log(inRow);
             var p = enyo.application.playlist[inRow];
             this.$.Song.itemID = p.itemID;
             this.$.Song.$.SongNameLabel.setContent(p.title);
@@ -751,6 +823,11 @@ enyo.kind({
                 {
                     this.log("highlighting " + inRow);
                     this.$.Song.applyStyle("border-top", "thick double blue");
+                    if(this.lastHighlightedIndex != inRow)
+                    {
+                        this.renderRow(this.lastHighlightedIndex)
+                        this.lastHighlightedIndex = inRow;
+                    }
                 } else {
                     this.$.Song.applyStyle("border-top", undefined);
                     this.$.Song.applyStyle("border-bottom", undefined);
@@ -767,11 +844,23 @@ enyo.kind({
         }
         return false;
     },
+    renderRow: function(inRow)
+    {
+        this.$.PlaylistRepeater.renderRow(inRow);
+    },
     clearPlaylist: function(inSender, inEvent)
     {
         enyo.application.playlist = [ ];
         this.$.PlaylistRepeater.render();
         inEvent.stopPropagation();
+    },
+    scrollUp: function(inSender, inEvent)
+    {
+        
+    },
+    scrollDown: function(inSender, inEvent)
+    {
+        
     }
 });
 /*
