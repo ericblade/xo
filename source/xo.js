@@ -2,6 +2,7 @@
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
 // TODO: half implemented downloading of files
 // TODO: playlist stuff is ridiculously unreliable and locks up touchpads and phones alike.. wtf?
+// TODO: stop play at App Exit . . unless going to dashboard mode?
 
 enyo.kind({
     name: "ArtistRepeater",
@@ -106,6 +107,8 @@ enyo.kind({
                         },
                     ]
                 },
+        {name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
+                
                 { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
                     [
                         { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange", showing: prefs.get("righttabsshowing"), components:
@@ -151,13 +154,13 @@ enyo.kind({
     ],
     openPlaylist: function(inSender, inEvent, inID)
     {
-        this.playPlaylist = false;
+        this.playNextPlaylist = false;
         this.$.api.call("getPlaylist", { id: inID });
     },
     playPlaylist: function(inSender, inEvent, inID)
     {
-        //this.log(inSender, inEvent, inID);
-        this.playPlaylist = true;
+        this.log(inSender, inEvent, inID);
+        this.playNextPlaylist = true;
         this.$.api.call("getPlaylist", { id: inID });
     },
     refreshPlaylists: function(inSender, inEvent)
@@ -166,20 +169,32 @@ enyo.kind({
     },
     dragOverPlaylist: function(inSender, inEvent)
     {
+        if(!enyo.application.dragging) return;
         if(inEvent.rowIndex != enyo.application.dropIndex)
         {
-            this.log("Dragging something over Playlist row " + inEvent.rowIndex);
+            this.log("Dragging something over Playlist row " + inEvent.rowIndex + " last row was " + enyo.application.dropIndex);
             enyo.application.dropIndex = inEvent.rowIndex;
-            this.$.PlaylistView.render();
+            this.log("new dropIndex: " + enyo.application.dropIndex);
+            if(inEvent.rowIndex == undefined)
+                this.$.PlaylistView.render();
+            else
+                this.$.PlaylistView.renderRow(inEvent.rowIndex);
         }
     },
     dragOutPlaylist: function(inSender, inEvent)
     {
+        var old = enyo.application.dropIndex;
         enyo.application.dropIndex = -1;
-        this.$.PlaylistView.render();
+        this.$.PlaylistView.renderRow(old);
+        this.log("dragging out", inEvent.rowIndex);
+        console.log(inSender);
+        console.log(inEvent);
+        //enyo.application.dropIndex = -1;
+        //this.$.PlaylistView.render();
     },
     dropOnPlaylist: function(inSender, inEvent)
     {
+        if(!enyo.application.dragging) return;
         /* dispatchTarget: enyo object we're dropping onto
            dragInfo: undefined?
            dx: x distance of drop?
@@ -206,7 +221,10 @@ enyo.kind({
                 enyo.application.playlist.insert(inEvent.rowIndex, this.$.MusicView.queryListItem(inEvent.dragInfo));
         }
         enyo.application.dragging = false;
-        this.$.PlaylistView.render();
+        //if(inEvent.rowIndex == undefined)
+            this.$.PlaylistView.render();
+        //else
+        //    this.$.PlaylistView.renderRow(inEvent.rowIndex);
         prefs.set("playlist", enyo.application.playlist);
     },
     hideShowRightTabs: function()
@@ -257,7 +275,33 @@ enyo.kind({
         prefs.def("playlist", []);
         
         enyo.application.playlist = prefs.get("playlist");
+        
+        enyo.application.setDragTracking = enyo.bind(this, function(on, inEvent)
+            {
+                this.log(on);
+                if(on)
+                {
+                    // TODO: figure out what we're dragging and highlight it (maybe that should be in the ondrag .. )
+                    this.$.avatar.show();
+                    this.avatarTrack(inEvent);
+                } else {
+                    // TODO: unhighlight what we were dragging
+                    this.$.avatar.hide();
+                }
+            }
+        );
+        enyo.application.dragTrack = enyo.bind(this,function(inSender, inEvent)
+            {
+                //console.log(inEvent);
+                if(enyo.application.dragging)
+                    this.avatarTrack(inEvent);
+            });
     },
+    avatarTrack: function(inEvent) {
+        //this.log();
+        this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
+    },
+
     pingServer: function()
     {
         this.$.api.call("ping");
@@ -351,9 +395,9 @@ enyo.kind({
     },
     receivedPlaylist: function(inSender, inPlaylist)
     {
-        //this.log(inPlaylist);
+        this.log(inPlaylist, this.playNextPlaylist);
         var stupid = { directory: { child: inPlaylist } }; // the subsonic api is dumb sometimes
-        if(!this.playPlaylist)
+        if(!this.playNextPlaylist)
         {
             this.$.MusicView.setSongList(stupid);
             this.selectMusicView();
@@ -363,7 +407,7 @@ enyo.kind({
             this.$.PlaylistView.render();
             this.startPlaylist();
         }
-        this.playPlaylist = false;
+        this.playNextPlaylist = false;
     },
     loadAlbum: function(inSender, inEvent, inId)
     {
