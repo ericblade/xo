@@ -1,4 +1,7 @@
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
+// TODO: half implemented scrolling when dragging music to top or bottom of list ?
+// TODO: half implemented downloading of files
+// TODO: playlist stuff is ridiculously unreliable and locks up touchpads and phones alike.. wtf?
 
 enyo.kind({
     name: "ArtistRepeater",
