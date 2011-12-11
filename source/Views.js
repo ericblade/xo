@@ -264,11 +264,13 @@ enyo.kind({
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(true, inEvent);
             this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
+            inEvent.stopPropagation();
         }
     },
     dragged: function(inSender, inEvent)
     {
         enyo.application.dragTrack(inSender, inEvent);
+        inEvent.stopPropagation();
     },
     dragFinish: function(inSender, inEvent)
     {
