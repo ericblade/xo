@@ -156,6 +156,11 @@ enyo.kind({
                                     [
                                         { content: "Lyrics View Here", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" },
                                         { kind: "Spacer", },
+                                        { kind: "Toolbar", components:
+                                            [
+                                                { kind: "GrabButton" },
+                                            ]
+                                        },
                                     ]
                                 }
                             ]
@@ -214,6 +219,7 @@ enyo.kind({
     },
     dragOutPlaylist: function(inSender, inEvent)
     {
+        if(!enyo.application.dragging) return;
         var old = enyo.application.dropIndex;
         if(inSender != this.$.PlaylistView)
             enyo.application.dropIndex = undefined;
@@ -248,15 +254,22 @@ enyo.kind({
                 enyo.application.playlist = [ ];
             }
             if(inEvent.rowIndex == undefined)
+            {
                 enyo.application.playlist.push(this.$.MusicView.queryListItem(inEvent.dragInfo)); // get the info from the row from the list
+            }
             else
                 enyo.application.playlist.insert(inEvent.rowIndex, this.$.MusicView.queryListItem(inEvent.dragInfo));
         }
-        enyo.application.dragging = false;
+        //enyo.application.dragging = false;
+        // dragging will get unset in the finish?
         //if(inEvent.rowIndex == undefined)
             this.$.PlaylistView.render();
         //else
         //    this.$.PlaylistView.renderRow(inEvent.rowIndex);
+        
+        if(inEvent.rowIndex == undefined) // we're inserting it last
+            this.$.PlaylistView.scrollToBottom();
+
         prefs.set("playlist", enyo.application.playlist);
     },
     downloadFileIndex: function(index)
