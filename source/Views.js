@@ -228,6 +228,8 @@ enyo.kind({
                         { name: "SongNameLabel", kind: "Control", content: "Song Name" },
                         { kind: "Spacer" },
                         { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
+                        { kind: "Button", caption: "DL", onclick: "DownloadFile" },
+
                     ]
                 },
                 { kind: "HFlexBox", components:
@@ -237,7 +239,7 @@ enyo.kind({
                         { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Album Name" },
                         { kind: "Spacer" },
                         { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "128kbps mp3" },
-                    ]
+                   ]
                 },
             ]
         },
@@ -251,10 +253,9 @@ enyo.kind({
         //console.log(inEvent); // set inEvent.dragInfo here
         if(!this.draggable)
             return;
-        console.log("dragStart");
-        console.log(inSender.parent);
         if(inEvent.horizontal)
         {
+            this.log(this, "dragging!");
             /*inEvent.dragInfo = inSender.parent.songInfo;
             inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
             inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
@@ -262,6 +263,7 @@ enyo.kind({
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(true, inEvent);
+            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
         }
     },
     dragged: function(inSender, inEvent)
@@ -275,6 +277,13 @@ enyo.kind({
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(false, inEvent);
             console.log(inEvent);
+        this.parent.addRemoveClass("draghighlight", enyo.application.dragging);            
+    },
+    DownloadFile: function(inSender, inEvent)
+    {
+        this.log(inEvent.rowIndex);
+        enyo.application.download(inEvent.rowIndex);
+        inEvent.stopPropagation();
     }
 });
 
@@ -401,6 +410,7 @@ enyo.kind({
     },
     songListChanged: function()
     {
+        this.log(this.songList);
         this.songList = this.songList.directory.child;
         this.$.ViewPane.selectViewByName("SongListView");
         if(this.lastActivatedSpinner)
@@ -446,63 +456,155 @@ enyo.kind({
 enyo.kind({
     name: "subsonic.SearchView",
     kind: "VFlexBox", components: [
-        { kind: "SearchInput", },
-        { kind: "Scroller", flex: 1, accelerated: true, components:
+        { name: "SearchText", kind: "SearchInput", onchange: "performSearch" },
+        { kind: "Scroller", flex: 1, accelerated: true, onchange: "performSearch", components:
             [
                 { kind: "Divider", caption: "Artists" },
-                { kind: "VirtualRepeater", accelerated: true, onSetupRow: "getArtistSearchItem", components:
+                { name: "ArtistList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getArtistSearchItem", components:
                     [
-                        { name: "ArtistItem", kind: "subsonic.ArtistItem" },
+                        { name: "ArtistItem", kind: "subsonic.ArtistItem", onclick: "clickArtist", },
                     ]
                 },
                 { kind: "Divider", caption: "Albums" },
-                { kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumSearchItem", components:
+                { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumSearchItem", components:
                     [
-                        { name: "AlbumItem", kind: "subsonic.AlbumItem" },
+                        { name: "AlbumItem", kind: "subsonic.AlbumItem", onclick: "clickAlbum", },
                     ]
                 },
                 { kind: "Divider", caption: "Songs", },
-                { kind: "VirtualRepeater", accelerated: true, onSetupRow: "getSongSearchItem", components:
+                { name: "SongList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getSongSearchItem", components:
                     [
-                        { name: "SongItem", kind: "subsonic.SongItem" },
+                        { name: "SongItem", kind: "subsonic.AlbumItem", onclick: "clickSong", }, // TODO: AlbumItem has a SongItem inside it already .. sigh
                     ]
                 }
             ]
         }
     ],
+    events: {
+        "onSearch": "",
+        "onAlbumClicked": "",
+        "onSongClicked": "",
+        "onArtistClicked": "",
+    },
+    published: {
+        "songList" : "",
+        "music": "",
+        "artistList": "",
+    },
+    clickArtist: function(inSender, inEvent) {
+        var x = inEvent.rowIndex;
+        this.doArtistClicked(inEvent, this.artistList[x].id);
+    },
+    clickAlbum: function(inSender, inEvent)
+    {
+        var x = inEvent.rowIndex;
+        this.doAlbumClicked(inEvent, this.albumList[x].id);        
+    },
+    clickSong: function(inSender, inEvent)
+    {
+        var x = inEvent.rowIndex;
+        this.doSongClicked(inEvent, this.songList[x].id);
+    },
+    musicChanged: function()
+    {
+        // TODO: If no Internet connection, we get "Cannot read property 'albumList' of undefined, here
+        this.albumList = (this.music.albumList && this.music.albumList.album) || (this.music.directory && this.music.directory.child) || this.music;
+        //this.albumList = this.music.albumList ? this.music.albumList.album : this.music.directory.child;
+        //this.albumList.sort( function(i1, i2) { return (i1.title && i1.title.localeCompare) ? i1.title.localeCompare(i2.title) : 0; });
+        this.log(this.albumList[0]);
+        //this.$.ViewPane.selectViewByName("AlbumListView");
+        this.$.AlbumList.render();
+    },
+    songListChanged: function()
+    {
+        this.songList = (this.songList.directory && this.songList.directory.child) || this.songList;
+        //this.$.ViewPane.selectViewByName("SongListView");
+        //if(this.lastActivatedSpinner)
+        //    this.lastActivatedSpinner.hide();
+        this.$.SongList.render();
+    },
+    artistListChanged: function()
+    {
+        //id: "633a5c6d757369635c54797065204f204e65676174697665"
+        // name: "Type O Negative"
+        this.log("artistlist", this.artistList);
+        this.albumList.sort( function(i1, i2) { return (i1.name && i1.name.localeCompare) ? i1.name.localeCompare(i2.name) : 0; });
+        this.$.ArtistList.render();
+    },
+    performSearch: function(inSender, inEvent)
+    {
+        this.log();
+        this.doSearch(this.$.SearchText.getValue());
+    },
     getArtistSearchItem: function(inSender, inRow)
     {
-        if(inRow >= 0 && inRow < 10)
+        if(this.artistList[inRow])
         {
-            this.$.ArtistItem.setContent("Artist " + inRow);
+            this.$.ArtistItem.setContent(this.artistList[inRow].name);
+            this.$.ArtistItem.artistID = this.artistList[inRow].id;
             return true;
         }
         return false;
     },
+    // TODO: getAlbum/SongListItem straight copied from the MusicView . . probably want to custom it, or figure out a way to share it.
     getAlbumSearchItem: function(inSender, inRow)
     {
-        if(inRow >= 0 && inRow < 10)
+        var a = this.songload ? this.songList[inRow] : (this.albumList && this.albumList[inRow]);
+        var mi = this.songload ? this.$.SongItem : this.$.AlbumItem;
+        
+        if(a)
         {
-            this.$.AlbumItem.$.AlbumArt.setSrc("http://images2.fanpop.com/images/photos/4100000/-21st-Century-Breakdown-Album-Cover-Art-Large-Version-green-day-4121729-900-900.jpg");
-            this.$.AlbumItem.$.ArtistNameLabel.setContent("Artist " + inRow);
-            this.$.AlbumItem.$.AlbumNameLabel.setContent("Album " + inRow);
+            if(a.isDir) {
+                mi.$.AlbumNameLabel.setContent(a.title);
+                mi.$.ArtistNameLabel.setContent(a.artist);
+                // TODO: Come up with a caching mechanism
+                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+                mi.$.AlbumArt.coverArt = a.coverArt;
+                mi.setItemID(a.id);
+            } else {
+                var si = mi.$.SongItem;
+                this.log("!isDir", mi, si, a);
+                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+                mi.$.AlbumArt.coverArt = a.coverArt;
+                mi.$.AlbumItem.hide();
+                si.show();
+                si.$.SongNameLabel.setContent(a.title);
+                si.$.SongLengthLabel.setContent(secondsToTime(a.duration)); // TODO: make hh:mm
+                si.$.ArtistNameLabel.setContent(a.artist);
+                si.$.SongFileTypeLabel.setContent(a.bitRate + "bit " + a.suffix);
+                si.$.AlbumNameLabel.setContent(a.album);
+                mi.setItemID(a.id);
+                //this.log(a);
+                si.songInfo = a;
+            }
             return true;
         }
         return false;
     },
     getSongSearchItem: function(inSender, inRow)
     {
-        if(inRow >= 0 && inRow < 10)
-        {
-            this.$.SongItem.$.ArtistNameLabel.setContent("Artist " + inRow);
-            this.$.SongItem.$.AlbumNameLabel.setContent("Album " + inRow);
-            this.$.SongItem.$.SongFileTypeLabel.setContent(inRow + "kbps mp3");
-            return true;
-        }
-        return false;
+        this.log(inRow);
+        this.songload = true;
+        var ret = this.getAlbumSearchItem(inSender, inRow);
+        this.songload = false;
+        return this.songList[inRow];
     },
 });
-
+/*
+  {"subsonic-response":
+  {"searchResult2":
+  {"song":
+    [
+        {"album":"Least Worst of",
+            "artist":"Type O Negative",
+            "bitRate":192,
+            "contentType":"audio/mpeg",
+            "coverArt":"633a5c6d757369635c54797065204f204e656761746976655c4c6561737420576f727374206f665c54797065204f204e65676174697665202d20313220426c61636b205261696e626f77732e6d7033",
+            "duration":749,
+            "genre":"Metal",
+            "id":"633a5c6d757369635c54797065204f204e656761746976655c4c6561737420576f727374206f665c54797065204f204e65676174697665202d20556e7375636365737366756c6c7920436f70696e67205769746820746865204e61747572616c20426561757479206f6620496e666964656c6974792e6d7033",
+            "isDir":false,"isVideo":false,"parent":"633a5c6d757369635c54797065204f204e656761746976655c4c6561737420576f727374206f66","path":"Type O Negative/Least Worst of/Type O Negative - Unsuccessfully Coping With the Natural Beauty of Infidelity.mp3","size":18042880,"suffix":"mp3","title":"Unsuccessfully Coping With the Natural Beauty of Infidelity","track":13,"year":2000},{"album":"Slow Deep & Hard","artist":"Type O Negative","bitRate":192,"contentType":"audio/mpeg","coverArt":"633a5c6d757369635c54797065204f204e656761746976655c536c6f772044656570202620486172645c466f6c6465722e6a7067","duration":759,"id":"633a5c6d757369635c54797065204f204e656761746976655c536c6f772044656570202620486172645c54797065204f204e65676174697665202d20556e7375636365737366756c6c7920436f70696e67205769746820746865204e61747572616c20426561757479206f6620496e666964656c6974792e6d7033","isDir":false,"isVideo":false,"parent":"633a5c6d757369635c54797065204f204e656761746976655c536c6f77204465657020262048617264","path":"Type O Negative/Slow Deep & Hard/Type O Negative - Unsuccessfully Coping With the Natural Beauty of Infidelity.mp3","size":18468864,"suffix":"mp3","title":"Unsuccessfully Coping With the Natural Beauty of Infidelity","track":1,"year":1991}]},"status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}
+*/
 enyo.kind({
     name: "subsonic.PlaylistsView",
     kind: "VFlexBox",
@@ -689,7 +791,7 @@ enyo.kind({
         
         //this.$.MusicPlayer.audio.addEventListener('onloadstart', this.log);
         //this.$.MusicPlayer.audio.onloadstart = "checkStatus";
-        this.timer = setInterval(enyo.bind(this, this.checkStatus), 500);
+        this.checkTimer();
     },
     playerEvent: function(inEvent, x, y)
     {
@@ -703,6 +805,21 @@ enyo.kind({
                 this.log(inEvent, x, y);
                 break;
         }
+    },
+    checkTimer: function() {
+        if(!this.timer)
+            this.timer = setInterval(enyo.bind(this, this.checkStatus), 500);
+    },
+    clearTimer: function() {
+        if(this.timer)
+        {
+            clearInterval(this.timer);
+            delete this.timer;
+        }
+    },
+    play: function() {
+        this.$.MusicPlayer.play();
+        this.checkTimer();
     },
     songChanged: function()
     {
@@ -722,10 +839,13 @@ enyo.kind({
             this.$.ProgressSlider.setBarPosition(0);
             this.$.ProgressSlider.setAltBarPosition(0);        
             this.$.MusicPlayer.play();
+            this.checkTimer();
         } else {
             this.$.SongInfoBox.hide();
             this.$.AlbumArt.setSrc("http://img91.imageshack.us/img91/3550/nocoverni0.png");
-            clearInterval(this.timer);
+            this.$.MusicPlayer.setSrc("");
+            this.clearTimer();
+            delete this.timer;
             this.checkStatus();
         }
     },
@@ -735,6 +855,7 @@ enyo.kind({
             this.$.MusicPlayer.audio.pause();
         else
             this.$.MusicPlayer.audio.play();
+        this.checkTimer();
         inEvent.stopPropagation();
         return true;
     },
@@ -817,12 +938,15 @@ enyo.kind({
             this.$.Song.$.ArtistNameLabel.setContent(p.artist);
             this.$.Song.$.AlbumNameLabel.setContent(p.album); // si.$.SongFileTypeLabel.setContent(a.bitRate + "bit " + a.suffix);
             this.$.Song.$.SongFileTypeLabel.setContent(p.bitRate + "bit " +p.suffix);
+            
+            this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
             if(enyo.application.dragging && enyo.application.dropIndex != undefined && enyo.application.dropIndex > -1)
             {
                 if(enyo.application.dropIndex == inRow)
                 {
                     this.log("highlighting " + inRow);
                     this.$.Song.applyStyle("border-top", "thick double blue");
+                    this.$.Song.applyStyle("border-bottom", undefined);
                     if(this.lastHighlightedIndex != inRow)
                     {
                         this.renderRow(this.lastHighlightedIndex)
@@ -832,9 +956,14 @@ enyo.kind({
                     this.$.Song.applyStyle("border-top", undefined);
                     this.$.Song.applyStyle("border-bottom", undefined);
                 } 
-            } else if(enyo.application.dragging && enyo.application.dropIndex == undefined && inRow == enyo.application.playlist.length-1) {
+            } else if(enyo.application.dragging && inRow == enyo.application.playlist.length-1) {
                 {
-                    this.$.Song.applyStyle("border-bottom", "thick double blue");
+                    if(enyo.application.dropIndex == undefined ) {
+                        this.$.Song.applyStyle("border-bottom", "thick double blue");
+                        this.lastHighlightedIndex = inRow;
+                    } else {
+                        this.$.Song.applyStyle("border-bottom", undefined);
+                    }
                 }
             } else {
                 this.$.Song.applyStyle("border-bottom", undefined);

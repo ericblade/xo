@@ -1,8 +1,27 @@
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
 // TODO: half implemented downloading of files
-// TODO: playlist stuff is ridiculously unreliable and locks up touchpads and phones alike.. wtf?
+// TODO: Jukebox mode .. with volume buttons on device directly controlling the jukebox volume
 // TODO: stop play at App Exit . . unless going to dashboard mode?
+// TODO: since playlist remembers where it left off at when restarting, need to be able to restart there.. only clear playlist index when necessary (ie, when adding a file above this one, or clearing the list, or loading a new one)
+// TODO: if a file in the list is playing or downloading, have it have it work as a ProgressButton ?
+// TODO: drag-drop to player (add to playlist, or play now?)
+// TODO: investigate searches returning exactly one result not showing up (ie "Judas Priest" shows 0 artists?)
+// TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
+// TODO: when highlighting song in playlist that is active in player, attempt to scroll it into view?
+// TODO: download button on Search view doesn't work
+// TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
+// TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
+// TODO: dragging from search list (bugged currently)
+// TODO: (option to?) disable sleep while player screen is up
+// TODO: Exhibition mode
+// TODO: had to add a timeout in the Transition code to deal with transitioning failure when auto-flipping from Search to Music tab.. investigate why the transition fails.
+// TODO: "gapless" playback?
+
+// INVESTIGATE: time on B.Y.O.B. on Mezmerize by SOAD is showing as 36:34 .. mp3 corrupt?
+
+// TODO: getting a blank list from server results in error: Uncaught TypeError: Cannot read property 'child' of undefined, source/Views.js:404
+// TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
 
 enyo.kind({
     name: "ArtistRepeater",
@@ -74,7 +93,7 @@ enyo.kind({
     kind: enyo.Pane,
     transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [
-        { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/", method: "download", onSuccess: "downloadFinished", subscribe: true },
+        { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/", method: "download", onSuccess: "downloadStatus", subscribe: true },
         { kind: "ApplicationEvents", onBack: "doBack" },
         { name: "LogView", kind: "LogView", },
         { name: "api", kind: "subsonic.api",
@@ -84,6 +103,7 @@ enyo.kind({
             onDirectoryReceived: "receivedDirectory",
             onReceivedPlaylists: "receivedPlaylists",
             onReceivedPlaylist: "receivedPlaylist",
+            onSearchResults: "receivedSearchResults",
         },
         { name: "slider", kind: "SlidingPane", components:
             [
@@ -101,7 +121,7 @@ enyo.kind({
                             [
                                 { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
                                 { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "loadSong", },
-                                { name: "SearchView", kind: "subsonic.SearchView", },
+                                { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "loadSong", },
                                 { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                             ]
                         },
@@ -152,6 +172,17 @@ enyo.kind({
             ]
         },
     ],
+    performSearch: function(inSender, inSearch)
+    {
+        // TODO: allow search only for artist/album/song? allow pagination, using artistOffset, albumOffset, songOffset?
+        var params = {
+            query: inSearch,
+            artistCount: 20,
+            albumCount: 20,
+            songCount: 20,
+        };
+        this.$.api.call("search", params);
+    },
     openPlaylist: function(inSender, inEvent, inID)
     {
         this.playNextPlaylist = false;
@@ -184,7 +215,8 @@ enyo.kind({
     dragOutPlaylist: function(inSender, inEvent)
     {
         var old = enyo.application.dropIndex;
-        enyo.application.dropIndex = -1;
+        if(inSender != this.$.PlaylistView)
+            enyo.application.dropIndex = undefined;
         this.$.PlaylistView.renderRow(old);
         this.log("dragging out", inEvent.rowIndex);
         console.log(inSender);
@@ -226,6 +258,13 @@ enyo.kind({
         //else
         //    this.$.PlaylistView.renderRow(inEvent.rowIndex);
         prefs.set("playlist", enyo.application.playlist);
+    },
+    downloadFileIndex: function(index)
+    {
+        var songinfo = this.$.MusicView.queryListItem(index);
+        var filename = songinfo.path.replace(/^.*[\\\/]/, '');
+        
+        this.downloadSubsonicFile(songinfo.id, songinfo.artist + "-"+filename);        
     },
     hideShowRightTabs: function()
     {
@@ -296,6 +335,7 @@ enyo.kind({
                 if(enyo.application.dragging)
                     this.avatarTrack(inEvent);
             });
+        enyo.application.download = enyo.bind(this, this.downloadFileIndex);
     },
     avatarTrack: function(inEvent) {
         //this.log();
@@ -379,7 +419,7 @@ enyo.kind({
                 break;
         }
         this.$.HomeView.$.ServerSpinner.show();
-        this.$.api.call(apicall, { type: type, size: 10 }); // TODO: Must support loading pages, using the offset parameter!
+        this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
@@ -387,6 +427,12 @@ enyo.kind({
         this.$.HomeView.$.ServerSpinner.hide();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
+    },
+    receivedSearchResults: function(inSender, inSearchRes)
+    {
+        this.$.SearchView.setMusic(inSearchRes.album);
+        this.$.SearchView.setSongList(inSearchRes.song);
+        this.$.SearchView.setArtistList(inSearchRes.artist);
     },
     receivedDirectory: function(inSender, inDirectory)
     {
@@ -412,9 +458,16 @@ enyo.kind({
     loadAlbum: function(inSender, inEvent, inId)
     {
         this.$.api.call("getMusicDirectory", { id: inId });
+        // TODO: we're going to need to create new views in the MusicView internal pane, so that it can nest selections deeply.. sigh.
+        this.selectMusicView(); // TODO: should this be conditional, if we're not already in that view?
     },
     loadSong: function(inSender, inEvent, inSongData)
     {
+        if(inSongData.isDir)
+        {
+            this.loadAlbum(inSender, inEvent, inSongData.id);
+            return;
+        }
         this.$.MusicPlayer.setSong(inSongData);
         this.selectPlayerView(); 
     },
@@ -520,6 +573,7 @@ enyo.kind({
     downloadSubsonicFile: function(id, filename)
     {
         // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
+        this.log(id, filename);
         this.$.fileDownload.call( {
             target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
             mime: "audio/mpeg3",
@@ -530,6 +584,15 @@ enyo.kind({
             canHandlePause: true,
             subscribe: true
         });
+    },
+    downloadStatus: function(x, y, z)
+    {
+        this.log(x, y, z);
+        /*
+         [20111201-18:04:45.555847] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"amountReceived":13594343,"e_amountReceived":"13594343","amountTotal":13787624,"e_amountTotal":"13787624"} enyo.PalmService.Request, /usr/palm/frameworks/enyo/1.0/framework/build/enyo-build.js:72
+[20111201-18:04:45.579501] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"amountReceived":13700846,"e_amountReceived":"13700846","amountTotal":13787624,"e_amountTotal":"13787624"} enyo.PalmService.Request, /usr/palm/frameworks/enyo/1.0/framework/build/enyo-build.js:72
+[20111201-18:04:45.654649] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"url":"http://ericbla.de:88/rest/download.view?id=633a5c6d757369635c4d6172696c796e204d616e736f6e5c4d6172696c796e204d616e736f6e202d204c65737420576520466f72676574205468652042657374204f6620283230303429205b4344205269705d2033323020767477696e3838637562655c31372e546865205265666c656374696e6720476f642e6d7033&u=admin&v=1.6.0&p=subgame&c=XO(webOS)(development)","sourceUrl":"http://ericbla.de:88/rest/download.view?id=633a5c6d757369635c4d6172696c796e204d616e736f6e5c4d6172696c796e204d616e736f6e202d204c65737420576520466f72676574205468652042657374204f6620283230303429205b4344205269705d2033323020767477696e3838637562655c31372e546865205265666c656374696e6720476f642e6d7033&u=admin&v=1.6.0&p=subgame&c=XO(webOS)(development)","deviceId":"","authToken":"","destTempPrefix":".","destFile":"download_1.view","destPath":"/media/internal/xo/","mimetype":"application/x-download","amountReceived":13787624,"e_amountReceive
+        */
     }
 })
 

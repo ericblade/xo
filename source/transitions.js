@@ -19,7 +19,7 @@ enyo.kind( {
                             });
             t2.show();
         }
-
+        this.timeout = setTimeout(enyo.bind(this, this.done), 800);
         Morf.transition(c, { "-webkit-transform": "translate3d("+window.screen.availWidth+"px, 0, 0)" },
                         {
                             duration: "700ms",
@@ -35,6 +35,8 @@ enyo.kind( {
     },
     done: function()
     {
+        if(this.timeout)
+            clearTimeout(this.timeout);
         var f = this.pane.transitioneeForView(this.fromView);
         //f.hide();
         var c = this.pane.transitioneeForView(this.toView);

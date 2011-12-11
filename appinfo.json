@@ -1,10 +1,10 @@
 {
-	"id": "com.ericblade.xo",
+	"id": "com.ericblade.xobeta",
 	"version": "0.1.0",
 	"vendor": "Eric Blade",
 	"type": "web",
 	"main": "index.html",
-	"title": "XO",
+	"title": "XObeta",
 	"icon": "icon.png",
 	"uiRevision":2
 }

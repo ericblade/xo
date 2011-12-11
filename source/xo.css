@@ -5,3 +5,8 @@
 	position: absolute;
         z-index: 10;
 }
+
+.draghighlight {
+    background: #5CB3FF;
+    font-weight: bold;
+}

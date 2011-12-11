@@ -1,3 +1,18 @@
+/* [20111207-04:32:39.929290] info: subsonic.api.pingSuccess():
+  {
+    "subsonic-response": {
+        "error": {
+            "code":60,
+            "message":"The trial period for the Subsonic server is over. Please donate to get a license key. Visit subsonic.org for details."
+        },
+        "status":"failed",
+        "version":"1.7.0",
+        "xmlns":"http://subsonic.org/restapi"
+    }
+} */
+
+// TODO: if we can't reach the service, for some reason, we get back a pingSuccess() and licenseSuccess() with no result .. must check error codes.
+
 enyo.kind({
     name: "subsonic.api",
     kind: "Component",
@@ -46,6 +61,7 @@ enyo.kind({
         "onDirectoryReceived": "",
         "onReceivedPlaylists": "",
         "onReceivedPlaylist": "",
+        "onSearchResults": "",
     },
     serverChanged: function()
     {
@@ -184,5 +200,6 @@ enyo.kind({
     },
     gotSearch: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
+        this.doSearchResults(inResponse["subsonic-response"]["searchResult2"]);
     },
 })
