@@ -215,6 +215,7 @@ enyo.kind({
     /*kind: "SwipeableItem",
     swipeable: false,*/
     kind: "Progress",
+    position: 50,
     layoutKind: "VFlexLayout",
     flex: 1,
     pack: "center",
@@ -239,7 +240,7 @@ enyo.kind({
                         { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Album Name" },
                         { kind: "Spacer" },
                         { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "128kbps mp3" },
-                        { kind: "NotificationButton", caption: "DL", onclick: "DownloadFile" },
+                        //{ kind: "NotificationButton", caption: "DL", onclick: "DownloadFile" },
                         
                    ]
                 },
@@ -252,7 +253,6 @@ enyo.kind({
     },
     dragStart: function(inSender, inEvent)
     {
-        //console.log(inEvent); // set inEvent.dragInfo here
         if(!this.draggable)
             return;
         if(inEvent.horizontal)
