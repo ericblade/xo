@@ -11,7 +11,7 @@ enyo.kind({
     },
     components:
         [
-            { kind: "Scroller", flex: 1, accelerated: true, components:
+            { kind: "FadeScroller", flex: 1, accelerated: true, components:
                 [
                     !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
                     { name: "serverItem", kind: "Item", onclick: "doServerDialog", layoutKind: "VFlexLayout", components:
@@ -212,33 +212,35 @@ enyo.kind({
                  },*/
 enyo.kind({
     name: "subsonic.SongItem",
-    kind: "SwipeableItem",
-    swipeable: false,
+    /*kind: "SwipeableItem",
+    swipeable: false,*/
+    kind: "Progress",
     layoutKind: "VFlexLayout",
     flex: 1,
+    pack: "center",
     style: "padding-left: 5px; padding-right: 5px;",
     published: {
         draggable: isLargeScreen(),
     },
     components: [
-        { kind: "VFlexBox", onmousehold: "mousehold", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
+        { kind: "VFlexBox", onmousehold: "mousehold", pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
-                { kind: "HFlexBox", components:
+                { kind: "HFlexBox", pack: "center", components:
                     [ // TODO: put album image in here?
                         { name: "SongNameLabel", kind: "Control", content: "Song Name" },
                         { kind: "Spacer" },
                         { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
-                        { kind: "Button", caption: "DL", onclick: "DownloadFile" },
-
                     ]
                 },
-                { kind: "HFlexBox", components:
+                { kind: "HFlexBox", pack: "center", components:
                     [
                         { name: "ArtistNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
                         { kind: "Spacer" },
                         { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Album Name" },
                         { kind: "Spacer" },
                         { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "128kbps mp3" },
+                        { kind: "NotificationButton", caption: "DL", onclick: "DownloadFile" },
+                        
                    ]
                 },
             ]
@@ -274,12 +276,14 @@ enyo.kind({
     },
     dragFinish: function(inSender, inEvent)
     {
-        // we don't need to wrap this in an if(dragging) check, since even if we were to receive it invalidly, we're just clearing the settings anyway right
+        if(enyo.application.dragging)
+        {
             enyo.application.dragging = false;
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(false, inEvent);
             console.log(inEvent);
-        this.parent.addRemoveClass("draghighlight", enyo.application.dragging);            
+            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
+        }
     },
     DownloadFile: function(inSender, inEvent)
     {
@@ -306,7 +310,7 @@ enyo.kind({
             [
                 { name: "AlbumListView", flex: 1, kind: "VFlexBox", components:
                     [
-                        { kind: "Scroller", flex: 1, accelerated: true, components:
+                        { kind: "FadeScroller", flex: 1, accelerated: true, components:
                             [
                                 { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumListItem", components:
                                     [
@@ -323,7 +327,7 @@ enyo.kind({
                 },
                 { name: "SongListView", kind: "VFlexBox", components:
                     [
-                        { kind: "Scroller", flex: 1, accelerated: true, components:
+                        { kind: "FadeScroller", flex: 1, accelerated: true, components:
                             [
                                 { name: "SongList", kind: "VirtualRepeater", flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
                                     [
@@ -459,7 +463,7 @@ enyo.kind({
     name: "subsonic.SearchView",
     kind: "VFlexBox", components: [
         { name: "SearchText", kind: "SearchInput", onchange: "performSearch" },
-        { kind: "Scroller", flex: 1, accelerated: true, onchange: "performSearch", components:
+        { kind: "FadeScroller", flex: 1, accelerated: true, onchange: "performSearch", components:
             [
                 { kind: "Divider", caption: "Artists" },
                 { name: "ArtistList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getArtistSearchItem", components:
@@ -616,7 +620,7 @@ enyo.kind({
         "onPlayPlaylist":"",
     },
     components: [
-        { kind: "Scroller", flex: 1, components:
+        { kind: "FadeScroller", flex: 1, components:
             [
                 { kind: "VirtualList", onSetupRow: "getPlaylistItem", components:
                     [
@@ -739,6 +743,7 @@ enyo.kind({
                 },
                 { kind: "HFlexBox", components:
                     [
+                        { kind: "GrabButton", style: "background-color: #121212" },
                         { kind: "Spacer", },
                         { kind: "Button", caption: "Prev", onclick: "doPrevSong", },
                         { kind: "Button", caption: "Play/Pause", onclick: "playPauseClicked", },
@@ -901,7 +906,7 @@ enyo.kind({
     },
     components: [
         isLargeScreen() ? { content: "Drag songs from the Music list and drop them here.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
-        { name: "Scroller", kind: "Scroller", flex: 1, accelerated: true, components:
+        { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
             [
                 { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", accelerated: true, onSetupRow: "getListItem", components:
                     [
@@ -913,6 +918,7 @@ enyo.kind({
         //{ kind: "Spacer" },
         { kind: "Toolbar", ondragover: "scrollDown", components:
             [
+                { kind: "GrabButton" },
                 { caption: "Play", onclick: "doStartPlaylist" },
                 { caption: "Clear", onclick: "clearPlaylist" },
             ]
@@ -927,6 +933,10 @@ enyo.kind({
     {
         this.$.Scroller.scrollTo(this.$.Scroller.scrollTop + 10, this.$.Scroller.scrollLeft);
         this.log("should be scrolling downwards");
+    },
+    scrollToBottom: function()
+    {
+        this.$.Scroller.scrollToBottom();
     },
     getListItem: function(inSender, inRow)
     {
