@@ -22,6 +22,8 @@
 
 // TODO: getting a blank list from server results in error: Uncaught TypeError: Cannot read property 'child' of undefined, source/Views.js:404
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
+// TODO: set drag cursor to the album art for what we are dragging?
+// TODO: "shake to shuffle" hehe
 
 enyo.kind({
     name: "ArtistRepeater",
