@@ -4,6 +4,7 @@ enyo.depends(
 	"source/morf.js",
 	"source/transitions.js",
         "source/Popups.js",
+        "source/Items.js",
         "source/Views.js",
         "source/subsonicApi.js",
 	"source/xo.js",
