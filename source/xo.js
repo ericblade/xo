@@ -25,6 +25,8 @@
 // TODO: set drag cursor to the album art for what we are dragging?
 // TODO: "shake to shuffle" hehe
 
+// TODO: Have search also send a search query to Amazon, linking for purchasing? hmmm...
+
 enyo.kind({
     name: "ArtistRepeater",
     kind: "VFlexBox",
@@ -129,42 +131,26 @@ enyo.kind({
                         },
                     ]
                 },
-        {name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
-                
+                {name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },                
                 { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
                     [
                         { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange", showing: prefs.get("righttabsshowing"), components:
                             [
-                                { caption: "Playlist" },
+                                { caption: "Now Playing" },
                                 { caption: "Player" },
-                                { caption: "Lyrics" },
+                                //{ caption: "Lyrics" },
                             ]
                         },
                         
-                        { name: "RightPane", kind: "Pane", flex: 1, components:
+                        { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                             [
-                                /*{ name: "PlaylistView", flex: 1, kind: "VFlexBox", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab", components:
-                                    [
-                                        { name: "Playlist", kind: "subsonic.PlaylistView" },
-                                    ]
-                                },*/
                                 { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab",},
                                 { name: "MusicPlayerView", flex: 1, kind: "VFlexBox", components:
                                     [
                                         { name: "MusicPlayer", flex: 1, onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", style: "background: black; ", kind: "subsonic.MusicPlayerView" },
                                     ]
                                 },
-                                { name: "LyricsView", kind: "VFlexBox", components:
-                                    [
-                                        { content: "Lyrics View Here", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" },
-                                        { kind: "Spacer", },
-                                        { kind: "Toolbar", components:
-                                            [
-                                                { kind: "GrabButton" },
-                                            ]
-                                        },
-                                    ]
-                                }
+                                //{ name: "LyricsView", flex: 1, kind: "LyricsView", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" }
                             ]
                         },
                     ]
@@ -293,12 +279,24 @@ enyo.kind({
         if(!this.ignoreCycle)
         {
             var curr = this.$.RightPane.getViewIndex();
-            var newind = (curr >= 2) ? 0 : curr+1;
+            //var newind = (curr >= 2) ? 0 : curr+1;
+            var newind = 1 - curr;
             this.$.RightTabs.setValue(newind);
             //this.log(curr, newind);
             this.$.RightPane.selectViewByIndex(newind);
         }
         this.ignoreCycle = false;
+    },
+    rightPaneSelected: function(inSender, inNewView, inOldView)
+    {
+        this.log(inNewView.name, this.$.MusicPlayerView.song);
+        /*if(inNewView.name == "LyricsView" && enyo.application.nowplaying)
+        {
+            inNewView.setSongArtist(enyo.application.nowplaying.artist);
+            inNewView.setSongTitle(enyo.application.nowplaying.title);
+            this.$.api.call("getLyrics", { artist: enyo.application.nowplaying.artist, title: enyo.application.nowplaying.title });
+            inNewView.$.scrim.show();
+        }*/
     },
     receivedLicense: function(inSender, inLicense)
     {

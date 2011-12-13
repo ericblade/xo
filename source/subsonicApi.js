@@ -134,6 +134,7 @@ enyo.kind({
         this.log(inResponse, inRequest);
     },
     gotLyrics: function(inSender, inResponse, inRequest) {
+// no lyrics: {"subsonic-response":{"lyrics":"","status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}        
         this.log(inResponse, inRequest);
     },
     controlledJukebox: function(inSender, inResponse, inRequest) {
