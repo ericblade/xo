@@ -3,10 +3,8 @@
 // TODO: half implemented downloading of files
 // TODO: Jukebox mode .. with volume buttons on device directly controlling the jukebox volume
 // TODO: stop play at App Exit . . unless going to dashboard mode?
-// TODO: since playlist remembers where it left off at when restarting, need to be able to restart there.. only clear playlist index when necessary (ie, when adding a file above this one, or clearing the list, or loading a new one)
 // TODO: if a file in the list is playing or downloading, have it have it work as a ProgressButton ?
 // TODO: drag-drop to player (add to playlist, or play now?)
-// TODO: investigate searches returning exactly one result not showing up (ie "Judas Priest" shows 0 artists?)
 // TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
 // TODO: when highlighting song in playlist that is active in player, attempt to scroll it into view?
 // TODO: download button on Search view doesn't work
