@@ -102,19 +102,20 @@ enyo.kind({
             [
                 { name: "AlbumListView", flex: 1, kind: "VFlexBox", components:
                     [
-                        { kind: "FadeScroller", flex: 1, accelerated: true, components:
-                            [
-                                { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumListItem", components:
+                        //{ kind: "FadeScroller", flex: 1, accelerated: true, components:
+                        //    [
+                                { name: "AlbumList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
                                     [
                                         { kind: "HFlexBox", components:
                                             [
-                                                { name: "AlbumItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
+                                                //{ name: "AlbumItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
+                                                { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "itemClicked", },
                                             ]
                                         }
                                     ]
                                 }
-                            ]
-                        },
+                        //    ]
+                        //},
                     ]
                 },
                 { name: "SongListView", kind: "VFlexBox", components:
@@ -125,7 +126,8 @@ enyo.kind({
                                     [
                                         { kind: "HFlexBox", components:
                                             [
-                                                { name: "SongItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
+                                                //{ name: "SongItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
+                                                { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, onclick: "itemClicked", },
                                             ]
                                         },
                                     ]
@@ -154,28 +156,11 @@ enyo.kind({
         
         if(a)
         {
+            //if(this.$.ViewPane.getViewName() == "AlbumListView") {
             if(a.isDir) {
-                mi.$.AlbumNameLabel.setContent(a.title);
-                mi.$.ArtistNameLabel.setContent(a.artist);
-                // TODO: Come up with a caching mechanism
-                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-                mi.$.AlbumArt.coverArt = a.coverArt;
-                mi.setItemID(a.id);
+                this.$.AlbumItem.setAlbumInfo(a);
             } else {
-                var si = mi.$.SongItem;
-                this.log("!isDir", mi, si, a);
-                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-                mi.$.AlbumArt.coverArt = a.coverArt;
-                mi.$.AlbumItem.hide();
-                si.show();
-                si.$.SongNameLabel.setContent(a.title);
-                si.$.SongLengthLabel.setContent(secondsToTime(a.duration)); // TODO: make hh:mm
-                si.$.ArtistNameLabel.setContent(a.artist);
-                si.$.SongFileTypeLabel.setContent(a.bitRate + "bit " + a.suffix);
-                si.$.AlbumNameLabel.setContent(a.album);
-                mi.setItemID(a.id);
-                //this.log(a);
-                si.songInfo = a;
+                this.$.SongItem.setSongInfo(a);
             }
             return true;
         }
@@ -208,7 +193,7 @@ enyo.kind({
     },
     songListChanged: function()
     {
-        this.log(this.songList);
+        //this.log(this.songList);
         this.songList = this.songList.directory.child;
         this.$.ViewPane.selectViewByName("SongListView");
         if(this.lastActivatedSpinner)
@@ -217,38 +202,12 @@ enyo.kind({
     },
     itemClicked: function(inSender, inEvent)
     {
-        this.log(inSender, inSender.itemID);
-        this.lastActivatedSpinner = inSender.$.AlbumSpinner;
-        inSender.$.AlbumSpinner.show();
-        if(inSender.name == "AlbumItem")
-            enyo.asyncMethod(this, enyo.bind(function(itemid, inEvent) { this.processAlbumClick(itemid, inEvent); }), inSender.itemID, inEvent);
+        var what = (inSender.name == "AlbumItem" ? this.albumList[inEvent.rowIndex] : this.songList[inEvent.rowIndex]);
+        if(inSender.songInfo)
+            enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, what);
         else
-            enyo.asyncMethod(this, enyo.bind(function(itemid, inEvent) { this.processSongClick(itemid, inEvent); }), inSender.itemID, inEvent);
+            enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, what.id);
     },
-    processAlbumClick: function(itemid, inEvent)
-    {
-        this.log();
-        for(x in this.albumList)
-        {
-            if(this.albumList[x].id == itemid)
-            {
-                this.doAlbumClicked(inEvent, this.albumList[x].id);
-                break;
-            }
-        }
-    },
-    processSongClick: function(itemid, inEvent)
-    {
-        this.log();
-        for(x in this.songList)
-        {
-            if(this.songList[x].id == itemid)
-            {
-                this.doSongClicked(inEvent, this.songList[x]);
-                break;
-            }
-        }
-    }
 });
 
 enyo.kind({
@@ -266,13 +225,13 @@ enyo.kind({
                 { kind: "Divider", caption: "Albums" },
                 { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumSearchItem", components:
                     [
-                        { name: "AlbumItem", kind: "subsonic.AlbumItem", onclick: "clickAlbum", },
+                        { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickAlbum", },
                     ]
                 },
                 { kind: "Divider", caption: "Songs", },
                 { name: "SongList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getSongSearchItem", components:
                     [
-                        { name: "SongItem", kind: "subsonic.AlbumItem", onclick: "clickSong", }, // TODO: AlbumItem has a SongItem inside it already .. sigh
+                        { name: "SongItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickSong", }, // TODO: AlbumItem has a SongItem inside it already .. sigh
                     ]
                 }
             ]
@@ -301,20 +260,34 @@ enyo.kind({
     clickSong: function(inSender, inEvent)
     {
         var x = inEvent.rowIndex;
-        this.doSongClicked(inEvent, this.songList[x].id);
+        this.doSongClicked(inEvent, this.songList[x]);
     },
     musicChanged: function()
     {
         // TODO: If no Internet connection, we get "Cannot read property 'albumList' of undefined, here
+        if(!this.music) {
+            this.music = { albumList: {} };
+            this.albumList = {};
+            this.$.AlbumList.render();
+            return;
+        }
+        if(this.music.artist) // Only one response.. SIGH
+            this.music[0] = this.music;
+
         this.albumList = (this.music.albumList && this.music.albumList.album) || (this.music.directory && this.music.directory.child) || this.music;
         //this.albumList = this.music.albumList ? this.music.albumList.album : this.music.directory.child;
         //this.albumList.sort( function(i1, i2) { return (i1.title && i1.title.localeCompare) ? i1.title.localeCompare(i2.title) : 0; });
-        this.log(this.albumList[0]);
+        //this.log(this.albumList[0]);
         //this.$.ViewPane.selectViewByName("AlbumListView");
         this.$.AlbumList.render();
     },
     songListChanged: function()
     {
+        
+        if(!this.songList)
+            this.songList = {};
+        if(this.songList.album) // fucking sigh
+            this.songList[0] = this.songList;
         this.songList = (this.songList.directory && this.songList.directory.child) || this.songList;
         //this.$.ViewPane.selectViewByName("SongListView");
         //if(this.lastActivatedSpinner)
@@ -325,8 +298,14 @@ enyo.kind({
     {
         //id: "633a5c6d757369635c54797065204f204e65676174697665"
         // name: "Type O Negative"
-        this.log("artistlist", this.artistList);
-        this.albumList.sort( function(i1, i2) { return (i1.name && i1.name.localeCompare) ? i1.name.localeCompare(i2.name) : 0; });
+        if(!this.artistList)
+        {
+            this.artistList = new Array();
+        }
+        if(this.artistList.name) // if there's only one entry, then .. well.. this API fucking sucks sometimes.
+            this.artistList[0] = this.artistList;
+        else
+            this.artistList.sort( function(i1, i2) { return (i1.name && i1.name.localeCompare) ? i1.name.localeCompare(i2.name) : 0; });
         this.$.ArtistList.render();
     },
     performSearch: function(inSender, inEvent)
@@ -347,45 +326,24 @@ enyo.kind({
     // TODO: getAlbum/SongListItem straight copied from the MusicView . . probably want to custom it, or figure out a way to share it.
     getAlbumSearchItem: function(inSender, inRow)
     {
-        var a = this.songload ? this.songList[inRow] : (this.albumList && this.albumList[inRow]);
-        var mi = this.songload ? this.$.SongItem : this.$.AlbumItem;
+        var a = this.albumList && this.albumList[inRow];
         
         if(a)
         {
-            if(a.isDir) {
-                mi.$.AlbumNameLabel.setContent(a.title);
-                mi.$.ArtistNameLabel.setContent(a.artist);
-                // TODO: Come up with a caching mechanism
-                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-                mi.$.AlbumArt.coverArt = a.coverArt;
-                mi.setItemID(a.id);
-            } else {
-                var si = mi.$.SongItem;
-                this.log("!isDir", mi, si, a);
-                mi.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-                mi.$.AlbumArt.coverArt = a.coverArt;
-                mi.$.AlbumItem.hide();
-                si.show();
-                si.$.SongNameLabel.setContent(a.title);
-                si.$.SongLengthLabel.setContent(secondsToTime(a.duration)); // TODO: make hh:mm
-                si.$.ArtistNameLabel.setContent(a.artist);
-                si.$.SongFileTypeLabel.setContent(a.bitRate + "bit " + a.suffix);
-                si.$.AlbumNameLabel.setContent(a.album);
-                mi.setItemID(a.id);
-                //this.log(a);
-                si.songInfo = a;
-            }
+            this.$.AlbumItem.setAlbumInfo(a);
             return true;
         }
         return false;
     },
     getSongSearchItem: function(inSender, inRow)
     {
-        this.log(inRow);
-        this.songload = true;
-        var ret = this.getAlbumSearchItem(inSender, inRow);
-        this.songload = false;
-        return this.songList[inRow];
+        var a = this.songList && this.songList[inRow];
+        if(a)
+        {
+            this.$.SongItem.setSongInfo(a);
+            return true;
+        }
+        return false;
     },
 });
 /*
@@ -476,6 +434,7 @@ enyo.kind({
         "onCycleTab": "",
         "onNextSong": "",
         "onPrevSong": "",
+        "onSongChanged": "",
     },
     components: [
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
@@ -648,6 +607,7 @@ enyo.kind({
             delete this.timer;
             this.checkStatus();
         }
+        this.doSongChanged(this.song);
     },
     playPauseClicked: function(inSender, inEvent)
     {
@@ -664,6 +624,8 @@ enyo.kind({
         //this.log(this.showing);
         //this.log();
         this.$.PlayerStatus.setContent(this.$.MusicPlayer.audio.seeking + " " + this.$.MusicPlayer.audio.readyState + " " +  this.$.MusicPlayer.audio.paused);
+        if(!this.song)
+            return;
         if(this.$.MusicPlayer.audio.readyState != 4)
         {
             this.$.SliderBox.hide();
@@ -696,14 +658,16 @@ enyo.kind({
     kind: "VFlexBox",
     events: {
         "onStartPlaylist" : "",
+        "onSongClicked" : "",
     },
     components: [
-        isLargeScreen() ? { content: "Drag songs from the Music list and drop them here.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap to change view, Hold to toggle Tabs", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
         { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
             [
                 { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", accelerated: true, onSetupRow: "getListItem", components:
                     [
-                        { name: "Song", kind: "subsonic.SongItem", draggable: false, },
+                        //{ name: "Song", kind: "subsonic.SongItem", draggable: false, },
+                        { name: "Song", kind: "subsonic.AlbumOrSongItem", onclick: "songClicked", draggable: false, },
                     ]
                 },
             ]
@@ -731,30 +695,38 @@ enyo.kind({
     {
         this.$.Scroller.scrollToBottom();
     },
+    songClicked: function(inSender, inEvent)
+    {
+        enyo.application.playlist.index = inEvent.rowIndex;
+        this.render();
+        this.doSongClicked(inEvent, enyo.application.playlist[inEvent.rowIndex]);
+        inEvent.stopPropagation();
+    },
     getListItem: function(inSender, inRow)
     {
         if(enyo.application.playlist && enyo.application.playlist[inRow])
         {
             this.log(inRow);
+            this.$.Song.addRemoveClass("playhighlight", inRow == enyo.application.playlist.index);
             var p = enyo.application.playlist[inRow];
-            this.$.Song.itemID = p.itemID;
-            this.$.Song.$.SongNameLabel.setContent(p.title);
-            this.$.Song.$.SongLengthLabel.setContent(secondsToTime(p.duration));
-            this.$.Song.$.ArtistNameLabel.setContent(p.artist);
-            this.$.Song.$.AlbumNameLabel.setContent(p.album); // si.$.SongFileTypeLabel.setContent(a.bitRate + "bit " + a.suffix);
-            this.$.Song.$.SongFileTypeLabel.setContent(p.bitRate + "bit " +p.suffix);
+            var si = this.$.Song;
             
-            this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
+            //this.log(inRow, "pre", si.songInfo);
+            si.setSongInfo(p);
+            //this.log(inRow, "post", si.songInfo);
+            this.$.Song.setDraggable(false); // TODO: make songs draggable -off- the now playing list, since we can't easily swipe to delete, i guess
+            
+            /*this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
             if(enyo.application.dragging && enyo.application.dropIndex != undefined && enyo.application.dropIndex > -1)
             {
                 if(enyo.application.dropIndex == inRow)
                 {
-                    this.log("highlighting " + inRow);
+                    //this.log("highlighting " + inRow);
                     this.$.Song.applyStyle("border-top", "thick double blue");
                     this.$.Song.applyStyle("border-bottom", undefined);
                     if(this.lastHighlightedIndex != inRow)
                     {
-                        this.renderRow(this.lastHighlightedIndex)
+                        //this.renderRow(this.lastHighlightedIndex)
                         this.lastHighlightedIndex = inRow;
                     }
                 } else {
@@ -773,7 +745,7 @@ enyo.kind({
             } else {
                 this.$.Song.applyStyle("border-bottom", undefined);
                 this.$.Song.applyStyle("border-top", undefined);
-            }
+            }*/
             return true;
         }
         return false;

@@ -172,6 +172,8 @@ enyo.kind({
             /*inEvent.dragInfo = inSender.parent.songInfo;
             inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
             inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
+            // TODO: can we figure out which view we are being dragged from? to fix search box dragging
+            this.log("drag inSender parent", inSender.parent);
             inEvent.dragInfo = inEvent.rowIndex;
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
@@ -203,4 +205,149 @@ enyo.kind({
         inEvent.stopPropagation();
     }
 });
+
+enyo.kind({
+    name: "subsonic.AlbumOrSongItem",
+    kind: "Item",
+    flex: 1,
+    published: {
+        songInfo: undefined,
+        albumInfo: undefined,
+        draggable: false,
+    },
+    components: [
+        { kind: "HFlexBox", flex: 1, onmousehold: "mousehold", pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
+            [
+                { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", pack: "center", components:
+                    [
+                        { kind: "HFlexBox", components:
+                            [
+                                { name: "TitleLabel", content: "Album or Song Title" },
+                                { kind: "Spacer" },
+                                { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
+                            ]
+                        },
+                        { kind: "HFlexBox", components:
+                            [
+                                { name: "ArtistLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
+                                { kind: "Spacer" },
+                                { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "AlbumName" },
+                                { kind: "Spacer" },
+                                { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "mp3" },
+                            ]
+                        },
+                    ]
+                }
+            ]
+        },
+    ],
+    songInfoChanged: function()
+    {
+        var song = this.songInfo;
+        if(this.oldSongInfo) this.log(this.songInfo.title, this.oldSongInfo.title);
+        if(!this.oldSongInfo || this.oldSongInfo.id != this.songInfo.id)
+        {
+            this.$.TitleLabel.setContent(song.title);
+            this.$.SongLengthLabel.setContent(secondsToTime(song.duration));
+            this.$.ArtistLabel.setContent(song.artist);
+            this.$.AlbumNameLabel.setContent(song.album);
+            this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
+            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+            this.setDraggable(true);
+            this.oldSongInfo = this.songInfo;
+        }
+    },
+    albumInfoChanged: function()
+    {
+        var album = this.albumInfo;
+        if(this.oldAlbumInfo != this.albumInfo)
+        {
+            this.$.TitleLabel.setContent(album.title);
+            this.$.SongLengthLabel.hide();
+            this.$.ArtistLabel.setContent(album.artist);
+            this.$.AlbumNameLabel.hide();
+            this.$.SongFileTypeLabel.hide();
+            if(album.coverArt)
+            {
+                this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+            }
+            this.setDraggable(false);
+            this.oldAlbumInfo = this.albumInfo;
+        }
+    },
+    mousehold: function(inSender, inEvent)
+    {
+        console.log(inEvent);        
+    },
+    dragStart: function(inSender, inEvent)
+    {
+        if(!this.draggable)
+            return;
+        if(inEvent.horizontal)
+        {
+            this.log(this, "dragging!");
+            /*inEvent.dragInfo = inSender.parent.songInfo;
+            inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
+            inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
+            inEvent.dragInfo = inEvent.rowIndex;
+            enyo.application.dragging = true;
+            enyo.application.dropIndex = -1;
+            enyo.application.setDragTracking(true, inEvent);
+            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
+            inEvent.stopPropagation();
+        }
+    },
+    dragged: function(inSender, inEvent)
+    {
+        enyo.application.dragTrack(inSender, inEvent);
+        inEvent.stopPropagation();
+    },
+    dragFinish: function(inSender, inEvent)
+    {
+        if(enyo.application.dragging)
+        {
+            enyo.application.dragging = false;
+            enyo.application.dropIndex = -1;
+            enyo.application.setDragTracking(false, inEvent);
+            console.log(inEvent);
+            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
+        }
+    },
+    DownloadFile: function(inSender, inEvent)
+    {
+        this.log(inEvent.rowIndex);
+        enyo.application.download(inEvent.rowIndex);
+        inEvent.stopPropagation();
+    }
+    
+})
+
+/* album info
+  artist: "Metallica"
+id: "633a5c6d757369635cefbcadefbca5efbcb4efbca1efbcacefbcacefbca9efbca3efbca15c4e6f204c6966652054696c6c204c656174686572"
+isDir: true
+parent: "633a5c6d757369635cefbcadefbca5efbcb4efbca1efbcacefbcacefbca9efbca3efbca1"
+title: "No Life Till Leather"
+*/
+
+/* song info
+                  {"album":"...For The Whole World To See",
+                 "artist":"Death",
+                 "bitRate":278,
+                 "contentType":"audio/mpeg",
+                 "coverArt":"633a5c6d757369635c44656174682d50756e6b2d446574726f69745c466f72205468652057686f6c6520576f726c6420546f205365655c4465617468202d20466f72207468652057686f6c6520576f726c6420746f205365655c6261636b2e6a7067",
+                 "duration":161,
+                 "genre":"Punk",
+                 "id":"633a5c6d757369635c44656174682d50756e6b2d446574726f69745c466f72205468652057686f6c6520576f726c6420546f205365655c4465617468202d20466f72207468652057686f6c6520576f726c6420746f205365655c3032202d20526f636b2d4e2d526f6c6c2056696374696d2e6d7033",
+                 "isDir":false,
+                 "isVideo":false,
+                 "parent":"633a5c6d757369635c44656174682d50756e6b2d446574726f69745c466f72205468652057686f6c6520576f726c6420546f205365655c4465617468202d20466f72207468652057686f6c6520576f726c6420746f20536565",
+                 "path":"Death-Punk-Detroit/For The Whole World To See/Death - For the Whole World to See/02 - Rock-N-Roll Victim.mp3",
+                 "size":5635970,
+                 "suffix":"mp3",
+                 "title":"Rock-N-Roll Victim",
+                 "track":2,
+                 "year":1975
+                 },*/
 

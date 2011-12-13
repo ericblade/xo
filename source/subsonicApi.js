@@ -196,11 +196,11 @@ enyo.kind({
         this.log(inResponse, inRequest);
     },
     directoryReceived:  function(inSender, inResponse, inRequest) {
-        this.log();
+        this.log(inResponse["subsonic-response"]);
         this.doDirectoryReceived(inResponse["subsonic-response"]);
     },
     gotSearch: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        this.log(inResponse, inRequest);        
         this.doSearchResults(inResponse["subsonic-response"]["searchResult2"]);
     },
 })
