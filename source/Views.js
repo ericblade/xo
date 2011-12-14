@@ -208,9 +208,13 @@ enyo.kind({
     {
         var what = (inSender.name == "AlbumItem" ? this.albumList[inEvent.rowIndex] : this.songList[inEvent.rowIndex]);
         if(inSender.songInfo)
+        {
             enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, what);
+        }
         else
+        {
             enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, what.id);
+        }
     },
 });
 
@@ -456,7 +460,7 @@ enyo.kind({
                                 //{ name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
                                 { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
-                                { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs", className: "enyo-item-ternary", style: "color: white;" },
+                                { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs.", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerStatus", content: "", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
                             ]
@@ -671,7 +675,7 @@ enyo.kind({
         "onSongClicked" : "",
     },
     components: [
-        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap to change view, Hold to toggle Tabs", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
         { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
             [
                 { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", accelerated: true, onSetupRow: "getListItem", components:

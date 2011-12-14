@@ -46,3 +46,32 @@ enyo.kind({
         prefs.set("password", this.$.PassInput.getValue());
     }
 });
+
+enyo.kind({
+    name: "SongMenu",
+    kind: enyo.Menu,
+    published: {
+        song: undefined,
+    },
+    events: {
+        "onPlaySong": "",
+        "onInsertSong": "",
+        "onAddSong": "",
+    },
+    components: [
+        { caption: "Play Now", onclick: "playSong" },
+        { caption: "Play Next", onclick: "insertSong" },
+        { caption: "Add to Now Playing", onclick: "addSong" },
+    ],
+    playSong: function() { this.doPlaySong(this.song); },
+    insertSong: function() { this.doInsertSong(this.song); },
+    addSong: function() { this.doAddSong(this.song); },
+});
+
+enyo.kind({
+    name: "NowPlayingMenu",
+    kind: enyo.Menu,
+    components: [
+        { caption: "Remove from Now Playing" },
+    ]
+})
