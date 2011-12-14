@@ -10,7 +10,6 @@
 // TODO: download button on Search view doesn't work
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
 // TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
-// TODO: dragging from search list (bugged currently)
 // TODO: (option to?) disable sleep while player screen is up
 // TODO: Exhibition mode
 // TODO: had to add a timeout in the Transition code to deal with transitioning failure when auto-flipping from Search to Music tab.. investigate why the transition fails.
@@ -130,7 +129,8 @@ enyo.kind({
                         },
                     ]
                 },
-                {name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },                
+                //{name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
+                { name: "avatar", kind: "ImageFallback", className: "app-avatar", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
                 { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
                     [
                         { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange", showing: prefs.get("righttabsshowing"), components:
@@ -340,6 +340,7 @@ enyo.kind({
                 if(on)
                 {
                     // TODO: figure out what we're dragging and highlight it (maybe that should be in the ondrag .. )
+                    this.$.avatar.setSrc(inEvent.dragInfo.art);
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {

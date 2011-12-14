@@ -20,11 +20,13 @@ enyo.kind({
         this.heightChanged();
         this.srcChanged();
         this.fallbackSrcChanged();
+        this.currentSrc = this.$.DummyImage.src;
     },
     mainLoaded: function(inSender, inEvent)
     {
         this.$.MainImage.show();
         this.$.DummyImage.hide();
+        this.currentSrc = this.$.MainImage.src;
     },
     srcChanged: function()
     {
@@ -52,33 +54,6 @@ enyo.kind({
     name: "subsonic.ArtistItem",
     kind: "Item",
     content: "Artist"
-});
-
-enyo.kind({
-    name: "subsonic.AlbumItem",
-    kind: "Item",
-    layoutKind: "HFlexLayout",
-    flex: 1,
-    published: {
-        itemID: "",
-    },
-    components: [
-        { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
-        { name: "AlbumItem", style: "padding-left: 5px;", pack: "center", kind: "HFlexBox", components:
-            [
-                { kind: "VFlexBox", pack: "center", components:
-                    [
-                        { name: "AlbumNameLabel", content: "Album Name" },
-                        { name: "ArtistNameLabel", content: "Artist Name", className: "enyo-item-ternary" },
-                    ]
-                },
-                { kind: "Spacer" },
-                { name: "AlbumSpinner", kind: "Spinner" },                
-            ]
-        },
-        { name: "SongItem", kind: "subsonic.SongItem", pack: "center", showing: false, },
-    ],
-
 });
 
 /*
@@ -132,6 +107,7 @@ enyo.kind({
         draggable: false,
     },
     components: [
+        { name: "wtf", kind: "Component" },
         { kind: "HFlexBox", flex: 1, onmousehold: "mousehold", pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
                 { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
@@ -160,7 +136,8 @@ enyo.kind({
     ],
     songInfoChanged: function()
     {
-        var song = this.songInfo;
+        var song = this.getSongInfo();
+        this.$.wtf.song = song;
         if(this.oldSongInfo) this.log(this.songInfo.title, this.oldSongInfo.title);
         if(!this.oldSongInfo || this.oldSongInfo.id != this.songInfo.id)
         {
@@ -202,12 +179,10 @@ enyo.kind({
             return;
         if(inEvent.horizontal)
         {
-            this.log(this, "dragging!");
-            /*inEvent.dragInfo = inSender.parent.songInfo;
-            inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
-            inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
-            inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner }
-            //inEvent.dragInfo = inEvent.rowIndex;
+            var song = this.owner.querySongItem(inEvent.rowIndex);
+            inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner,
+                art: "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
+            }
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(true, inEvent);
