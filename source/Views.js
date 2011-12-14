@@ -641,10 +641,12 @@ enyo.kind({
                 this.$.PlayerSpinner.hide();
         }
         var prog = (this.$.MusicPlayer.audio.currentTime / this.song.duration) * 100;
+        this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
         if(!this.$.MusicPlayer.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
-        if(prog >= 100)
+        // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
+        if(this.$.MusicPlayer.audio.currentTime > (this.song.duration - 0.6))
         {
             this.doNextSong();
         }
