@@ -1,3 +1,7 @@
+// TODO: need to get SongMenu up when tapped on in SearchView
+
+// IDEA: "Search" brings up a completely new main-view that is three-panes, and shows the search results from each type in each pane?!
+
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
 // TODO: half implemented downloading of files
