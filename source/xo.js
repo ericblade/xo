@@ -1,4 +1,4 @@
-// TODO: need to get SongMenu up when tapped on in SearchView
+// TODO: when starting up with Subsonic, call getMusicFolders and populate that to Home
 
 // IDEA: "Search" brings up a completely new main-view that is three-panes, and shows the search results from each type in each pane?!
 
@@ -132,7 +132,7 @@ enyo.kind({
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
                                         { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
-                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "loadSong", },
+                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                                     ]
                                 },
