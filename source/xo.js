@@ -245,12 +245,13 @@ enyo.kind({
             {
                 enyo.application.playlist = [ ];
             }
+            var songitem = inEvent.dragInfo.list.querySongItem(inEvent.dragInfo.index);
             if(inEvent.rowIndex == undefined)
             {
-                enyo.application.playlist.push(this.$.MusicView.queryListItem(inEvent.dragInfo)); // get the info from the row from the list
+                enyo.application.playlist.push(songitem); // get the info from the row from the list
             }
             else
-                enyo.application.playlist.insert(inEvent.rowIndex, this.$.MusicView.queryListItem(inEvent.dragInfo));
+                enyo.application.playlist.insert(inEvent.rowIndex, songitem);
         }
         //enyo.application.dragging = false;
         // dragging will get unset in the finish?

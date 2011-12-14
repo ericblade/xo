@@ -180,6 +180,10 @@ enyo.kind({
         var a = (view == "AlbumListView") ? (this.albumList && this.albumList[row]) : (this.songList && this.songList[row]);
         return a || false;
     },
+    querySongItem: function(row)
+    {
+        return this.queryListItem(row);
+    },
     // TODO: rename "music" to "albumList", fix getSongListItem and getAlbumListItem to be more independent?
     musicChanged: function()
     {
@@ -345,6 +349,10 @@ enyo.kind({
         }
         return false;
     },
+    querySongItem: function(inRow)
+    {
+        return this.songList && this.songList[inRow];
+    }
 });
 /*
   {"subsonic-response":
@@ -641,7 +649,7 @@ enyo.kind({
                 this.$.PlayerSpinner.hide();
         }
         var prog = (this.$.MusicPlayer.audio.currentTime / this.song.duration) * 100;
-        this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
+        //this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
         if(!this.$.MusicPlayer.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);

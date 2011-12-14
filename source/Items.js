@@ -121,90 +121,6 @@ enyo.kind({
                  "track":2,
                  "year":1975
                  },*/
-enyo.kind({
-    name: "subsonic.SongItem",
-    /*kind: "SwipeableItem",
-    swipeable: false,*/
-    kind: "Progress",
-    position: 50,
-    layoutKind: "VFlexLayout",
-    flex: 1,
-    pack: "center",
-    style: "padding-left: 5px; padding-right: 5px;",
-    published: {
-        draggable: isLargeScreen(),
-    },
-    components: [
-        { kind: "VFlexBox", onmousehold: "mousehold", pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
-            [
-                { kind: "HFlexBox", pack: "center", components:
-                    [ // TODO: put album image in here?
-                        { name: "SongNameLabel", kind: "Control", content: "Song Name" },
-                        { kind: "Spacer" },
-                        { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
-                    ]
-                },
-                { kind: "HFlexBox", pack: "center", components:
-                    [
-                        { name: "ArtistNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
-                        { kind: "Spacer" },
-                        { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Album Name" },
-                        { kind: "Spacer" },
-                        { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "128kbps mp3" },
-                        //{ kind: "NotificationButton", caption: "DL", onclick: "DownloadFile" },
-                        
-                   ]
-                },
-            ]
-        },
-    ],
-    mousehold: function(inSender, inEvent)
-    {
-        console.log(inEvent);        
-    },
-    dragStart: function(inSender, inEvent)
-    {
-        if(!this.draggable)
-            return;
-        if(inEvent.horizontal)
-        {
-            this.log(this, "dragging!");
-            /*inEvent.dragInfo = inSender.parent.songInfo;
-            inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
-            inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
-            // TODO: can we figure out which view we are being dragged from? to fix search box dragging
-            this.log("drag inSender parent", inSender.parent);
-            inEvent.dragInfo = inEvent.rowIndex;
-            enyo.application.dragging = true;
-            enyo.application.dropIndex = -1;
-            enyo.application.setDragTracking(true, inEvent);
-            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
-            inEvent.stopPropagation();
-        }
-    },
-    dragged: function(inSender, inEvent)
-    {
-        enyo.application.dragTrack(inSender, inEvent);
-        inEvent.stopPropagation();
-    },
-    dragFinish: function(inSender, inEvent)
-    {
-        if(enyo.application.dragging)
-        {
-            enyo.application.dragging = false;
-            enyo.application.dropIndex = -1;
-            enyo.application.setDragTracking(false, inEvent);
-            console.log(inEvent);
-            this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
-        }
-    },
-    DownloadFile: function(inSender, inEvent)
-    {
-        this.log(inEvent.rowIndex);
-        enyo.application.download(inEvent.rowIndex);
-        inEvent.stopPropagation();
-    }
-});
 
 enyo.kind({
     name: "subsonic.AlbumOrSongItem",
@@ -290,7 +206,8 @@ enyo.kind({
             /*inEvent.dragInfo = inSender.parent.songInfo;
             inEvent.dragInfo.itemID = inSender.parent.parent.itemID;
             inEvent.dragInfo.coverArt = inSender.parent.parent.$.AlbumArt.coverArt;*/
-            inEvent.dragInfo = inEvent.rowIndex;
+            inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner }
+            //inEvent.dragInfo = inEvent.rowIndex;
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
             enyo.application.setDragTracking(true, inEvent);
