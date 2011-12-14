@@ -71,7 +71,14 @@ enyo.kind({
 enyo.kind({
     name: "NowPlayingMenu",
     kind: enyo.Menu,
+    published: {
+        song: undefined,
+    },
+    events: {
+        "onRemoveSong": "",
+    },
     components: [
-        { caption: "Remove from Now Playing" },
-    ]
+        { caption: "Remove from Now Playing", onclick: "removeSong" },
+    ],
+    removeSong: function() { this.doRemoveSong(this.song); },
 })

@@ -473,15 +473,15 @@ enyo.kind({
                     [
                         { kind: "HFlexBox", components:
                             [
-                                { name: "ArtistNameLabel", content: "Artist Name", style: "color: white", },
+                                { name: "ArtistNameLabel", content: "Artist Name", style: "color: white; max-width: 50%; ", },
                                 { kind: "Spacer", },
-                                { name: "AlbumNameLabel", content: "Album Name", style: "color: white", },
+                                { name: "AlbumNameLabel", content: "Album Name", style: "color: white; max-width: 50%; ", },
                             ]
                         },
                         { kind: "HFlexBox", components:
                             [
                                 { kind: "Spacer", },
-                                { name: "SongNameLabel", content: "Song Name", style: "color: white", },
+                                { name: "SongNameLabel", content: "Song Name", style: "color: white; max-width: 95%; ", },
                                 { kind: "Spacer", },
                             ]
                         },                        
@@ -673,15 +673,17 @@ enyo.kind({
     events: {
         "onStartPlaylist" : "",
         "onSongClicked" : "",
+        "onItemMenu": "",
+        "onSongRemove": "",
     },
     components: [
-        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
         { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
             [
-                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", accelerated: true, onSetupRow: "getListItem", components:
+                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                     [
                         //{ name: "Song", kind: "subsonic.SongItem", draggable: false, },
-                        { name: "Song", kind: "subsonic.AlbumOrSongItem", onclick: "songClicked", draggable: false, },
+                        { name: "Song", kind: "subsonic.AlbumOrSongItem", onclick: "songClicked", onConfirm: "removeSong", swipeable: true, draggable: false, },
                     ]
                 },
             ]
@@ -695,6 +697,17 @@ enyo.kind({
             ]
         },
     ],
+    removeSong: function(inSender, inIndex) // TODO: This is all fucked in Chrome .. will it be all fucked on devices?
+    {
+        this.log();
+        this.doSongRemove(enyo.application.playlist[inIndex]);
+    },
+    songHeld: function(inSender, inEvent)
+    {
+        this.log();
+        this.doItemMenu(inEvent, enyo.application.playlist[inEvent.rowIndex]);
+        inEvent.stopPropagation();
+    },
     scrollUp: function(inSender, inEvent)
     {
         this.$.Scroller.scrollTo(this.$.Scroller.scrollTop - 10, this.$.Scroller.scrollLeft);

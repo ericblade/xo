@@ -99,23 +99,23 @@ enyo.kind({
 
 enyo.kind({
     name: "subsonic.AlbumOrSongItem",
-    kind: "Item",
+    kind: "SwipeableItem",
     flex: 1,
+    swipeable: false,
     published: {
         songInfo: undefined,
         albumInfo: undefined,
         draggable: false,
     },
     components: [
-        { name: "wtf", kind: "Component" },
-        { kind: "HFlexBox", flex: 1, onmousehold: "mousehold", pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
+        { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
                 { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
                 { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", pack: "center", components:
                     [
                         { kind: "HFlexBox", components:
                             [
-                                { name: "TitleLabel", content: "Album or Song Title" },
+                                { name: "TitleLabel", style: "max-width: 75%", content: "Album or Song Title" },
                                 { kind: "Spacer" },
                                 { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
                             ]
@@ -123,8 +123,8 @@ enyo.kind({
                         { kind: "HFlexBox", components:
                             [
                                 { name: "ArtistLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
-                                { kind: "Spacer" },
-                                { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "AlbumName" },
+                                //{ kind: "Spacer" },
+                                { name: "AlbumNameLabel", kind: "Control", style: "padding-left: 10px; max-width: 60%", className: "enyo-item-ternary", content: "AlbumName" },
                                 { kind: "Spacer" },
                                 { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "mp3" },
                             ]
@@ -137,10 +137,9 @@ enyo.kind({
     songInfoChanged: function()
     {
         var song = this.getSongInfo();
-        this.$.wtf.song = song;
         if(this.oldSongInfo) this.log(this.songInfo.title, this.oldSongInfo.title);
-        if(!this.oldSongInfo || this.oldSongInfo.id != this.songInfo.id)
-        {
+        //if(!this.oldSongInfo || this.oldSongInfo.id != this.songInfo.id)
+        //{
             this.$.TitleLabel.setContent(song.title);
             this.$.SongLengthLabel.setContent(secondsToTime(song.duration));
             this.$.ArtistLabel.setContent(song.artist);
@@ -149,7 +148,7 @@ enyo.kind({
             this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
             this.setDraggable(true);
             this.oldSongInfo = this.songInfo;
-        }
+        //}
     },
     albumInfoChanged: function()
     {
@@ -168,10 +167,6 @@ enyo.kind({
             this.setDraggable(false);
             this.oldAlbumInfo = this.albumInfo;
         }
-    },
-    mousehold: function(inSender, inEvent)
-    {
-        console.log(inEvent);        
     },
     dragStart: function(inSender, inEvent)
     {
