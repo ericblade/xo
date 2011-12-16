@@ -1,13 +1,16 @@
 // http://www.ericbla.de:88/rest/stream.view?id=633a5c6d757369635c54797065204f204e656761746976655c4f63746f62657220527573745c54797065204f204e65676174697665202d204261642047726f756e642e6d7033&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)
+
 enyo.kind({
     name: "subsonic.HomeView",
     kind: "VFlexBox",
     events: {
         onServerDialog: "",
         onMusicView: "",
+        onFolderClick: "",
     },
     published: {
         licenseData: "",
+        folders: "",
     },
     components:
         [
@@ -39,9 +42,45 @@ enyo.kind({
                     { kind: "Item", content: "Top Rated", onclick: "clickTopRated" },
                     { kind: "Item", content: "Recently Played", onclick: "clickRecentlyPlayed" },
                     { kind: "Item", content: "Most Played", onclick: "clickMostPlayed", },
+                    { kind: "Divider", caption: "Folders" },
+                    { name: "FolderRepeater", style: "padding-left: 20px; padding-right: 20px;", kind: "VirtualRepeater", onclick: "folderClicked", onSetupRow: "getFolderRow", components:
+                        [
+                            { name: "FolderItem", kind: "DividerDrawer", open: false, content: "Folder", components:
+                                [
+                                ]
+                            },
+                        ]
+                    },
                 ]
             }
         ],
+        // {"musicFolder":{"id":4,"name":"Music"}
+    getFolderRow: function(inSender, inRow)
+    {
+        var x = this.folderList && this.folderList[inRow];
+        this.log(inRow, x, this.folderList);
+        if(x)
+        {
+            this.$.FolderItem.setCaption(x.name);
+            this.$.FolderItem.folderId = x.id;
+            return true;
+        }
+        return false;
+    },
+    folderClicked: function(inSender, inEvent)
+    {
+        this.doFolderClick(inEvent, this.folderList[inEvent.rowIndex].id);
+    },
+    foldersChanged: function()
+    {
+        if(this.folders.musicFolder.name) { // only one.. sigh
+            this.folderList = new Array();
+            this.folderList[0] = this.folders.musicFolder;
+        } else {
+            this.folderList = this.folders.musicFolder;
+        }
+        this.$.FolderRepeater.render();
+    },
     licenseDataChanged: function()
     {
         var ld = this.licenseData;

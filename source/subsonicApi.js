@@ -62,6 +62,8 @@ enyo.kind({
         "onReceivedPlaylists": "",
         "onReceivedPlaylist": "",
         "onSearchResults": "",
+        "onReceivedFolders": "",
+        "onReceivedIndexes": "",
     },
     serverChanged: function()
     {
@@ -188,12 +190,14 @@ enyo.kind({
     },
     gotMusicFolders: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
+        this.doReceivedFolders(inResponse["subsonic-response"]);
     },
     gotNowPlaying:  function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
     },
     indexReceived:  function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        //this.log(inResponse, inRequest);
+        this.doReceivedIndexes(inResponse["subsonic-response"], inRequest);
     },
     directoryReceived:  function(inSender, inResponse, inRequest) {
         this.log(inResponse["subsonic-response"]);

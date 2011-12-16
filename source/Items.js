@@ -145,7 +145,7 @@ enyo.kind({
             this.$.ArtistLabel.setContent(song.artist);
             this.$.AlbumNameLabel.setContent(song.album);
             this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
-            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
             this.setDraggable(true);
             this.oldSongInfo = this.songInfo;
         //}
@@ -153,8 +153,8 @@ enyo.kind({
     albumInfoChanged: function()
     {
         var album = this.albumInfo;
-        if(this.oldAlbumInfo != this.albumInfo)
-        {
+        //if(this.oldAlbumInfo != this.albumInfo)
+        //{
             this.$.TitleLabel.setContent(album.title);
             this.$.SongLengthLabel.hide();
             this.$.ArtistLabel.setContent(album.artist);
@@ -162,11 +162,11 @@ enyo.kind({
             this.$.SongFileTypeLabel.hide();
             if(album.coverArt)
             {
-                this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+                this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
             }
             this.setDraggable(false);
             this.oldAlbumInfo = this.albumInfo;
-        }
+        //}
     },
     dragStart: function(inSender, inEvent)
     {
@@ -176,7 +176,7 @@ enyo.kind({
         {
             var song = this.owner.querySongItem(inEvent.rowIndex);
             inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner,
-                art: "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
+                art: "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
             }
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;

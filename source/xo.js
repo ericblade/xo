@@ -1,3 +1,4 @@
+
 // TODO: when starting up with Subsonic, call getMusicFolders and populate that to Home
 
 // IDEA: "Search" brings up a completely new main-view that is three-panes, and shows the search results from each type in each pane?!
@@ -31,38 +32,6 @@
 // TODO: Why is it when I hit "Play" in Now Playing, it refreshes the entire list?
 // TODO: is the draggable stuff draggable on phones? shouldn't be..
 // TODO: array.Remove in globals is -not- reliably working right
-
-enyo.kind({
-    name: "ArtistRepeater",
-    kind: "VFlexBox",
-    onSetupRow: "loadIndexArtist",
-    published: {
-        artists: { },
-    },
-    events: {
-        onArtistClicked: "",
-    },
-    components: [
-        { kind: "VirtualRepeater", onSetupRow: "loadArtist", onclick: "artistClicked", components:
-            [
-                { name: "IndexArtist", kind: "Item", },
-            ]
-        },
-    ],
-    loadArtist: function(inSender, inRow)
-    {
-        if(this.artists[inRow])
-        {
-            this.$.IndexArtist.setContent(this.artists[inRow].name);
-            return true;
-        }
-        return false;
-    },
-    artistClicked: function(inSender, inEvent)
-    {
-        this.doArtistClicked(this.artists[inEvent.rowIndex]);
-    },
-});
 
 function stripHtml(html)
 {
@@ -112,6 +81,8 @@ enyo.kind({
             onReceivedPlaylists: "receivedPlaylists",
             onReceivedPlaylist: "receivedPlaylist",
             onSearchResults: "receivedSearchResults",
+            onReceivedFolders: "receivedFolders",
+            onReceivedIndexes: "receivedIndexes",
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
@@ -130,7 +101,7 @@ enyo.kind({
                                 },
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                                     [
-                                        { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onMusicView: "loadMusicView" },
+                                        { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView" },
                                         { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
                                         { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
@@ -367,11 +338,17 @@ enyo.kind({
             inNewView.$.scrim.show();
         }*/
     },
+    receivedFolders: function(inSender, inFolders)
+    {
+        //this.log(inFolders);
+        this.$.HomeView.setFolders(inFolders["musicFolders"]);
+    },
     receivedLicense: function(inSender, inLicense)
     {
         this.log(inLicense);
         this.$.HomeView.setLicenseData(inLicense);
         this.$.HomeView.$.ServerSpinner.hide();
+        this.$.api.call("getMusicFolders");
     },
     receivedPlaylists: function(inSender, inLists)
     {
@@ -503,7 +480,7 @@ enyo.kind({
                 break;
         }
         this.$.HomeView.$.ServerSpinner.show();
-        this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
+        this.$.api.call(apicall, { type: type, size: 500 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
@@ -511,6 +488,16 @@ enyo.kind({
         this.$.HomeView.$.ServerSpinner.hide();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
+    },
+    receivedIndexes: function(inSender, inIndexes, inRequest)
+    {
+        // inRequest.params.musicFolderId = the music folder we asked for to begin with
+        //this.log(inIndexes, inRequest);
+        if(!enyo.application.folders)
+            enyo.application.folders = new Array();
+        this.log(inIndexes.indexes.index);
+        enyo.application.folders[inRequest.params.musicFolderId] = inIndexes.indexes.index;
+        this.$.HomeView.render();
     },
     receivedSearchResults: function(inSender, inSearchRes)
     {
@@ -546,6 +533,10 @@ enyo.kind({
         // TODO: we're going to need to create new views in the MusicView internal pane, so that it can nest selections deeply.. sigh.
         this.selectMusicView(); // TODO: should this be conditional, if we're not already in that view?
         //this.$.MusicView.$.ViewPane.selectViewByName("AlbumListView");
+    },
+    loadIndex: function(inSender, inEvent, inId)
+    {
+        this.$.api.call("getIndexes", { musicFolderId: inId });
     },
     loadSong: function(inSender, inEvent, inSongData)
     {
