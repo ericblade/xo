@@ -103,7 +103,7 @@ enyo.kind({
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView" },
                                         { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
-                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "showSongMenu", },
+                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                                     ]
                                 },
@@ -437,14 +437,29 @@ enyo.kind({
     },
     doBack: function(inSender, inEvent)
     {
-        if(this.$.LeftPane.getViewName() == "MusicView" && this.$.slider.getViewName() != "RightView")
+        var sliderview = this.$.slider.getView();
+        var leftview = this.$.LeftPane.getView();
+        var rightview = this.$.RightPane.getView();
+        
+        if(sliderview == this.$.LeftView)
         {
-            this.$.MusicView.goBack();
-            inEvent.stopPropagation();
-            inEvent.preventDefault();
-            return -1;
+            if(this.$.LeftPane.getViewName() == "MusicView")
+            {
+                if(this.$.MusicView.goBack())
+                {
+                    inEvent.stopPropagation();
+                    inEvent.preventDefault();
+                    return -1;
+                }
+            }
+            if(this.$.LeftPane.history.length)
+            {
+                this.$.LeftPane.back();
+                inEvent.stopPropagation();
+                inEvent.preventDefault();
+                return -1;
+            }
         }
-        this.log(this.$.slider.history);
         if(this.$.slider.history.length)
         {
             this.$.slider.back();
@@ -480,6 +495,7 @@ enyo.kind({
                 break;
         }
         this.$.HomeView.$.ServerSpinner.show();
+        this.$.MusicView.resetViews();
         this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
@@ -507,9 +523,11 @@ enyo.kind({
     },
     receivedDirectory: function(inSender, inDirectory)
     {
-        this.log();
-        //this.$.MusicView.setSongList(inDirectory);
-        this.$.MusicView.setMusic(inDirectory.directory.child);
+        //this.log(inDirectory);
+        var x = inDirectory.directory.child;
+        if(x.artist) // a single was received.. sigh
+            x = [ x ];
+        this.$.MusicView.setMusic(x);
     },
     receivedPlaylist: function(inSender, inPlaylist)
     {
@@ -526,6 +544,11 @@ enyo.kind({
             this.startPlaylist();
         }
         this.playNextPlaylist = false;
+    },
+    loadSearchedAlbum: function(inSender, inEvent, inId)
+    {
+        this.$.MusicView.resetViews();
+        this.loadAlbum(inSender, inEvent, inId);
     },
     loadAlbum: function(inSender, inEvent, inId)
     {
@@ -654,7 +677,9 @@ enyo.kind({
                 this.ForceTabSet = true;
                 break;
         }
-        if(inNewView.index)
+        this.log("new view index", inNewView.index);
+        inNewView.index = inSender.getViewIndex();
+        if(inNewView.index != undefined)
             this.$.TabBar.setValue(inNewView.index);
     },
     badLicense: function(inSender, inError)

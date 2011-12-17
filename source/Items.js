@@ -136,37 +136,30 @@ enyo.kind({
     ],
     songInfoChanged: function()
     {
+        //this.log(this, this.songInfo);
         var song = this.getSongInfo();
-        if(this.oldSongInfo) this.log(this.songInfo.title, this.oldSongInfo.title);
-        //if(!this.oldSongInfo || this.oldSongInfo.id != this.songInfo.id)
-        //{
-            this.$.TitleLabel.setContent(song.title);
-            this.$.SongLengthLabel.setContent(secondsToTime(song.duration));
-            this.$.ArtistLabel.setContent(song.artist);
-            this.$.AlbumNameLabel.setContent(song.album);
-            this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
-            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-            this.setDraggable(true);
-            this.oldSongInfo = this.songInfo;
-        //}
+        this.$.TitleLabel.setContent(song.title);
+        this.$.SongLengthLabel.setContent(secondsToTime(song.duration));
+        this.$.ArtistLabel.setContent(song.artist);
+        this.$.AlbumNameLabel.setContent(song.album);
+        this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
+        this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+        this.setDraggable(true);
     },
     albumInfoChanged: function()
     {
-        var album = this.albumInfo;
-        //if(this.oldAlbumInfo != this.albumInfo)
-        //{
-            this.$.TitleLabel.setContent(album.title);
-            this.$.SongLengthLabel.hide();
-            this.$.ArtistLabel.setContent(album.artist);
-            this.$.AlbumNameLabel.hide();
-            this.$.SongFileTypeLabel.hide();
-            if(album.coverArt)
-            {
-                this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
-            }
-            this.setDraggable(false);
-            this.oldAlbumInfo = this.albumInfo;
-        //}
+        //this.log(this, this.albumInfo);
+        var album = this.getAlbumInfo();
+        this.$.TitleLabel.setContent(album.title);
+        this.$.SongLengthLabel.hide();
+        this.$.ArtistLabel.setContent(album.artist);
+        this.$.AlbumNameLabel.hide();
+        this.$.SongFileTypeLabel.hide();
+        if(album.coverArt)
+        {
+            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+        }
+        this.setDraggable(false);
     },
     dragStart: function(inSender, inEvent)
     {

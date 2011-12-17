@@ -124,139 +124,6 @@ enyo.kind({
     },
 });
 
-/*enyo.kind({
-    name: "subsonic.MusicView",
-    kind: "VFlexBox",
-    flex: 1,
-    published: {
-        "music" : "",
-        "songList": "",
-    },
-    events: {
-        "onAlbumClicked": "",
-        "onSongClicked": "",
-    },
-    components: [
-        { name: "ViewPane", flex: 1, kind: "Pane", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
-            [
-                { name: "AlbumListView", flex: 1, kind: "VFlexBox", components:
-                    [
-                        //{ kind: "FadeScroller", flex: 1, accelerated: true, components:
-                        //    [
-                                { name: "AlbumList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
-                                    [
-                                        { kind: "HFlexBox", components:
-                                            [
-                                                //{ name: "AlbumItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
-                                                { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "itemClicked", },
-                                            ]
-                                        }
-                                    ]
-                                }
-                        //    ]
-                        //},
-                    ]
-                },
-                { name: "SongListView", kind: "VFlexBox", components:
-                    [
-                        { kind: "FadeScroller", flex: 1, accelerated: true, components:
-                            [
-                                { name: "SongList", kind: "VirtualRepeater", flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
-                                    [
-                                        { kind: "HFlexBox", components:
-                                            [
-                                                //{ name: "SongItem", kind: "subsonic.AlbumItem", onclick: "itemClicked", },
-                                                { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, onclick: "itemClicked", },
-                                            ]
-                                        },
-                                    ]
-                                },
-                            ]
-                        },
-                        isLargeScreen() ? 
-                        { kind: "Toolbar", components:
-                            [
-                                { caption: "Back", onclick: "goBack" },
-                            ]
-                        } : {},
-                    ]
-                }
-            ]
-        }
-    ],
-    goBack: function()
-    {
-        this.$.ViewPane.back();
-    },
-    getAlbumListItem: function(inSender, inRow)
-    {
-        var a = this.songload ? this.songList[inRow] : (this.albumList && this.albumList[inRow]);
-        var mi = this.songload ? this.$.SongItem : this.$.AlbumItem;
-        
-        if(a)
-        {
-            //if(this.$.ViewPane.getViewName() == "AlbumListView") {
-            if(a.isDir) {
-                this.$.AlbumItem.setAlbumInfo(a);
-            } else {
-                this.$.SongItem.setSongInfo(a);
-            }
-            return true;
-        }
-        return false;
-    },
-    getSongListItem: function(inSender, inRow)
-    {
-        this.log(inRow);
-        this.songload = true;
-        var ret = this.getAlbumListItem(inSender, inRow);
-        this.songload = false;
-        return this.songList[inRow];
-    },
-    queryListItem: function(row)
-    {
-        var view = this.$.ViewPane.getViewName();
-        var a = (view == "AlbumListView") ? (this.albumList && this.albumList[row]) : (this.songList && this.songList[row]);
-        return a || false;
-    },
-    querySongItem: function(row)
-    {
-        return this.queryListItem(row);
-    },
-    // TODO: rename "music" to "albumList", fix getSongListItem and getAlbumListItem to be more independent?
-    musicChanged: function()
-    {
-        //this.log(this.music);
-        // TODO: If no Internet connection, we get "Cannot read property 'albumList' of undefined, here
-        this.albumList = this.music.albumList ? this.music.albumList.album : this.music.directory.child;
-        //this.albumList.sort( function(i1, i2) { return (i1.title && i1.title.localeCompare) ? i1.title.localeCompare(i2.title) : 0; });
-        this.log(this.albumList[0]);
-        this.$.ViewPane.selectViewByName("AlbumListView");
-        this.$.AlbumList.render();
-    },
-    songListChanged: function()
-    {
-        //this.log(this.songList);
-        this.songList = this.songList.directory.child;
-        this.$.ViewPane.selectViewByName("SongListView");
-        if(this.lastActivatedSpinner)
-            this.lastActivatedSpinner.hide();
-        this.$.SongList.render();
-    },
-    itemClicked: function(inSender, inEvent)
-    {
-        var what = (inSender.name == "AlbumItem" ? this.albumList[inEvent.rowIndex] : this.songList[inEvent.rowIndex]);
-        if(inSender.songInfo)
-        {
-            enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, what);
-        }
-        else
-        {
-            enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, what.id);
-        }
-    },
-});*/
-
 enyo.kind({
     name: "subsonic.SearchView",
     kind: "VFlexBox", components: [
@@ -902,142 +769,63 @@ enyo.kind({
     songLyricsChanged: function()
     {
         this.$.Lyrics.setContent(this.songLyrics);
-    }
+    },
 })
 
 enyo.kind({
-    name: "subsonic.NewMusicView",
-    kind: "VFlexBox",
-    flex: 1,
-    published: {
-        "music": undefined, /* The complete list of Music we received for this folder */
-        "albums": undefined, /* We're going to parse this into albums and songs */
-        "songs": undefined, /* ok */
-    },
+    name: "MusicListView",
+    //flex: 1,
     events: {
         "onAlbumClicked": "",
         "onSongClicked": "",
     },
-    musicListView: {
-        name: "AlbumListView", 
-        flex: 1,
-        kind: "VFlexBox", components: [
-            { content: "Pre SongList" },
-            { name: "SongList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
+    kind: "VFlexBox", components:
+        [
+            { name: "ViewLabel", content: "View" },
+            { kind: isLargeScreen() ? "FadeScroller" : "Scroller", accelerated: true, flex: 1, components:
                 [
-                    { kind: "HFlexBox", components:
+                    { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getSongListItem", components:
                         [
-                            { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, onclick: "songClicked", },
+                            { name: "SongItem", kind: "subsonic.AlbumOrSongItem", draggable: true, onclick: "songClicked", },
                         ]
-                    }
+                    },
+                    { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getAlbumListItem", components:
+                        [
+                            { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked" },
+                        ]
+                    },
                 ]
             },
-            { content: "Pre AlbumList" },
-            { name: "AlbumList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
-                [
-                    { kind: "HFlexBox", components: // TODO: is this box necessary? can we just HLayoutKind the list?
-                        [
-                            { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "albumClicked" },
-                        ]
-                    }
-                ]
-            },
-        ]
-    },
-    components: [
-        //{ content: "Begin NewMusicView ViewPane" },
-        { name: "ViewPane", flex: 1, kind: "Pane", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
-            [
-                {
-                    name: "AlbumListView", 
-                    flex: 1,
-                    kind: "VFlexBox", components:
-                        [
-                            //{ content: "Pre SongList" },
-                            { kind: "FadeScroller", flex: 1, components:
-                                [
-                                    { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
-                                        [
-                                            { kind: "HFlexBox", components:
-                                                [
-                                                    { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, draggable: true, onclick: "songClicked", },
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    //{ content: "Pre AlbumList" },
-                                    { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
-                                        [
-                                            { kind: "HFlexBox", components: // TODO: is this box necessary? can we just HLayoutKind the list?
-                                                [
-                                                    { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked" },
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                ]
-                            },
-                        ]
-                }
-            ]
-        },
-        //{ content: "End NewMusicView ViewPane" },
-    ],
-    
-    ready: function()
-    {
-        this.inherited(arguments);
-        //this.myViews = new Array();
-        //this.myViews.push(this.$.ViewPane.createComponent(this.musicListView));
-        //this.$.ViewPane.render();
-        //this.$.ViewPane.selectView(this.myViews[0]);
-    },
-    goBack: function()
-    {
-        this.$.ViewPane.selectView(this.myViews.pop);
-    },
+        ],
     getSongListItem: function(inSender, inRow)
     {
-        /*var s = this.$.ViewPane.getView().songs;
-        s = s[inRow];*/
-        var s = this.songs && this.songs[inRow];
+        var s = this.songs;
+        if(s) s = s[inRow];
         if(s)
         {
-            this.$.SongItem.setSongInfo(s);
+            //this.log(inRow, s.title);
+            if(this.$.SongItem.getSongInfo() != s)
+                this.$.SongItem.setSongInfo(s);
             return true;
         }
         return false;
+    },
+    querySongItem: function(inIndex)
+    {
+        return this.songs[inIndex];
     },
     getAlbumListItem: function(inSender, inRow)
     {
-        var a = this.albums && this.albums[inRow];
+        var a = this.albums;
+        if(a) a = a[inRow];
         if(a)
         {
-            this.$.AlbumItem.setAlbumInfo(a);
+            //this.log(inRow, a.title);
+            if(this.$.AlbumItem.getAlbumInfo() != a)
+                this.$.AlbumItem.setAlbumInfo(a);
             return true;
         }
         return false;
-    },
-    querySongItem: function(inRow)
-    {
-        return this.songs[inRow];
-    },
-    musicChanged: function()
-    {
-        this.log(this.music);
-        if(this.music.albumList)
-            this.music = this.music.albumList.album;
-        this.albums = new Array();
-        this.songs = new Array();
-        for(var x = 0; x < this.music.length; x++)
-        {
-            if(this.music[x].isDir)
-                this.albums.push(this.music[x]);
-            else
-                this.songs.push(this.music[x]);
-        }
-        this.$.SongList.render();
-        this.$.AlbumList.render();
     },
     songClicked: function(inSender, inEvent)
     {
@@ -1049,4 +837,140 @@ enyo.kind({
         this.log();
         enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, this.albums[inEvent.rowIndex].id);
     }
-})
+        
+});
+
+enyo.kind({
+    name: "subsonic.NewMusicView",
+    kind: "VFlexBox",
+    flex: 1,
+    published: {
+        "music": undefined, /* The complete list of Music we received for this folder */
+    },
+    events: {
+        "onAlbumClicked": "",
+        "onSongClicked": "",
+    },
+    components: [
+        { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+            [
+                { content: "WTF" }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
+            ]
+        },
+    ],
+    viewSelected: function(inSender, inNewView, inOldView)
+    {
+        this.log();
+    },
+    ready: function()
+    {
+        this.inherited(arguments);
+        //this.createNewView();
+    },
+    createNewView: function()
+    {
+        var newview;
+        var stamp = Date.now();
+        if(!this.myViews)
+            this.myViews = new Array();
+        this.myViews.push(newview = this.$.ViewPane.createComponent({ kind: "MusicListView", "onSongClicked":"songClicked", "onAlbumClicked":"albumClicked" }, { owner: this }));
+        newview.$.ViewLabel.setContent("View " + this.myViews.length);
+        this.log("create new view completed in " + (Date.now() - stamp) + " ms");
+        if(this.myViews.length > 1)
+        {
+            newview.createComponent({ kind: "Button", caption: "Back", onclick: "goBack" }, { owner: this });
+        }
+        this.$.ViewPane.selectView(newview);
+        //this.$.ViewPane.render();
+        newview.render();
+        return newview;
+    },
+    resetViews: function()
+    {
+        var stamp = Date.now();
+        this.$.ViewPane.selectViewByIndex(0);
+        if(this.myViews)
+        {
+            for(x = 0; x < this.myViews.length; x++)
+            {
+                if(x.destroy)
+                    x.destroy();
+            }
+            this.myViews.length = 0;
+        }
+        this.log("reset views completed in " + (Date.now() - stamp) + " ms");
+    },
+    goBack: function()
+    {
+        var stamp = Date.now();
+        if(this.myViews && this.myViews.length > 1)
+        {
+            this.$.ViewPane.selectView(this.myViews[this.myViews.length-2]);
+            //this.myViews[this.myViews.length-1].destroy();
+            this.myViews.length -= 1;
+            this.log("back completed in " + (Date.now() - stamp) + " ms");
+            return true;
+        }
+        return false;
+    },
+    /*
+        {
+            "directory":
+            {
+                "child":
+                [
+                    {
+                        "id":"633a5c6d757369635c47756e7320274e2720526f7365735c47756e73204e2720526f73657320446973636f6772617068795c416c62756d73",
+                        "isDir":true,
+                        "parent":"633a5c6d757369635c47756e7320274e2720526f7365735c47756e73204e2720526f73657320446973636f677261706879",
+                        "title":"Albums"
+                    }
+                ]
+            }
+        } ...
+        {
+            "directory":
+            {
+                "child":
+                {
+                    "artist":"Guns N' Roses",
+                    "id":"633a5c6d757369635c47756e7320274e2720526f7365735c47756e73204e2720526f73657320446973636f6772617068795c416c62756d735c31393939202d204c69766520457261202738372d2739335c4469736b2032",
+                    "isDir":true,
+                    "parent":"633a5c6d757369635c47756e7320274e2720526f7365735c47756e73204e2720526f73657320446973636f6772617068795c416c62756d735c31393939202d204c69766520457261202738372d273933",
+                    "title":"Disk 2"
+                },
+                "id":"633a5c6d757369635c47756e7320274e2720526f7365735c47756e73204e2720526f73657320446973636f6772617068795c416c62756d735c31393939202d204c69766520457261202738372d273933",
+                "name":"1999 - Live Era '87-'93"
+            },
+            "status":"ok",
+            "version":"1.7.0",
+            "xmlns":"http://subsonic.org/restapi"
+        }
+    */
+    musicChanged: function()
+    {
+        //this.log("music=", this.music );
+        var view = this.createNewView();
+        if(this.music && this.music.albumList)
+            this.music = this.music.albumList.album;
+        view.albums = new Array();
+        view.songs = new Array();
+        for(var x = 0; x < this.music.length; x++)
+        {
+            if(this.music[x].isDir)
+                view.albums.push(this.music[x]);
+            else
+                view.songs.push(this.music[x]);
+        }
+        view.$.SongList.render();
+        view.$.AlbumList.render();
+    },
+    songClicked: function(inSender, inEvent, songInfo)
+    {
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, songInfo);
+    },
+    albumClicked: function(inSender, inEvent, albumIndex)
+    {
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, albumIndex);
+    }
+});
