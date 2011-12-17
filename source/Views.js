@@ -124,7 +124,7 @@ enyo.kind({
     },
 });
 
-enyo.kind({
+/*enyo.kind({
     name: "subsonic.MusicView",
     kind: "VFlexBox",
     flex: 1,
@@ -255,7 +255,7 @@ enyo.kind({
             enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, what.id);
         }
     },
-});
+});*/
 
 enyo.kind({
     name: "subsonic.SearchView",
@@ -902,5 +902,151 @@ enyo.kind({
     songLyricsChanged: function()
     {
         this.$.Lyrics.setContent(this.songLyrics);
+    }
+})
+
+enyo.kind({
+    name: "subsonic.NewMusicView",
+    kind: "VFlexBox",
+    flex: 1,
+    published: {
+        "music": undefined, /* The complete list of Music we received for this folder */
+        "albums": undefined, /* We're going to parse this into albums and songs */
+        "songs": undefined, /* ok */
+    },
+    events: {
+        "onAlbumClicked": "",
+        "onSongClicked": "",
+    },
+    musicListView: {
+        name: "AlbumListView", 
+        flex: 1,
+        kind: "VFlexBox", components: [
+            { content: "Pre SongList" },
+            { name: "SongList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
+                [
+                    { kind: "HFlexBox", components:
+                        [
+                            { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, onclick: "songClicked", },
+                        ]
+                    }
+                ]
+            },
+            { content: "Pre AlbumList" },
+            { name: "AlbumList", kind: "VirtualList", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
+                [
+                    { kind: "HFlexBox", components: // TODO: is this box necessary? can we just HLayoutKind the list?
+                        [
+                            { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "albumClicked" },
+                        ]
+                    }
+                ]
+            },
+        ]
+    },
+    components: [
+        //{ content: "Begin NewMusicView ViewPane" },
+        { name: "ViewPane", flex: 1, kind: "Pane", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+            [
+                {
+                    name: "AlbumListView", 
+                    flex: 1,
+                    kind: "VFlexBox", components:
+                        [
+                            //{ content: "Pre SongList" },
+                            { kind: "FadeScroller", flex: 1, components:
+                                [
+                                    { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getSongListItem", components:
+                                        [
+                                            { kind: "HFlexBox", components:
+                                                [
+                                                    { name: "SongItem", kind: "subsonic.AlbumOrSongItem", flex: 1, draggable: true, onclick: "songClicked", },
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    //{ content: "Pre AlbumList" },
+                                    { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, onSetupRow: "getAlbumListItem", components:
+                                        [
+                                            { kind: "HFlexBox", components: // TODO: is this box necessary? can we just HLayoutKind the list?
+                                                [
+                                                    { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked" },
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                ]
+                            },
+                        ]
+                }
+            ]
+        },
+        //{ content: "End NewMusicView ViewPane" },
+    ],
+    
+    ready: function()
+    {
+        this.inherited(arguments);
+        //this.myViews = new Array();
+        //this.myViews.push(this.$.ViewPane.createComponent(this.musicListView));
+        //this.$.ViewPane.render();
+        //this.$.ViewPane.selectView(this.myViews[0]);
+    },
+    goBack: function()
+    {
+        this.$.ViewPane.selectView(this.myViews.pop);
+    },
+    getSongListItem: function(inSender, inRow)
+    {
+        /*var s = this.$.ViewPane.getView().songs;
+        s = s[inRow];*/
+        var s = this.songs && this.songs[inRow];
+        if(s)
+        {
+            this.$.SongItem.setSongInfo(s);
+            return true;
+        }
+        return false;
+    },
+    getAlbumListItem: function(inSender, inRow)
+    {
+        var a = this.albums && this.albums[inRow];
+        if(a)
+        {
+            this.$.AlbumItem.setAlbumInfo(a);
+            return true;
+        }
+        return false;
+    },
+    querySongItem: function(inRow)
+    {
+        return this.songs[inRow];
+    },
+    musicChanged: function()
+    {
+        this.log(this.music);
+        if(this.music.albumList)
+            this.music = this.music.albumList.album;
+        this.albums = new Array();
+        this.songs = new Array();
+        for(var x = 0; x < this.music.length; x++)
+        {
+            if(this.music[x].isDir)
+                this.albums.push(this.music[x]);
+            else
+                this.songs.push(this.music[x]);
+        }
+        this.$.SongList.render();
+        this.$.AlbumList.render();
+    },
+    songClicked: function(inSender, inEvent)
+    {
+        this.log();
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, this.songs[inEvent.rowIndex]);
+    },
+    albumClicked: function(inSender, inEvent)
+    {
+        this.log();
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, this.albums[inEvent.rowIndex].id);
     }
 })

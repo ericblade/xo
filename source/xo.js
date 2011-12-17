@@ -102,7 +102,7 @@ enyo.kind({
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView" },
-                                        { name: "MusicView", kind: "subsonic.MusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
+                                        { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
                                         { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadAlbum", onArtistClicked: "loadAlbum", onSongClicked: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                                     ]
@@ -480,7 +480,7 @@ enyo.kind({
                 break;
         }
         this.$.HomeView.$.ServerSpinner.show();
-        this.$.api.call(apicall, { type: type, size: 500 }); // TODO: Must support loading pages, using the offset parameter!
+        this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
@@ -508,7 +508,8 @@ enyo.kind({
     receivedDirectory: function(inSender, inDirectory)
     {
         this.log();
-        this.$.MusicView.setSongList(inDirectory);
+        //this.$.MusicView.setSongList(inDirectory);
+        this.$.MusicView.setMusic(inDirectory.directory.child);
     },
     receivedPlaylist: function(inSender, inPlaylist)
     {
