@@ -16,3 +16,7 @@
 .playhighlight {
     font-weight: bold; 
 }
+
+.selectedhighlight {
+    background: lightgreen;
+}

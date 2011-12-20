@@ -145,7 +145,7 @@ enyo.kind({
                 { kind: "Divider", caption: "Songs", },
                 { name: "SongList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getSongSearchItem", components:
                     [
-                        { name: "SongItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickSong", }, // TODO: AlbumItem has a SongItem inside it already .. sigh
+                        { name: "SongItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickSong", onmousehold: "holdSong"}, // TODO: AlbumItem has a SongItem inside it already .. sigh
                     ]
                 }
             ]
@@ -156,6 +156,7 @@ enyo.kind({
         "onAlbumClicked": "",
         "onSongClicked": "",
         "onArtistClicked": "",
+        "onSongHeld":"",
     },
     published: {
         "songList" : "",
@@ -176,6 +177,23 @@ enyo.kind({
         var x = inEvent.rowIndex;
         this.doSongClicked(inEvent, this.songList[x]);
     },
+    holdSong: function(inSender, inEvent)
+    {
+        var x = inEvent.rowIndex;
+        this.doSongHeld(inEvent, this.songList[x]);
+    },
+    findItemInPlaylist: function(itemID)
+    {
+        for(x in enyo.application.playlist)
+        {
+            if(x && enyo.application.playlist[x].id == itemID)
+            {
+                return x;
+            }
+        }
+        return false;
+    },
+
     musicChanged: function()
     {
         // TODO: If no Internet connection, we get "Cannot read property 'albumList' of undefined, here
@@ -196,8 +214,7 @@ enyo.kind({
         this.$.AlbumList.render();
     },
     songListChanged: function()
-    {
-        
+    {        
         if(!this.songList)
             this.songList = {};
         if(this.songList.album) // fucking sigh
@@ -206,7 +223,20 @@ enyo.kind({
         //this.$.ViewPane.selectViewByName("SongListView");
         //if(this.lastActivatedSpinner)
         //    this.lastActivatedSpinner.hide();
+        for(var x = 0; x < this.songList.length; x++)
+        {
+            this.songList[x].isSelected = (this.findItemInPlaylist(this.songList[x].id) !== false);
+        }
         this.$.SongList.render();
+    },
+    selectSongItem: function(index, selected)
+    {
+        this.songList[index].isSelected = selected;
+        this.refreshSong(index);
+    },
+    refreshSong: function(index)
+    {
+        this.$.SongList.renderRow(index);
     },
     artistListChanged: function()
     {
@@ -255,6 +285,7 @@ enyo.kind({
         if(a)
         {
             this.$.SongItem.setSongInfo(a);
+            this.$.SongItem.addRemoveClass("selectedhighlight", a.isSelected);
             return true;
         }
         return false;
@@ -355,7 +386,9 @@ enyo.kind({
         "onSongChanged": "",
     },
     components: [
+        { name: "VideoLauncher", kind: "PalmService", service: "palm://com.wordpress.mobilecoder.touchplayer.service/", method: "play"},
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
+        //{ name: "VideoPlayer", kind: "Video", preload: true, },
         { kind: "VFlexBox", flex: 1, components:
             [
                 { kind: "HFlexBox", components:
@@ -428,7 +461,9 @@ enyo.kind({
     {
         this.log(x);
         //this.log(this.$.MusicPlayer.audio.currentTime, this.$.ProgressSlider.getPosition(), (this.$.ProgressSlider.getPosition() / 100) * this.song.duration);
-        this.$.MusicPlayer.audio.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        
+        player.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
         //this.log(this.$.MusicPlayer.audio.currentTime);
         return true;
     },
@@ -465,6 +500,31 @@ enyo.kind({
         this.$.MusicPlayer.audio.addEventListener('volumechange', e);
         this.$.MusicPlayer.audio.addEventListener('waiting', e);
         
+/*        this.$.VideoPlayer.node.addEventListener('loadstart', e);
+        //this.$.VideoPlayer.node.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
+        this.$.VideoPlayer.node.addEventListener('canplay', e);
+        this.$.VideoPlayer.node.addEventListener('canplaythrough', e);
+        this.$.VideoPlayer.node.addEventListener('durationchange', e);
+        this.$.VideoPlayer.node.addEventListener('emptied', e);
+        this.$.VideoPlayer.node.addEventListener('ended', e);
+        this.$.VideoPlayer.node.addEventListener('error', e);
+        this.$.VideoPlayer.node.addEventListener('loadeddata', e);
+        this.$.VideoPlayer.node.addEventListener('loadedmetadata', e);
+        this.$.VideoPlayer.node.addEventListener('pause', e);
+        this.$.VideoPlayer.node.addEventListener('onpause', e);
+        this.$.VideoPlayer.node.addEventListener('play', e);
+        this.$.VideoPlayer.node.addEventListener('playing', e);
+        this.$.VideoPlayer.node.addEventListener('progress', e);
+        this.$.VideoPlayer.node.addEventListener('ratechange', e);
+        this.$.VideoPlayer.node.addEventListener('readystatechange', e);
+        this.$.VideoPlayer.node.addEventListener('seeked', e);
+        this.$.VideoPlayer.node.addEventListener('seeking', e);
+        this.$.VideoPlayer.node.addEventListener('stalled', e);
+        this.$.VideoPlayer.node.addEventListener('suspend', e);
+        this.$.VideoPlayer.node.addEventListener('timeupdate', e);
+        this.$.VideoPlayer.node.addEventListener('volumechange', e);
+        this.$.VideoPlayer.node.addEventListener('waiting', e);
+*/      
         //this.$.MusicPlayer.audio.addEventListener('onloadstart', this.log);
         //this.$.MusicPlayer.audio.onloadstart = "checkStatus";
         this.checkTimer();
@@ -477,6 +537,11 @@ enyo.kind({
         {
             case "error":
                 this.$.PlayerStatus.setContent("ERROR LOADING MEDIA");
+                this.$.PlayerSpinner.hide();
+                this.log(inEvent, x, y);
+                break;
+            case "stalled":
+                this.$.PlayerStatus.setContent("CONNECTION STALLED");
                 this.$.PlayerSpinner.hide();
                 this.log(inEvent, x, y);
                 break;
@@ -494,33 +559,44 @@ enyo.kind({
         }
     },
     play: function() {
-        this.$.MusicPlayer.play();
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        player.play();
         this.checkTimer();
     },
     songChanged: function()
     {
-        console.log("songChanged");
+        console.log("songChanged", this.song.isVideo);
         console.log(this.song);
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
         this.$.MusicPlayer.audio.pause();
+        //this.$.VideoPlayer.node.pause();
+        if(this.song.isVideo)
+        {
+            var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
+            this.log("*** Playing Video URL ", url);
+            this.$.VideoLauncher.call( { source: url });
+            return;
+        }
         enyo.application.nowplaying = this.song;
         if(this.song)
         {
+            this.log("using player", player);
             this.$.SongInfoBox.show();
             this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
             this.$.ArtistNameLabel.setContent(this.song.artist);
             this.$.AlbumNameLabel.setContent(this.song.album);
             this.$.SongNameLabel.setContent(this.song.title);
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
-            this.$.MusicPlayer.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)");
-            this.log(this.$.MusicPlayer.src);
+            player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)");
+            this.log(player.src);
             this.$.ProgressSlider.setBarPosition(0);
             this.$.ProgressSlider.setAltBarPosition(0);        
-            this.$.MusicPlayer.play();
+            player.play();
             this.checkTimer();
         } else {
             this.$.SongInfoBox.hide();
             this.$.AlbumArt.setSrc("http://img91.imageshack.us/img91/3550/nocoverni0.png");
-            this.$.MusicPlayer.setSrc("");
+            player.setSrc("");
             this.clearTimer();
             delete this.timer;
             this.checkStatus();
@@ -529,10 +605,19 @@ enyo.kind({
     },
     playPauseClicked: function(inSender, inEvent)
     {
-        if(!this.$.MusicPlayer.audio.paused)
-            this.$.MusicPlayer.audio.pause();
-        else
-            this.$.MusicPlayer.audio.play();
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        if(this.song.isVideo)
+        {
+            if(!player.node.paused)
+                player.node.pause();
+            else
+                player.node.play();
+        } else {
+            if(!this.$.MusicPlayer.audio.paused)
+                this.$.MusicPlayer.audio.pause();
+            else
+                this.$.MusicPlayer.audio.play();
+        }
         this.checkTimer();
         inEvent.stopPropagation();
         return true;
@@ -541,13 +626,35 @@ enyo.kind({
     {
         //this.log(this.showing);
         //this.log();
-        this.$.PlayerStatus.setContent(this.$.MusicPlayer.audio.seeking + " " + this.$.MusicPlayer.audio.readyState + " " +  this.$.MusicPlayer.audio.paused);
+        var state;
+        var node;
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var node = this.song.isVideo ? player.node : player.audio;
+        switch(node.readyState)
+        {
+            case 0:
+                state = "NO DATA LOADED";
+                break;
+            case 1:
+                state = "HAVE METADATA";
+                break;
+            case 2:
+                state = "HAVE CURRENT DATA";
+                break;
+            case 3:
+                state = "HAVE FUTURE DATA";
+                break;
+            case 4:
+                state = "HAVE ENOUGH DATA";
+                break;
+        }
+        this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         if(!this.song)
             return;
-        if(this.$.MusicPlayer.audio.readyState != 4)
+        if(node.readyState != 4)
         {
             this.$.SliderBox.hide();
-            if(!this.$.MusicPlayer.audio.paused && !this.$.PlayerSpinner.showing)
+            if(!node.paused && !this.$.PlayerSpinner.showing)
             {
                 this.$.PlayerSpinner.show();
             }
@@ -558,13 +665,13 @@ enyo.kind({
             if(this.$.PlayerSpinner.showing)
                 this.$.PlayerSpinner.hide();
         }
-        var prog = (this.$.MusicPlayer.audio.currentTime / this.song.duration) * 100;
+        var prog = (node.currentTime / this.song.duration) * 100;
         //this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
         if(!this.$.MusicPlayer.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
         // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
-        if(this.$.MusicPlayer.audio.currentTime > (this.song.duration - 0.6))
+        if(node.currentTime > (this.song.duration - 0.6))
         {
             this.doNextSong();
         }
@@ -639,14 +746,11 @@ enyo.kind({
     {
         if(enyo.application.playlist && enyo.application.playlist[inRow])
         {
-            this.log(inRow);
             this.$.Song.addRemoveClass("playhighlight", inRow == enyo.application.playlist.index);
             var p = enyo.application.playlist[inRow];
             var si = this.$.Song;
             
-            //this.log(inRow, "pre", si.songInfo);
             si.setSongInfo(p);
-            //this.log(inRow, "post", si.songInfo);
             this.$.Song.setDraggable(false); // TODO: make songs draggable -off- the now playing list, since we can't easily swipe to delete, i guess
             
             /*this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
@@ -778,6 +882,8 @@ enyo.kind({
     events: {
         "onAlbumClicked": "",
         "onSongClicked": "",
+        "onAlbumHeld": "",
+        "onSongHeld": "",
     },
     kind: "VFlexBox", components:
         [
@@ -786,12 +892,12 @@ enyo.kind({
                 [
                     { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getSongListItem", components:
                         [
-                            { name: "SongItem", kind: "subsonic.AlbumOrSongItem", draggable: true, onclick: "songClicked", },
+                            { name: "SongItem", kind: "subsonic.AlbumOrSongItem", draggable: true, onclick: "songClicked", onmousehold: "songHeld" },
                         ]
                     },
                     { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getAlbumListItem", components:
                         [
-                            { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked" },
+                            { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked", onmousehold: "albumHeld" },
                         ]
                     },
                 ]
@@ -806,6 +912,7 @@ enyo.kind({
             //this.log(inRow, s.title);
             if(this.$.SongItem.getSongInfo() != s)
                 this.$.SongItem.setSongInfo(s);
+            this.$.SongItem.addRemoveClass("selectedhighlight", s.isSelected);
             return true;
         }
         return false;
@@ -823,6 +930,7 @@ enyo.kind({
             //this.log(inRow, a.title);
             if(this.$.AlbumItem.getAlbumInfo() != a)
                 this.$.AlbumItem.setAlbumInfo(a);
+            this.$.AlbumItem.addRemoveClass("selectedhighlight", a.isSelected);
             return true;
         }
         return false;
@@ -836,8 +944,15 @@ enyo.kind({
     {
         this.log();
         enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, this.albums[inEvent.rowIndex].id);
+    },
+    songHeld: function(inSender, inEvent)
+    {
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongHeld(inEvent, id); }), inEvent, this.songs[inEvent.rowIndex]);   
+    },
+    albumHeld: function(inSender, inEvent)
+    {
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumHeld(inEvent, id); }), inEvent, this.albums[inEvent.rowIndex].id);
     }
-        
 });
 
 enyo.kind({
@@ -884,6 +999,27 @@ enyo.kind({
         //this.$.ViewPane.render();
         newview.render();
         return newview;
+    },
+    selectSongItem: function(index, selected)
+    {
+        var view = this.$.ViewPane.getView();
+        view.songs[index].isSelected = selected;
+        this.refreshSong(index);
+    },
+    querySongItem: function(index)
+    {
+        var view = this.$.ViewPane.getView();
+        return view.songs[index];
+    },
+    refreshSong: function(index)
+    {
+        var view = this.$.ViewPane.getView();
+        view.$.SongList.renderRow(index);
+    },
+    selectAlbumItem: function(index, selected)
+    {
+        var view = this.$.ViewPane.getView();
+        view.$.albums[index].isSelected = selected;
     },
     resetViews: function()
     {
@@ -947,6 +1083,17 @@ enyo.kind({
             "xmlns":"http://subsonic.org/restapi"
         }
     */
+    findItemInPlaylist: function(itemID)
+    {
+        for(x in enyo.application.playlist)
+        {
+            if(x && enyo.application.playlist[x].id == itemID)
+            {
+                return x;
+            }
+        }
+        return false;
+    },
     musicChanged: function()
     {
         //this.log("music=", this.music );
@@ -957,6 +1104,8 @@ enyo.kind({
         view.songs = new Array();
         for(var x = 0; x < this.music.length; x++)
         {
+            this.music[x].isSelected = (this.findItemInPlaylist(this.music[x].id) !== false);
+
             if(this.music[x].isDir)
                 view.albums.push(this.music[x]);
             else
@@ -965,6 +1114,7 @@ enyo.kind({
         view.$.SongList.render();
         view.$.AlbumList.render();
     },
+
     songClicked: function(inSender, inEvent, songInfo)
     {
         enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, songInfo);

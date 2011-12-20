@@ -1,4 +1,4 @@
-
+// TODO: Album hold menu
 // TODO: when starting up with Subsonic, call getMusicFolders and populate that to Home
 
 // IDEA: "Search" brings up a completely new main-view that is three-panes, and shows the search results from each type in each pane?!
@@ -102,8 +102,8 @@ enyo.kind({
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView" },
-                                        { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "showSongMenu", },
-                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "showSongMenu", },
+                                        { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
+                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
                                     ]
                                 },
@@ -153,6 +153,32 @@ enyo.kind({
         this.$.SongMenu.openAtEvent(inEvent);
         this.$.SongMenu.setSong(inSongInfo);
         inEvent.stopPropagation();
+    },
+    toggleSongSelection: function(inSender, inEvent, inSongInfo)
+    {
+        this.log(inSender, inEvent, inEvent.rowIndex, inSongInfo);
+        this.$.MusicView.selectSongItem(inEvent.rowIndex, !inSongInfo.isSelected);
+        this.log(this.$.MusicView.querySongItem(inEvent.rowIndex));
+        if(this.$.MusicView.querySongItem(inEvent.rowIndex).isSelected)
+        {
+            this.addSongToPlaylist(inSongInfo);
+        } else {
+            this.removeSongFromPlaylist(inSongInfo);
+        }
+        this.$.MusicView.refreshSong(inEvent.rowIndex);
+
+    },
+    toggleSearchSongSelection: function(inSender, inEvent, inSongInfo)
+    {
+        this.$.SearchView.selectSongItem(inEvent.rowIndex, !inSongInfo.isSelected);
+        this.log(this.$.SearchView.querySongItem(inEvent.rowIndex));
+        if(this.$.SearchView.querySongItem(inEvent.rowIndex).isSelected)
+        {
+            this.addSongToPlaylist(inSongInfo);
+        } else {
+            this.removeSongFromPlaylist(inSongInfo);
+        }
+        this.$.SearchView.refreshSong(inEvent.rowIndex);        
     },
     showPlaylistMenu: function(inSender, inEvent, inSongInfo)
     {
@@ -489,6 +515,7 @@ enyo.kind({
             case "recentlyplayed":
                 type = "recent";
                 apicall = "getAlbumList";
+                break;
             case "mostplayed":
                 type = "frequent";
                 apicall = "getAlbumList";
