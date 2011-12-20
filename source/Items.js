@@ -30,8 +30,8 @@ enyo.kind({
     },
     srcChanged: function()
     {
-        this.$.DummyImage.show(); // reshow the dummy, as we're loading a new src
-        this.$.MainImage.hide();
+        //this.$.DummyImage.show(); // reshow the dummy, as we're loading a new src
+        //this.$.MainImage.hide();
         this.$.MainImage.setSrc(this.src);
     },
     fallbackSrcChanged: function()
@@ -144,6 +144,7 @@ enyo.kind({
         this.$.AlbumNameLabel.setContent(song.album);
         this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
         this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+        this.oldSongId = song.id;
         this.setDraggable(true);
     },
     albumInfoChanged: function()

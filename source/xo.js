@@ -150,6 +150,7 @@ enyo.kind({
     ],
     showSongMenu: function(inSender, inEvent, inSongInfo)
     {
+        this.log();
         this.$.SongMenu.openAtEvent(inEvent);
         this.$.SongMenu.setSong(inSongInfo);
         inEvent.stopPropagation();

@@ -947,7 +947,8 @@ enyo.kind({
     },
     songHeld: function(inSender, inEvent)
     {
-        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongHeld(inEvent, id); }), inEvent, this.songs[inEvent.rowIndex]);   
+        this.log();
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.log(id); this.doSongHeld(inEvent, id); }), inEvent, this.songs[inEvent.rowIndex]);   
     },
     albumHeld: function(inSender, inEvent)
     {
@@ -965,6 +966,8 @@ enyo.kind({
     events: {
         "onAlbumClicked": "",
         "onSongClicked": "",
+        "onSongHeld": "",
+        "onAlbumHeld": "",
     },
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
@@ -988,7 +991,7 @@ enyo.kind({
         var stamp = Date.now();
         if(!this.myViews)
             this.myViews = new Array();
-        this.myViews.push(newview = this.$.ViewPane.createComponent({ kind: "MusicListView", "onSongClicked":"songClicked", "onAlbumClicked":"albumClicked" }, { owner: this }));
+        this.myViews.push(newview = this.$.ViewPane.createComponent({ kind: "MusicListView", "onSongHeld": "songHeld", "onAlbumHeld":"albumHeld", "onSongClicked":"songClicked", "onAlbumClicked":"albumClicked" }, { owner: this }));
         newview.$.ViewLabel.setContent("View " + this.myViews.length);
         this.log("create new view completed in " + (Date.now() - stamp) + " ms");
         if(this.myViews.length > 1)
@@ -1122,5 +1125,15 @@ enyo.kind({
     albumClicked: function(inSender, inEvent, albumIndex)
     {
         enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumClicked(inEvent, id); }), inEvent, albumIndex);
+    },
+    songHeld: function(inSender, inEvent, songInfo)
+    {
+        this.log();
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.log(id); this.doSongHeld(inEvent, id); }), inEvent, songInfo);
+    },
+    albumHeld: function(inSender, inEvent, albumIndex)
+    {
+        enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doAlbumHeld(inEvent, id); }), inEvent, albumIndex);
     }
+    
 });
