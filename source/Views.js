@@ -1,6 +1,80 @@
 // http://www.ericbla.de:88/rest/stream.view?id=633a5c6d757369635c54797065204f204e656761746976655c4f63746f62657220527573745c54797065204f204e65676174697665202d204261642047726f756e642e6d7033&u=admin&p=subgame&v=1.6.0&c=XO(webOS)(development)
 
 enyo.kind({
+    name: "IndexArtistRepeater",
+    kind: "VFlexBox",
+    published: {
+        "artists": "",
+    },
+    components: [
+        { kind: "VirtualRepeater", onSetupRow: "setupRow", onclick: "artistClicked", components:
+            [
+                { name: "ArtistItem", kind: "subsonic.ArtistItem" },
+            ]
+        }
+    ],
+    setupRow: function(inSender, inRow)
+    {
+        var x = this.artists.artist[inRow];
+        if(x) {
+            this.$.ArtistItem.setContent(x.name);
+            this.$.ArtistItem.artistId = x.id;
+            return true;
+        }
+        return false;
+    },
+    artistClicked: function(inSender, inEvent)
+    {
+        this.log("clicked on artist ", this.artists.artist[inEvent.rowIndex]);
+        enyo.application.loadArtist(inSender, inEvent, this.artists.artist[inEvent.rowIndex].id);
+        inEvent.stopPropagation();
+    }
+});
+
+enyo.kind({
+    name: "IndexRepeater",
+    kind: "VFlexBox",
+    published: {
+        "folder": "",
+    },
+    components: [
+        { kind: "VirtualRepeater",style: "padding-left: 20px; padding-right: 20px;", onSetupRow: "setupRow", components:
+            [
+                { name: "IndexLabel", kind: "DividerDrawer", open: false, onclick: "IndexClicked", components:
+                    [
+                        { name: "ArtistRepeater", kind: "IndexArtistRepeater"},
+                    ]
+                },
+            ]
+        }
+    ],
+    setupRow: function(inSender, inRow)
+    {
+        if(enyo.application.folders) {
+            var x = enyo.application.folders[this.folder.id];
+            if(x[inRow]) {
+                //this.log(x[inRow].name);
+                this.$.IndexLabel.setCaption(x[inRow].name);
+                this.$.ArtistRepeater.setArtists(x[inRow]);
+                this.$.ArtistRepeater.render();
+                return true;
+            }
+        }
+        return false;
+    },
+    folderChanged: function() {
+        this.log(this.folder);
+    },
+    IndexClicked: function(inSender, inEvent) {
+        var x = enyo.application.folders[this.folder.id][inEvent.rowIndex];
+        this.log(x);
+        inEvent.stopPropagation();
+        inEvent.preventDefault();
+        return -1;
+    }
+});
+
+enyo.kind({
     name: "subsonic.HomeView",
     kind: "VFlexBox",
     events: {
@@ -47,6 +121,7 @@ enyo.kind({
                         [
                             { name: "FolderItem", kind: "DividerDrawer", open: false, content: "Folder", components:
                                 [
+                                    { name: "IndexRepeater", kind: "IndexRepeater", },
                                 ]
                             },
                         ]
@@ -55,6 +130,12 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
+    receivedIndexes: function(folderId)
+    {
+        this.log(folderId);
+        this.repeaters[folderId].render();
+        //this.$.FolderRepeater.render();
+    },
     getFolderRow: function(inSender, inRow)
     {
         var x = this.folderList && this.folderList[inRow];
@@ -63,13 +144,22 @@ enyo.kind({
         {
             this.$.FolderItem.setCaption(x.name);
             this.$.FolderItem.folderId = x.id;
+            this.$.IndexRepeater.setFolder(x);
+            if(!this.repeaters)
+                this.repeaters = new Array();
+            this.repeaters[x.id] = this.$.IndexRepeater;
             return true;
         }
         return false;
     },
     folderClicked: function(inSender, inEvent)
     {
+        this.log(inSender);
+        inSender.open = !inSender.open;
         this.doFolderClick(inEvent, this.folderList[inEvent.rowIndex].id);
+        inEvent.stopPropagation();
+        inEvent.preventDefault();
+        return -1;
     },
     foldersChanged: function()
     {
@@ -375,7 +465,7 @@ enyo.kind({
 });
 
 enyo.kind({
-    name: "subsonic.MusicPlayerView",
+    name: "subsonic.MediaPlayerView",
     kind: "VFlexBox",
     flex: 1,
     events: {
@@ -384,11 +474,24 @@ enyo.kind({
         "onNextSong": "",
         "onPrevSong": "",
         "onSongChanged": "",
+        "onVideoError": "",
+        "onVideoPlay": "",
     },
+        videoLaunched: function(inSender, x, y, z)
+        {
+            this.log(inSender, x, y, z);
+            this.doVideoPlay(inSender, x, y, z);
+        },
+        videoFailed: function(inSender, x, y, z)
+        {
+            this.log(inSender, x, y, z);
+            this.doVideoError(inSender, x, y, z);
+        },
     components: [
-        { name: "VideoLauncher", kind: "PalmService", service: "palm://com.wordpress.mobilecoder.touchplayer.service/", method: "play"},
+        { name: "VideoLauncher", kind: "PalmService", service: "palm://com.wordpress.mobilecoder.touchplayer.service/", method: "play", onSuccess: "videoLaunched", onFailure: "videoFailed" },
+        { name: "AppLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "launch" },
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
-        //{ name: "VideoPlayer", kind: "Video", preload: true, },
+        { name: "VideoPlayer", kind: "Video", preload: true, flex: 1, },
         { kind: "VFlexBox", flex: 1, components:
             [
                 { kind: "HFlexBox", components:
@@ -456,7 +559,7 @@ enyo.kind({
             ]                            
         },
     ],
-    hideTips: function() { this.log(this); this.$.MusicPlayer.$.PlayerTips.hide(); },
+    hideTips: function() { this.log(this); this.$.MediaPlayer.$.PlayerTips.hide(); },
     progressSliderChange: function(inSender, x)
     {
         this.log(x);
@@ -500,31 +603,34 @@ enyo.kind({
         this.$.MusicPlayer.audio.addEventListener('volumechange', e);
         this.$.MusicPlayer.audio.addEventListener('waiting', e);
         
-/*        this.$.VideoPlayer.node.addEventListener('loadstart', e);
-        //this.$.VideoPlayer.node.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
-        this.$.VideoPlayer.node.addEventListener('canplay', e);
-        this.$.VideoPlayer.node.addEventListener('canplaythrough', e);
-        this.$.VideoPlayer.node.addEventListener('durationchange', e);
-        this.$.VideoPlayer.node.addEventListener('emptied', e);
-        this.$.VideoPlayer.node.addEventListener('ended', e);
-        this.$.VideoPlayer.node.addEventListener('error', e);
-        this.$.VideoPlayer.node.addEventListener('loadeddata', e);
-        this.$.VideoPlayer.node.addEventListener('loadedmetadata', e);
-        this.$.VideoPlayer.node.addEventListener('pause', e);
-        this.$.VideoPlayer.node.addEventListener('onpause', e);
-        this.$.VideoPlayer.node.addEventListener('play', e);
-        this.$.VideoPlayer.node.addEventListener('playing', e);
-        this.$.VideoPlayer.node.addEventListener('progress', e);
-        this.$.VideoPlayer.node.addEventListener('ratechange', e);
-        this.$.VideoPlayer.node.addEventListener('readystatechange', e);
-        this.$.VideoPlayer.node.addEventListener('seeked', e);
-        this.$.VideoPlayer.node.addEventListener('seeking', e);
-        this.$.VideoPlayer.node.addEventListener('stalled', e);
-        this.$.VideoPlayer.node.addEventListener('suspend', e);
-        this.$.VideoPlayer.node.addEventListener('timeupdate', e);
-        this.$.VideoPlayer.node.addEventListener('volumechange', e);
-        this.$.VideoPlayer.node.addEventListener('waiting', e);
-*/      
+        if(this.$.VideoPlayer && this.$.VideoPlayer.node)
+        {
+            this.$.VideoPlayer.node.addEventListener('loadstart', e);
+            //this.$.VideoPlayer.node.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
+            this.$.VideoPlayer.node.addEventListener('canplay', e);
+            this.$.VideoPlayer.node.addEventListener('canplaythrough', e);
+            this.$.VideoPlayer.node.addEventListener('durationchange', e);
+            this.$.VideoPlayer.node.addEventListener('emptied', e);
+            this.$.VideoPlayer.node.addEventListener('ended', e);
+            this.$.VideoPlayer.node.addEventListener('error', e);
+            this.$.VideoPlayer.node.addEventListener('loadeddata', e);
+            this.$.VideoPlayer.node.addEventListener('loadedmetadata', e);
+            this.$.VideoPlayer.node.addEventListener('pause', e);
+            this.$.VideoPlayer.node.addEventListener('onpause', e);
+            this.$.VideoPlayer.node.addEventListener('play', e);
+            this.$.VideoPlayer.node.addEventListener('playing', e);
+            this.$.VideoPlayer.node.addEventListener('progress', e);
+            this.$.VideoPlayer.node.addEventListener('ratechange', e);
+            this.$.VideoPlayer.node.addEventListener('readystatechange', e);
+            this.$.VideoPlayer.node.addEventListener('seeked', e);
+            this.$.VideoPlayer.node.addEventListener('seeking', e);
+            this.$.VideoPlayer.node.addEventListener('stalled', e);
+            this.$.VideoPlayer.node.addEventListener('suspend', e);
+            this.$.VideoPlayer.node.addEventListener('timeupdate', e);
+            this.$.VideoPlayer.node.addEventListener('volumechange', e);
+            this.$.VideoPlayer.node.addEventListener('waiting', e);
+        }
+        
         //this.$.MusicPlayer.audio.addEventListener('onloadstart', this.log);
         //this.$.MusicPlayer.audio.onloadstart = "checkStatus";
         this.checkTimer();
@@ -569,11 +675,16 @@ enyo.kind({
         console.log(this.song);
         var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
         this.$.MusicPlayer.audio.pause();
-        //this.$.VideoPlayer.node.pause();
+        this.$.VideoPlayer.node.pause();
         if(this.song.isVideo)
         {
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
             this.log("*** Playing Video URL ", url);
+            //this.$.MusicPlayer.hide();
+            this.$.VideoPlayer.show();
+            //this.$.AppLauncher.call( { target: url } );
+            //this.$.AppLauncher.call( { id: "com.palm.app.videoplayer", params: { target: url } });
+            enyo.windows.addBannerMessage("Launching TouchPlayer...", '{}', "", "")
             this.$.VideoLauncher.call( { source: url });
             return;
         }
@@ -628,8 +739,10 @@ enyo.kind({
         //this.log();
         var state;
         var node;
-        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
-        var node = this.song.isVideo ? player.node : player.audio;
+        //var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        //var node = this.song.isVideo ? player.node : player.audio;
+        var player = this.$.MusicPlayer;
+        var node = player.audio;
         switch(node.readyState)
         {
             case 0:
@@ -688,28 +801,42 @@ enyo.kind({
         "onSongClicked" : "",
         "onItemMenu": "",
         "onSongRemove": "",
+        "onCycleTab": "",
     },
     components: [
-        isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
-        { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
+        { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
             [
-                { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
+                isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+                { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
                     [
-                        //{ name: "Song", kind: "subsonic.SongItem", draggable: false, },
-                        { name: "Song", kind: "subsonic.AlbumOrSongItem", onclick: "songClicked", onConfirm: "removeSong", swipeable: true, draggable: false, },
+                        { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
+                            [
+                                //{ name: "Song", kind: "subsonic.SongItem", draggable: false, },
+                                { name: "Song", kind: "subsonic.AlbumOrSongItem",  onConfirm: "removeSong", swipeable: true, draggable: false, },
+                            ]
+                        },
+                    ]
+                },
+                //{ kind: "Spacer" },
+                { kind: "Toolbar", ondragover: "scrollDown", components:
+                    [
+                        { kind: "GrabButton" },
+                        { caption: "Play", onclick: "doStartPlaylist" },
+                        { caption: "Clear", onclick: "clearPlaylist" },
                     ]
                 },
             ]
         },
-        //{ kind: "Spacer" },
-        { kind: "Toolbar", ondragover: "scrollDown", components:
-            [
-                { kind: "GrabButton" },
-                { caption: "Play", onclick: "doStartPlaylist" },
-                { caption: "Clear", onclick: "clearPlaylist" },
-            ]
-        },
     ],
+    cycleTab: function(inSender, inEvent)
+    {
+        this.log(inSender, inEvent);
+        if(!inEvent.defaultPrevented)
+        {
+            this.log("WTF IS GOING ON", inEvent.defaultPrevented);
+            this.doCycleTab(inEvent);
+        }
+    },
     removeSong: function(inSender, inIndex) // TODO: This is all fucked in Chrome .. will it be all fucked on devices?
     {
         this.log();
@@ -741,6 +868,9 @@ enyo.kind({
         this.render();
         this.doSongClicked(inEvent, enyo.application.playlist[inEvent.rowIndex]);
         inEvent.stopPropagation();
+        inEvent.preventDefault();
+        this.log();
+        return -1;
     },
     getListItem: function(inSender, inRow)
     {

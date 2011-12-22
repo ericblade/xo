@@ -123,10 +123,10 @@ enyo.kind({
                                 
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
-                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab",},
-                                        { name: "MusicPlayerView", flex: 1, kind: "VFlexBox", components:
+                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab",},
+                                        { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
-                                                { name: "MusicPlayer", flex: 1, onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", style: "background: black; ", kind: "subsonic.MusicPlayerView" },
+                                                { name: "MediaPlayer", flex: 1, onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", style: "background: black; ", kind: "subsonic.MediaPlayerView" },
                                             ]
                                         },
                                         //{ name: "LyricsView", flex: 1, kind: "LyricsView", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" }
@@ -147,7 +147,13 @@ enyo.kind({
         },
         { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", },
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
+        { name: "ErrorDialog", kind: "ErrorDialog" },
     ],
+    videoError: function(inSender, x, y, z)
+    {
+        this.$.ErrorDialog.open();
+        this.$.ErrorDialog.setMessage("Video Player Error: " + y.errorText + " - Do you have TouchPlayer installed?");
+    },
     showSongMenu: function(inSender, inEvent, inSongInfo)
     {
         this.log();
@@ -341,9 +347,11 @@ enyo.kind({
         prefs.set("righttabsshowing", on);
         this.ignoreCycle = true;
     },
-    cycleRightTab: function()
+    cycleRightTab: function(inSender, inEvent)
     {
-        if(!this.ignoreCycle)
+        this.log(inSender, inEvent);
+        this.log(this.ignoreCycle, inEvent.defaultPrevented);
+        if(!this.ignoreCycle && !inEvent.defaultPrevented)
         {
             var curr = this.$.RightPane.getViewIndex();
             //var newind = (curr >= 2) ? 0 : curr+1;
@@ -353,10 +361,13 @@ enyo.kind({
             this.$.RightPane.selectViewByIndex(newind);
         }
         this.ignoreCycle = false;
+        inEvent.stopPropagation();
+        inEvent.preventDefault();        
+        return -1;
     },
     rightPaneSelected: function(inSender, inNewView, inOldView)
     {
-        this.log(inNewView.name, this.$.MusicPlayerView.song);
+        this.log(inNewView.name, this.$.MediaPlayerView.song);
         /*if(inNewView.name == "LyricsView" && enyo.application.nowplaying)
         {
             inNewView.setSongArtist(enyo.application.nowplaying.artist);
@@ -424,6 +435,8 @@ enyo.kind({
                     this.avatarTrack(inEvent);
             });
         enyo.application.download = enyo.bind(this, this.downloadFileIndex);
+        
+        enyo.application.loadArtist = enyo.bind(this, this.loadSearchedAlbum); // TODO: well, i guess it'll work .. hmm.
     },
     avatarTrack: function(inEvent) {
         //this.log();
@@ -541,7 +554,7 @@ enyo.kind({
             enyo.application.folders = new Array();
         this.log(inIndexes.indexes.index);
         enyo.application.folders[inRequest.params.musicFolderId] = inIndexes.indexes.index;
-        this.$.HomeView.render();
+        this.$.HomeView.receivedIndexes(inRequest.params.musicFolderId);
     },
     receivedSearchResults: function(inSender, inSearchRes)
     {
@@ -551,7 +564,7 @@ enyo.kind({
     },
     receivedDirectory: function(inSender, inDirectory)
     {
-        //this.log(inDirectory);
+        this.log(inDirectory);
         var x = inDirectory.directory.child;
         if(x.artist) // a single was received.. sigh
             x = [ x ];
@@ -588,30 +601,38 @@ enyo.kind({
     },
     loadIndex: function(inSender, inEvent, inId)
     {
+        this.log();
         this.$.api.call("getIndexes", { musicFolderId: inId });
     },
     loadSong: function(inSender, inEvent, inSongData)
     {
         //this.log(inSongData);
+        this.log(inEvent);
         if(inSongData.isDir)
         {
             this.loadAlbum(inSender, inEvent, inSongData.id);
             return;
         }
-        this.$.MusicPlayer.setSong(inSongData);
-        this.selectPlayerView(); 
+        this.$.MediaPlayer.setSong(inSongData);
+        if(!inSongData.isVideo && !inEvent.defaultPrevented) // if we get here with a prevented default, don't select the player ...
+            this.selectPlayerView();
+        inEvent.stopPropagation();
+        inEvent.preventDefault();
+        return -1;    
     },
     startPlaylist: function(inSender, inEvent)
     {
         //enyo.application.playlist.index = 0;
+        this.log();
         if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
             enyo.application.playlist.index = 0;
-        this.$.MusicPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
-        this.selectPlayerView();
+        this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
+        if(!enyo.application.playlist[enyo.application.playlist.index].isVideo)
+            this.selectPlayerView();
     },
     playNext: function(inSender, inEvent)
     {
-        var currId = this.$.MusicPlayer.song.id;
+        var currId = this.$.MediaPlayer.song.id;
         var currindex = enyo.application.playlist.index;
         var p = enyo.application.playlist[currindex];
         
@@ -622,11 +643,11 @@ enyo.kind({
         }
         enyo.application.playlist.index = parseInt(currindex) + 1;
         this.log("moving to ", enyo.application.playlist.index, enyo.application.playlist[enyo.application.playlist.index]);
-        this.$.MusicPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
+        this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
     },
     playPrev: function(inSender, inEvent)
     {
-        var currId = this.$.MusicPlayer.song.id;
+        var currId = this.$.MediaPlayer.song.id;
         var currindex = enyo.application.playlist.index;
         var p = enyo.application.playlist[currindex];
         if(p && p.id != currId)
@@ -634,7 +655,7 @@ enyo.kind({
             currindex = this.findItemInPlaylist(currId);
         }
         enyo.application.playlist.index = parseInt(currindex) - 1;
-        this.$.MusicPlayer.setSong(enyo.application.playlist[currindex-1]);
+        this.$.MediaPlayer.setSong(enyo.application.playlist[currindex-1]);
     },
     songChanged: function(inSender, inSong) // reset a highlight...
     {
@@ -663,23 +684,27 @@ enyo.kind({
     },
     selectSearchView: function()
     {
+        this.log();
         this.$.LeftPane.selectViewByName("SearchView");
     },
     selectPlaylistsView: function()
     {
+        this.log();
         this.$.LeftPane.selectViewByName("PlaylistsView");
     },
     selectHomeView: function()
     {
+        this.log();
         this.$.LeftPane.selectViewByName("HomeView");
     },
     selectPlayerView: function()
     {
         //this.$.RightView.show();
+        this.log();
         this.$.slider.selectViewByName("RightView");
-        this.$.RightPane.selectViewByName("MusicPlayerView");
+        this.$.RightPane.selectViewByName("MediaPlayerView");
         this.$.RightTabs.setValue(1);
-        setTimeout(enyo.bind(this, this.$.MusicPlayer.hideTips), 5000);
+        setTimeout(enyo.bind(this, this.$.MediaPlayer.hideTips), 5000);
     },
     leftTabChange: function(inSender)
     {

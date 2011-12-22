@@ -81,4 +81,19 @@ enyo.kind({
         { caption: "Remove from Now Playing", onclick: "removeSong" },
     ],
     removeSong: function() { this.doRemoveSong(this.song); },
-})
+});
+
+enyo.kind({
+    name: "ErrorDialog",
+    kind: "Dialog",
+    flyInFrom: "bottom",    
+    published: {
+        message: "",
+    },
+    components: [
+        { name: "MessageBox", content: "Error" },
+    ],
+    messageChanged: function() {
+        this.$.MessageBox.setContent(this.message);
+    }
+});
