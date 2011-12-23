@@ -489,7 +489,7 @@ enyo.kind({
         },
     components: [
         { name: "VideoLauncher", kind: "PalmService", service: "palm://com.wordpress.mobilecoder.touchplayer.service/", method: "play", onSuccess: "videoLaunched", onFailure: "videoFailed" },
-        { name: "AppLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "launch" },
+        { name: "AppLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open" },
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
         { name: "VideoPlayer", kind: "Video", preload: true, flex: 1, },
         { kind: "VFlexBox", flex: 1, components:
@@ -680,12 +680,14 @@ enyo.kind({
         if(this.song.isVideo)
         {
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
+            url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
             this.log("*** Playing Video URL ", url);
             //this.$.MusicPlayer.hide();
-            this.$.VideoPlayer.show();
-            //this.$.AppLauncher.call( { target: url } );
+            //this.$.VideoPlayer.show();
+            this.$.AppLauncher.call( { target: url } );
             //this.$.AppLauncher.call( { id: "com.palm.app.videoplayer", params: { target: url } });
-            enyo.windows.addBannerMessage("Launching TouchPlayer...", '{}', "", "")
+            //enyo.windows.addBannerMessage("Launching TouchPlayer...", '{}', "", "")
+            enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
             this.$.VideoLauncher.call( { source: url });
             return;
         }
