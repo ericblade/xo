@@ -7,7 +7,7 @@ enyo.kind({
         "artists": "",
     },
     components: [
-        { kind: "VirtualRepeater", onSetupRow: "setupRow", onclick: "artistClicked", components:
+        { name: "Repeater", kind: "VirtualRepeater", onSetupRow: "setupRow", onclick: "artistClicked", components:
             [
                 { name: "ArtistItem", kind: "subsonic.ArtistItem" },
             ]
@@ -23,9 +23,15 @@ enyo.kind({
         }
         return false;
     },
+    artistsChanged: function()
+    {
+        if(this.artists.artist.id)
+            this.artists.artist[0] = this.artists.artist;
+        this.$.Repeater.render();
+    },
     artistClicked: function(inSender, inEvent)
     {
-        this.log("clicked on artist ", this.artists.artist[inEvent.rowIndex]);
+        //this.log("clicked on artist ", this.artists.artist[inEvent.rowIndex]);
         enyo.application.loadArtist(inSender, inEvent, this.artists.artist[inEvent.rowIndex].id);
         inEvent.stopPropagation();
     }
@@ -442,7 +448,7 @@ enyo.kind({
     },
     addPlaylist: function(list)
     {
-        this.log(list);
+        //this.log(list);
         if(!this.playlists)
             this.playlists = [ ];
         this.playlists.push(list);
@@ -1147,12 +1153,50 @@ enyo.kind({
         this.log("create new view completed in " + (Date.now() - stamp) + " ms");
         if(this.myViews.length > 1)
         {
-            newview.createComponent({ kind: "Button", caption: "Back", onclick: "goBack" }, { owner: this });
+            newview.createComponent(
+                { kind: "Toolbar", components:
+                    [
+                        { kind: "ToolButton", caption: "Back", onclick: "goBack", },
+                        { kind: "ToolButton", caption: "Select All", onclick: "selectAll" },
+                        { kind: "ToolButton", caption: "Unselect All", onclick: "unselectAll" },
+                    ]
+                },
+                { owner: this }
+            );
+            //newview.createComponent({ kind: "Button", caption: "Back", onclick: "goBack" }, { owner: this });
         }
         this.$.ViewPane.selectView(newview);
         //this.$.ViewPane.render();
         newview.render();
         return newview;
+    },
+    selectAll: function(inSender, inEvent) // TODO: selectAll and unselectAll are -really- slow due to some junk the intermediate functions are doing..
+    {
+        var view = this.$.ViewPane.getView();
+        var songs = view.songs;
+        for(var x in songs)
+        {
+            if(songs[x].id)
+            {
+                songs[x].isSelected = true;
+                enyo.application.addSongToPlaylist(songs[x]); // TODO: need to write a function that will add only if they aren't already there..
+            }
+        }
+        view.$.SongList.render();
+    },
+    unselectAll: function(inSender, inEvent)
+    {
+        var view = this.$.ViewPane.getView();
+        var songs = view.songs;
+        for(var x in songs)
+        {
+            if(songs[x].id)
+            {
+                songs[x].isSelected = false;
+                enyo.application.removeSongFromPlaylist(songs[x]);
+            }
+        }
+        view.$.SongList.render();
     },
     selectSongItem: function(index, selected)
     {
@@ -1254,6 +1298,8 @@ enyo.kind({
         var view = this.createNewView();
         if(this.music && this.music.albumList)
             this.music = this.music.albumList.album;
+        else if(this.music && this.music.directory)
+            this.music = this.music.directory.child;
         view.albums = new Array();
         view.songs = new Array();
         for(var x = 0; x < this.music.length; x++)

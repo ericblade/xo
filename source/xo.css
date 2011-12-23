@@ -11,6 +11,10 @@
 .draghighlight {
     background: #5CB3FF;
     font-weight: bold;
+    -webkit-transition-property: background, font-weight;
+    -webkit-transform: translateX(10px);
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 1000ms;
 }
 
 .playhighlight {
@@ -19,6 +23,9 @@
 
 .selectedhighlight {
     background: lightgreen;
+    -webkit-transition-property: background;
+    -webkit-transition-timing-function: linear;
+    -webkit-transition-duration: 1000ms;
 }
 
 .albumimage {

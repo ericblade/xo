@@ -1,3 +1,4 @@
+// TODO: need to have Clear playlist re-render the music view
 // TODO: Album hold menu
 // TODO: Probably should not allow any further taps to load more directories when we're waiting on a directory to load already ...
 
@@ -30,7 +31,6 @@
 // TODO: Saving of current index in playlist does not appear to be working
 // TODO: Why is it when I hit "Play" in Now Playing, it refreshes the entire list?
 // TODO: is the draggable stuff draggable on phones? shouldn't be..
-// TODO: array.Remove in globals is -not- reliably working right
 
 function stripHtml(html)
 {
@@ -419,10 +419,13 @@ enyo.kind({
     receivedPlaylists: function(inSender, inLists)
     {
         this.log(inLists);
-        var list = inLists.playlist || inLists;
-        
+        var list = inLists.playlist;
+        if(list.id)
+            list[0] = list;
+            
         for(var x in list)
         {
+            //this.log(list[x].id);
             if(list[x].id)
                 this.$.PlaylistsView.addPlaylist(list[x]);
         }
@@ -446,12 +449,10 @@ enyo.kind({
                 this.log(on);
                 if(on)
                 {
-                    // TODO: figure out what we're dragging and highlight it (maybe that should be in the ondrag .. )
                     this.$.avatar.setSrc(inEvent.dragInfo.art);
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
-                    // TODO: unhighlight what we were dragging
                     this.$.avatar.hide();
                 }
             }
@@ -465,6 +466,8 @@ enyo.kind({
         enyo.application.download = enyo.bind(this, this.downloadFileIndex);
         
         enyo.application.loadArtist = enyo.bind(this, this.loadSearchedAlbum); // TODO: well, i guess it'll work .. hmm.
+        enyo.application.addSongToPlaylist = enyo.bind(this, this.addSongToPlaylist);
+        enyo.application.removeSongFromPlaylist = enyo.bind(this, this.removeSongFromPlaylist);
         document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
         document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
     },
@@ -606,7 +609,7 @@ enyo.kind({
         var stupid = { directory: { child: inPlaylist } }; // the subsonic api is dumb sometimes
         if(!this.playNextPlaylist)
         {
-            this.$.MusicView.setSongList(stupid);
+            this.$.MusicView.setMusic(stupid);
             this.selectMusicView();
         } else {
             enyo.application.playlist = inPlaylist;
