@@ -490,6 +490,7 @@ enyo.kind({
     components: [
         { name: "VideoLauncher", kind: "PalmService", service: "palm://com.wordpress.mobilecoder.touchplayer.service/", method: "play", onSuccess: "videoLaunched", onFailure: "videoFailed" },
         { name: "AppLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open" },
+        { name: "VideoService", kind: "BasicService", requestKind: "VideoRequest" },
         { name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", },
         { name: "VideoPlayer", kind: "Video", preload: true, flex: 1, },
         { kind: "VFlexBox", flex: 1, components:
@@ -684,11 +685,12 @@ enyo.kind({
             this.log("*** Playing Video URL ", url);
             //this.$.MusicPlayer.hide();
             //this.$.VideoPlayer.show();
-            this.$.AppLauncher.call( { target: url } );
+            //this.$.AppLauncher.call( { target: url } );
             //this.$.AppLauncher.call( { id: "com.palm.app.videoplayer", params: { target: url } });
             //enyo.windows.addBannerMessage("Launching TouchPlayer...", '{}', "", "")
             enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
-            this.$.VideoLauncher.call( { source: url });
+            //this.$.VideoLauncher.call( { source: url });
+            this.$.VideoService.request( { itemId: this.song.id });
             return;
         }
         enyo.application.nowplaying = this.song;
@@ -707,6 +709,10 @@ enyo.kind({
             this.$.ProgressSlider.setAltBarPosition(0);        
             player.play();
             this.checkTimer();
+            if(this.song.startTime)
+            {
+                player.currentTime =  this.song.startTime;
+            }
         } else {
             this.$.SongInfoBox.hide();
             this.$.AlbumArt.setSrc("http://img91.imageshack.us/img91/3550/nocoverni0.png");
@@ -782,6 +788,7 @@ enyo.kind({
                 this.$.PlayerSpinner.hide();
         }
         var prog = (node.currentTime / this.song.duration) * 100;
+        prefs.set("savedtime", node.currentTime);
         //this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
         if(!this.$.MusicPlayer.audio.seeking)

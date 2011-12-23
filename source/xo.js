@@ -71,7 +71,7 @@ enyo.kind({
     transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [        
         { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/", method: "download", onSuccess: "downloadStatus", subscribe: true },
-        { kind: "ApplicationEvents", onBack: "doBack" },
+        { kind: "ApplicationEvents", onBack: "doBack", onLoad: "onLoad", onApplicationRelaunched: "onRelaunch" },
         { name: "api", kind: "subsonic.api",
             onLicenseReceived: "receivedLicense",
             onLicenseError: "badLicense",
@@ -148,6 +148,14 @@ enyo.kind({
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
     ],
+    onLoad: function(x, y, z)
+    {
+        this.log(x, y, z);
+    },
+    onRelaunch: function(x, y, z)
+    {
+        this.log(x, y, z);
+    },
     videoError: function(inSender, x, y, z)
     {
         this.$.ErrorDialog.open();
@@ -645,6 +653,16 @@ enyo.kind({
             inEvent.preventDefault();
             return -1;
         }
+    },
+    resumePlaylist: function(inSender, inEvent)
+    {
+        this.log();
+        if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
+            enyo.application.playlist.index = 0;
+        enyo.application.playlist[enyo.application.playlist.index].startTime = prefs.get("savedtime");
+        this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
+        if(!enyo.application.playlist[enyo.application.playlist.index].isVideo)
+            this.selectPlayerView();
     },
     startPlaylist: function(inSender, inEvent)
     {

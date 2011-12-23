@@ -7,6 +7,7 @@ enyo.depends(
         "source/Items.js",
         "source/Views.js",
         "source/subsonicApi.js",
+        "source/Services.js", 
 	"source/xo.js",
 	"source/xo.css"
 );
