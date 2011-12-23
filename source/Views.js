@@ -675,7 +675,8 @@ enyo.kind({
         console.log(this.song);
         var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
         this.$.MusicPlayer.audio.pause();
-        this.$.VideoPlayer.node.pause();
+        if(this.$.VideoPlayer && this.$.VideoPlayer.node)
+            this.$.VideoPlayer.node.pause();
         if(this.song.isVideo)
         {
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
@@ -802,6 +803,7 @@ enyo.kind({
         "onItemMenu": "",
         "onSongRemove": "",
         "onCycleTab": "",
+        "onShuffle": "",
     },
     components: [
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
@@ -821,6 +823,7 @@ enyo.kind({
                 { kind: "Toolbar", ondragover: "scrollDown", components:
                     [
                         { kind: "GrabButton" },
+                        { caption: "Shuffle", onclick: "shuffleTap" },
                         { caption: "Play", onclick: "doStartPlaylist" },
                         { caption: "Clear", onclick: "clearPlaylist" },
                     ]
@@ -828,6 +831,10 @@ enyo.kind({
             ]
         },
     ],
+    shuffleTap: function(inSender, inEvent)
+    {
+        this.doShuffle(inEvent);
+    },
     cycleTab: function(inSender, inEvent)
     {
         this.log(inSender, inEvent);
@@ -1102,7 +1109,7 @@ enyo.kind({
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
             [
-                { content: "WTF" }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
+                { content: "Loading content from server..." }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
             ]
         },
     ],

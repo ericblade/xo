@@ -98,6 +98,31 @@ enyo.kind({
                  },*/
 
 enyo.kind({
+	name: "Example",
+	kind: enyo.Control,
+	published: {
+		caption: ""
+	},
+	style: "margin: 24px 12px; border: 1px solid #333;",
+	components: [
+		{name: "caption", style: "padding: 6px; background: #bbb"},
+		{name: "client", style: "padding: 12px"}
+	],
+	create: function() {
+		this.inherited(arguments);
+		this.captionChanged();
+	},
+	captionChanged: function() {
+		this.$.caption.setContent(this.caption);
+	},
+	layoutKindChanged: function() {
+		this.$.client.align = this.align;
+		this.$.client.pack = this.pack;
+		this.$.client.setLayoutKind(this.layoutKind);
+	}
+});
+
+enyo.kind({
     name: "subsonic.AlbumOrSongItem",
     kind: "SwipeableItem",
     flex: 1,
@@ -108,6 +133,7 @@ enyo.kind({
         draggable: false,
     },
     components: [
+        //{ kind: "ProgressButton", flex: 1, layoutKind: "HFlexLayout", pack: "center", position: 50, ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
         { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
                 { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
@@ -120,6 +146,15 @@ enyo.kind({
                                 { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
                             ]
                         },
+                        /*{kind: "Example", layoutKind: "HFlexLayout", caption: "ProgresBarItem", components: [
+				{kind: "ProgressBarItem", onclick: "simulateProgress", components: [
+					{content: "Progressing short... ", style:"margin:-12px 0;height:24px"}
+				]},
+				{kind: "ProgressBarItem", position: 50, style:"height:48px; margin-top: 2px;", components: [
+					{content: "Progressing tall... "}
+				]},	
+			]},*/
+                        //{ kind: "ProgressButton", position: 0, content: "wtf" },
                         { kind: "HFlexBox", components:
                             [
                                 { name: "ArtistLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },

@@ -1,5 +1,5 @@
 // TODO: Album hold menu
-// TODO: when starting up with Subsonic, call getMusicFolders and populate that to Home
+// TODO: Probably should not allow any further taps to load more directories when we're waiting on a directory to load already ...
 
 // IDEA: "Search" brings up a completely new main-view that is three-panes, and shows the search results from each type in each pane?!
 
@@ -24,8 +24,7 @@
 
 // TODO: getting a blank list from server results in error: Uncaught TypeError: Cannot read property 'child' of undefined, source/Views.js:404
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
-// TODO: set drag cursor to the album art for what we are dragging?
-// TODO: "shake to shuffle" hehe
+// TODO: preference to disable shake-to-shuffle
 
 // TODO: Have search also send a search query to Amazon, linking for purchasing? hmmm...
 // TODO: Saving of current index in playlist does not appear to be working
@@ -123,7 +122,7 @@ enyo.kind({
                                 
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
-                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab",},
+                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1, onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", style: "background: black; ", kind: "subsonic.MediaPlayerView" },
@@ -153,6 +152,18 @@ enyo.kind({
     {
         this.$.ErrorDialog.open();
         this.$.ErrorDialog.setMessage("Video Player Error: " + y.errorText + " - Do you have TouchPlayer installed?");
+    },
+    shakeNotify: function(inSender, inEvent)
+    {
+        this.$.ErrorDialog.open();
+        this.$.ErrorDialog.setMessage("Randomizing and redistributing your playlist...");
+    },
+    endShakeNotify: function(inSender, inEvent)
+    {
+        this.$.ErrorDialog.open();
+        this.$.ErrorDialog.setMessage(" T I L T -- Playlist Shuffled -- T I L T ");
+        this.shufflePlaylist();
+        setTimeout(this.$.ErrorDialog.close, 1500);
     },
     showSongMenu: function(inSender, inEvent, inSongInfo)
     {
@@ -317,6 +328,15 @@ enyo.kind({
         this.$.PlaylistView.render();
         prefs.set("playlist", enyo.application.playlist);        
     },
+    shufflePlaylist: function(inSender, inEvent)
+    {
+        this.log();
+        if(inEvent)
+            inEvent.stopPropagation();
+        enyo.application.playlist.index = 0;
+        enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
+        this.$.PlaylistView.render();
+    },
     menuRemoveSongFromPlaylist: function(inSender, song)
     {
         this.removeSongFromPlaylist(song);
@@ -437,6 +457,8 @@ enyo.kind({
         enyo.application.download = enyo.bind(this, this.downloadFileIndex);
         
         enyo.application.loadArtist = enyo.bind(this, this.loadSearchedAlbum); // TODO: well, i guess it'll work .. hmm.
+        document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
+        document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
     },
     avatarTrack: function(inEvent) {
         //this.log();
@@ -608,6 +630,7 @@ enyo.kind({
     {
         //this.log(inSongData);
         this.log(inEvent);
+        if(!inSongData) return; // this is what happens when we tap an area with no song in it
         if(inSongData.isDir)
         {
             this.loadAlbum(inSender, inEvent, inSongData.id);
