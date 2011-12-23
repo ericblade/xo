@@ -501,7 +501,7 @@ enyo.kind({
                         { kind: "VFlexBox", components:
                             [
                                 //{ name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
-                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://img91.imageshack.us/img91/3550/nocoverni0.png"*/ },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
                                 { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs.", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerStatus", content: "", className: "enyo-item-ternary", style: "color: white;" },
@@ -698,13 +698,19 @@ enyo.kind({
         {
             this.log("using player", player);
             this.$.SongInfoBox.show();
-            this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+            if(!this.song.coverArt)
+                this.$.AlbumArt.setSrc("images/noart.png");
+            else
+            {
+                var arturl = "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)";
+                if(this.$.AlbumArt.src != arturl)
+                    this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+            }
             this.$.ArtistNameLabel.setContent(this.song.artist);
             this.$.AlbumNameLabel.setContent(this.song.album);
             this.$.SongNameLabel.setContent(this.song.title);
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
-            player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)");
-            this.log(player.src);
+            player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
             this.$.ProgressSlider.setBarPosition(0);
             this.$.ProgressSlider.setAltBarPosition(0);        
             player.play();
@@ -715,7 +721,6 @@ enyo.kind({
             }
         } else {
             this.$.SongInfoBox.hide();
-            this.$.AlbumArt.setSrc("http://img91.imageshack.us/img91/3550/nocoverni0.png");
             player.setSrc("");
             this.clearTimer();
             delete this.timer;

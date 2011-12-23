@@ -645,7 +645,7 @@ enyo.kind({
             return;
         }
         this.$.MediaPlayer.setSong(inSongData);
-        if(!inSongData.isVideo && !inEvent.defaultPrevented) // if we get here with a prevented default, don't select the player ...
+        if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
             this.selectPlayerView();
         if(inEvent)
         {

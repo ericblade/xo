@@ -10,8 +10,7 @@ enyo.kind({
         height: "",
     },
     components: [
-        { name: "MainImage", kind: enyo.Image, src: this.src, height: this.height, width: this.width, showing: false, onload: "mainLoaded" },
-        { name: "DummyImage", kind: enyo.Image, src: this.fallbackSrc, height: this.height, width: this.width, showing: true },
+        { name: "MainImage", kind: enyo.Image, src: this.src, height: this.height, width: this.width, className: "albumimage", onload: "mainLoaded" },
     ],
     create: function()
     {
@@ -20,33 +19,37 @@ enyo.kind({
         this.heightChanged();
         this.srcChanged();
         this.fallbackSrcChanged();
-        this.currentSrc = this.$.DummyImage.src;
     },
     mainLoaded: function(inSender, inEvent)
     {
         this.$.MainImage.show();
-        this.$.DummyImage.hide();
-        this.currentSrc = this.$.MainImage.src;
+        this.$.MainImage.setClassName("albumimageloaded");
+    },
+    swapImages: function()
+    {
+        this.log();
+        this.setFallbackSrc(this.$.MainImage.src);
+        //this.$.MainImage.hide();
+        this.$.MainImage.setClassName("albumimage");
     },
     srcChanged: function()
     {
-        //this.$.DummyImage.show(); // reshow the dummy, as we're loading a new src
-        //this.$.MainImage.hide();
         this.$.MainImage.setSrc(this.src);
+        this.$.MainImage.setClassName("albumimagenoanim");
     },
     fallbackSrcChanged: function()
     {
-        this.$.DummyImage.setSrc(this.fallbackSrc);
+        this.applyStyle("background", "url("+this.fallbackSrc+")");
     },
     widthChanged: function()
     {
         this.$.MainImage.applyStyle("width", this.width);
-        this.$.DummyImage.applyStyle("width", this.width);
+        this.applyStyle("width", this.width);
     },
     heightChanged: function()
     {
         this.$.MainImage.applyStyle("height", this.height);
-        this.$.DummyImage.applyStyle("height", this.height);
+        this.applyStyle("height", this.height);
     }
 });
 
@@ -136,7 +139,7 @@ enyo.kind({
         //{ kind: "ProgressButton", flex: 1, layoutKind: "HFlexLayout", pack: "center", position: 50, ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
         { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
-                { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
+                { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "images/noart48.png" },
                 { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", pack: "center", components:
                     [
                         { kind: "HFlexBox", components:
@@ -178,6 +181,10 @@ enyo.kind({
         this.$.ArtistLabel.setContent(song.artist);
         this.$.AlbumNameLabel.setContent(song.album);
         this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
+        if(!song.coverArt)
+        {
+            this.log(" *** NO COVER ART ", song.title);
+        }
         this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
         this.oldSongId = song.id;
         this.setDraggable(true);
