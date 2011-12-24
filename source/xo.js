@@ -1,3 +1,5 @@
+// TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
+// TODO: TouchPad in portrait mode has a shitton of extra space we can use
 // TODO: need to have Clear playlist re-render the music view
 // TODO: Album hold menu
 // TODO: Probably should not allow any further taps to load more directories when we're waiting on a directory to load already ...
@@ -31,6 +33,7 @@
 // TODO: Saving of current index in playlist does not appear to be working
 // TODO: Why is it when I hit "Play" in Now Playing, it refreshes the entire list?
 // TODO: is the draggable stuff draggable on phones? shouldn't be..
+// TODO: font sizing on artist/song title should be based on the lengths of both, not of each
 
 function stripHtml(html)
 {
