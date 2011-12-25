@@ -57,15 +57,18 @@ enyo.kind({
         "onPlaySong": "",
         "onInsertSong": "",
         "onAddSong": "",
+        "onDownloadSong": "",
     },
     components: [
         { caption: "Play Now", onclick: "playSong" },
         { caption: "Play Next", onclick: "insertSong" },
         { caption: "Add to Now Playing", onclick: "addSong" },
+        { caption: "Download", onclick: "downloadSong" },
     ],
     playSong: function() { this.doPlaySong(this.song); },
     insertSong: function() { this.doInsertSong(this.song); },
     addSong: function() { this.doAddSong(this.song); },
+    downloadSong: function() { this.doDownloadSong(this.song); }
 });
 
 enyo.kind({

@@ -12,12 +12,12 @@ enyo.kind({
             { name: "ViewLabel", content: "View" },
             { kind: isLargeScreen() ? "FadeScroller" : "Scroller", accelerated: true, flex: 1, components:
                 [
-                    { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getSongListItem", components:
+                    { name: "SongList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getSongListItem", components:
                         [
                             { name: "SongItem", kind: "subsonic.AlbumOrSongItem", draggable: true, onclick: "songClicked", onmousehold: "songHeld" },
                         ]
                     },
-                    { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getAlbumListItem", components:
+                    { name: "AlbumList", kind: "VirtualRepeater", lookAhead: 20, flex: 1, accelerated: true, layoutKind: "HFlexLayout", onSetupRow: "getAlbumListItem", components:
                         [
                             { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", draggable: false, onclick: "albumClicked", onmousehold: "albumHeld" },
                         ]

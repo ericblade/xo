@@ -1,5 +1,3 @@
-// TODO: make a Swipable version of SongItem for use here, so you can delete things.
-// TODO: make Player playing a song search the Playlist, and highlight it if present, making that the current location in the playlist
 enyo.kind({
     name: "subsonic.PlaylistView",
     kind: "VFlexBox",
@@ -15,17 +13,15 @@ enyo.kind({
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
             [
                 isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
-                { name: "Scroller", kind: "FadeScroller", flex: 1, accelerated: true, components:
+                { name: "Scroller", kind: isLargeScreen() ? "FadeScroller" : "Scroller", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
-                        { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
+                        { name: "PlaylistRepeater", flex: 1, kind: "VirtualList", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
-                                //{ name: "Song", kind: "subsonic.SongItem", draggable: false, },
                                 { name: "Song", kind: "subsonic.AlbumOrSongItem",  onConfirm: "removeSong", swipeable: true, draggable: false, },
                             ]
                         },
                     ]
                 },
-                //{ kind: "Spacer" },
                 { kind: "Toolbar", ondragover: "scrollDown", components:
                     [
                         { kind: "GrabButton" },
@@ -94,7 +90,7 @@ enyo.kind({
             var si = this.$.Song;
             
             si.setSongInfo(p);
-            this.$.Song.setDraggable(false); // TODO: make songs draggable -off- the now playing list, since we can't easily swipe to delete, i guess
+            this.$.Song.setDraggable(false); 
             
             /*this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
             if(enyo.application.dragging && enyo.application.dropIndex != undefined && enyo.application.dropIndex > -1)
@@ -149,27 +145,3 @@ enyo.kind({
         
     }
 });
-/*
-                { kind: "HFlexBox", components:
-                    [ // TODO: put album image in here?
-                        { name: "SongNameLabel", kind: "Control", content: "Song Name" },
-                        { kind: "Spacer" },
-                        { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
-                    ]
-                },
-                { kind: "HFlexBox", components:
-                    [
-                        { name: "ArtistNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
-                        { kind: "Spacer" },
-                        { name: "AlbumNameLabel", kind: "Control", className: "enyo-item-ternary", content: "Album Name" },
-                        { kind: "Spacer" },
-                        { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "128kbps mp3" },
-                    ]
-                },
-                itemID: this.owner.itemID,
-                title: this.$.SongNameLabel.getContent(),
-                duration: this.$.SongLengthLabel.getContent(),
-                artist: this.ArtistNameLabel.getContent(),
-                album: this.AlbumNameLabel.getContent(),
-                filetype: this.SongFileTypeLabel.getContent(),
-*/

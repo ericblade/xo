@@ -149,15 +149,7 @@ enyo.kind({
                                 { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
                             ]
                         },
-                        /*{kind: "Example", layoutKind: "HFlexLayout", caption: "ProgresBarItem", components: [
-				{kind: "ProgressBarItem", onclick: "simulateProgress", components: [
-					{content: "Progressing short... ", style:"margin:-12px 0;height:24px"}
-				]},
-				{kind: "ProgressBarItem", position: 50, style:"height:48px; margin-top: 2px;", components: [
-					{content: "Progressing tall... "}
-				]},	
-			]},*/
-                        //{ kind: "ProgressButton", position: 0, content: "wtf" },
+                        { name: "DownloadProgress", kind: "ProgressBarItem", showing: false, position: 10, },
                         { kind: "HFlexBox", components:
                             [
                                 { name: "ArtistLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
@@ -187,7 +179,12 @@ enyo.kind({
         }
         this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
         this.oldSongId = song.id;
+        this.$.TitleLabel.applyStyle("max-width", "75%");
         this.setDraggable(true);
+        if(!enyo.application.downloads[song.id])
+            enyo.application.downloads[song.id] = { progress: this.$.DownloadProgress };
+        else
+            enyo.application.downloads[song.id].progress = this.$.DownloadProgress;
     },
     albumInfoChanged: function()
     {
@@ -202,6 +199,7 @@ enyo.kind({
         {
             this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
         }
+        this.$.TitleLabel.applyStyle("max-width", "95%");
         this.setDraggable(false);
     },
     dragStart: function(inSender, inEvent)

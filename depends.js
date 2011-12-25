@@ -10,6 +10,7 @@ enyo.depends(
         "source/PlaylistsView.js",
         "source/PlaylistView.js",
         "source/MusicView.js",
+        "source/MediaPlayerView.js",
         "source/Views.js",
         "source/subsonicApi.js",
         "source/Services.js", 

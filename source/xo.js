@@ -147,7 +147,7 @@ enyo.kind({
                 },
             ]
         },
-        { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", },
+        { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong"},
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
     ],
@@ -181,6 +181,7 @@ enyo.kind({
         this.log();
         this.$.SongMenu.openAtEvent(inEvent);
         this.$.SongMenu.setSong(inSongInfo);
+        this.$.SongMenu.sender = inSender;
         inEvent.stopPropagation();
     },
     toggleSongSelection: function(inSender, inEvent, inSongInfo)
@@ -473,6 +474,7 @@ enyo.kind({
         enyo.application.removeSongFromPlaylist = enyo.bind(this, this.removeSongFromPlaylist);
         document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
         document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
+        enyo.application.downloads = new Array();
     },
     avatarTrack: function(inEvent) {
         //this.log();
@@ -791,6 +793,11 @@ enyo.kind({
         // TODO: get a real popup. alert doesn't work.. lol
         window.alert("Error: " + inError.code +" " + inError.message);
     },
+    downloadSong: function(inSender, song, sender)
+    {
+        var filename = song.path.replace(/^.*[\\\/]/, '');
+        this.downloadSubsonicFile(song.id, filename, sender);
+    },
     downloadSubsonicFile: function(id, filename)
     {
         // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
@@ -803,12 +810,34 @@ enyo.kind({
             targetFilename: filename,
             keepFilenameOnRedirect: true,
             canHandlePause: true,
-            subscribe: true
+            subscribe: true,
+            subsonicId: id,
         });
+        enyo.application.downloads[id].amountReceived = 1;
+        enyo.application.downloads[id].amountTotal = 2;
     },
-    downloadStatus: function(x, y, z)
+    downloadStatus: function(inSender, inResponse, inRequest)
     {
-        this.log(x, y, z);
+        //for(var i in inRequest)
+        //{
+            //this.log(i, inRequest[i]);
+        //}
+        //return;
+        var x = enyo.application.downloads[inRequest.params.subsonicId];
+        var prog = enyo.application.downloads[inRequest.params.subsonicId].progress;
+        x.amountReceived = inResponse.amountReceived;
+        x.amountTotal = inResponse.amountTotal;
+        //this.log("downloadStatus: ", inRequest.params.subsonicId, x.amountReceived, x.amountTotal);
+        if(prog)
+        {
+            var perc = (x.amountReceived / x.amountTotal) * 100;
+            //this.log(x.amountReceived / x.amountTotal);
+            prog.setPosition( (x.amountReceived / x.amountTotal) * 100);
+            if(perc >= 100)
+                prog.hide();
+            else if(!prog.showing)
+                prog.show();
+        }
         /*
          [20111201-18:04:45.555847] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"amountReceived":13594343,"e_amountReceived":"13594343","amountTotal":13787624,"e_amountTotal":"13787624"} enyo.PalmService.Request, /usr/palm/frameworks/enyo/1.0/framework/build/enyo-build.js:72
 [20111201-18:04:45.579501] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"amountReceived":13700846,"e_amountReceived":"13700846","amountTotal":13787624,"e_amountTotal":"13787624"} enyo.PalmService.Request, /usr/palm/frameworks/enyo/1.0/framework/build/enyo-build.js:72
