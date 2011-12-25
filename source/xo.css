@@ -17,6 +17,10 @@
     -webkit-transition-duration: 1000ms;
 }
 
+.dragoverhighlight {
+    border-top: double blue;
+}
+
 .playhighlight {
     font-weight: bold; 
 }

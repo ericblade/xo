@@ -248,9 +248,9 @@ enyo.kind({
         if(inEvent.rowIndex != enyo.application.dropIndex)
         {
             var oldindex = enyo.application.dropIndex;
-            this.log("Dragging something over Playlist row " + inEvent.rowIndex + " last row was " + enyo.application.dropIndex);
+            //this.log("Dragging something over Playlist row " + inEvent.rowIndex + " last row was " + enyo.application.dropIndex);
             enyo.application.dropIndex = inEvent.rowIndex;
-            this.log("new dropIndex: " + enyo.application.dropIndex);
+            //this.log("new dropIndex: " + enyo.application.dropIndex);
             /*if(inEvent.rowIndex == undefined)
                 this.$.PlaylistView.render();
             else {
@@ -289,8 +289,8 @@ enyo.kind({
            type: drop
            vertical: false .. huh?
         */
-        console.log(inEvent);
-        console.log("rowIndex", inEvent.rowIndex);
+        //console.log(inEvent);
+        //console.log("rowIndex", inEvent.rowIndex);
         if(inEvent.dragInfo != undefined)
         {
             if(!enyo.application.playlist)
@@ -316,13 +316,15 @@ enyo.kind({
     addSongToPlaylist: function(song)
     {
         enyo.application.playlist.push(song);
-        this.$.PlaylistView.render();
+        enyo.nextTick(this, this.$.PlaylistView.render);
+        //this.$.PlaylistView.render();
         prefs.set("playlist", enyo.application.playlist);        
     },
     insertSongInPlaylist: function(song, row)
     {
         enyo.application.playlist.insert(row, song);
-        this.$.PlaylistView.render();
+        enyo.nextTick(this, this.$.PlaylistView.render);
+        //this.$.PlaylistView.render();
         prefs.set("playlist", enyo.application.playlist);        
     },
     removeSongFromPlaylist: function(song)
@@ -602,7 +604,7 @@ enyo.kind({
     },
     receivedDirectory: function(inSender, inDirectory)
     {
-        this.log(inDirectory);
+        //this.log(inDirectory);
         var x = inDirectory.directory.child;
         if(x.artist) // a single was received.. sigh
             x = [ x ];

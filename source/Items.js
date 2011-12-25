@@ -204,7 +204,7 @@ enyo.kind({
     },
     dragStart: function(inSender, inEvent)
     {
-        if(!this.draggable)
+        if(!this.draggable || !isLargeScreen())
             return;
         if(inEvent.horizontal)
         {

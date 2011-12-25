@@ -13,9 +13,9 @@ enyo.kind({
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
             [
                 isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
-                { name: "Scroller", kind: isLargeScreen() ? "FadeScroller" : "Scroller", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
+                { name: "Scroller", kind: isLargeScreen() ? "FadeScroller" : "Scroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
-                        { name: "PlaylistRepeater", flex: 1, kind: "VirtualList", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
+                        { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
                                 { name: "Song", kind: "subsonic.AlbumOrSongItem",  onConfirm: "removeSong", swipeable: true, draggable: false, },
                             ]
@@ -33,6 +33,23 @@ enyo.kind({
             ]
         },
     ],
+    dragOver: function(inSender, inEvent)
+    {
+        if(enyo.application.dragging)
+        {
+            if(this.dragTarget != inEvent.rowIndex)
+            {
+                this.oldDragTarget = this.dragTarget;
+                this.dragTarget = inEvent.rowIndex;
+                //this.log("Now dragging over ", this.dragTarget);
+                if(this.oldDragTarget !== undefined) {
+                    this.$.PlaylistRepeater.renderRow(this.oldDragTarget);
+                }
+                if(this.dragTarget !== undefined)
+                    this.$.PlaylistRepeater.renderRow(this.dragTarget);
+            }
+        }
+    },
     shuffleTap: function(inSender, inEvent)
     {
         this.doShuffle(inEvent);
@@ -86,6 +103,7 @@ enyo.kind({
         if(enyo.application.playlist && enyo.application.playlist[inRow])
         {
             this.$.Song.addRemoveClass("playhighlight", inRow == enyo.application.playlist.index);
+            this.$.Song.addRemoveClass("dragoverhighlight", enyo.application.dragging && inRow == this.dragTarget);
             var p = enyo.application.playlist[inRow];
             var si = this.$.Song;
             
