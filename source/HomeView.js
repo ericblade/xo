@@ -59,7 +59,20 @@ enyo.kind({
         if(enyo.application.folders) {
             var x = enyo.application.folders[this.folder.id];
             if(x[inRow]) {
-                //this.log(x[inRow].name);
+                //this.log(x[inRow]);
+                /* {
+                      "artist":
+                          [
+                              {
+                                  "id":"633a5c6d757369635c41626261","name":"Abba"},
+                                  {"id":"633a5c6d757369635c616263","name":"abc"},
+                                  {"id":"633a5c6d757369635c41432d4443","name":"AC-DC"},
+                                  {"id":"633a5c6d757369635c416363657074","name":"Accept"},
+                                }
+                            ],
+                        "name":"A"
+                    }
+                */
                 this.$.IndexLabel.setCaption(x[inRow].name);
                 this.$.ArtistRepeater.setArtists(x[inRow]);
                 this.$.ArtistRepeater.render();
@@ -87,6 +100,7 @@ enyo.kind({
         onServerDialog: "",
         onMusicView: "",
         onFolderClick: "",
+        onRandomList: "",
     },
     published: {
         licenseData: "",
@@ -125,9 +139,15 @@ enyo.kind({
                     { kind: "Divider", caption: "Folders" },
                     { name: "FolderRepeater", style: "padding-left: 20px; padding-right: 20px;", kind: "VirtualRepeater", onclick: "folderClicked", onSetupRow: "getFolderRow", components:
                         [
-                            { name: "FolderItem", kind: "DividerDrawer", open: false, content: "Folder", components:
+                            { kind: "HFlexBox", components:
                                 [
-                                    { name: "IndexRepeater", kind: "IndexRepeater", },
+                                    { name: "FolderItem", flex: 1, kind: "DividerDrawer", open: false, content: "Folder", components:
+                                        [
+                                            { name: "IndexRepeater", kind: "IndexRepeater", },
+                                        ]
+                                    },
+                                    { kind: "ToolButton", caption: "Shuffle", /*icon: "images/shuffle32.png",*/ onclick: "getRandomList" },
+                                    //{ kind: "IconButton", icon: "images/shuffle32.png", onclick: "getRandomList" },
                                 ]
                             },
                         ]
@@ -136,6 +156,11 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
+    getRandomList: function(inSender, inEvent)
+    {
+        this.doRandomList(inEvent, this.folderList[inEvent.rowIndex].id);
+        inEvent.stopPropagation();
+    },
     receivedIndexes: function(folderId)
     {
         this.log(folderId);

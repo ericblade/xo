@@ -85,6 +85,7 @@ enyo.kind({
             onSearchResults: "receivedSearchResults",
             onReceivedFolders: "receivedFolders",
             onReceivedIndexes: "receivedIndexes",
+            onRandomSongsReceived: "receivedRandomSongs",
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
@@ -103,7 +104,7 @@ enyo.kind({
                                 },
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                                     [
-                                        { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView" },
+                                        { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView", onRandomList: "getRandomList" },
                                         { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
@@ -238,6 +239,14 @@ enyo.kind({
         this.playNextPlaylist = true;
         this.$.api.call("getPlaylist", { id: inID });
     },
+    receivedRandomSongs: function(inSender, inSongs)
+    {
+        //this.log(inSongs);
+        this.log();
+        this.$.MusicView.resetViews();
+        this.$.MusicView.setMusic(inSongs.randomSongs.song);
+        this.selectMusicView();
+    },
     refreshPlaylists: function(inSender, inEvent)
     {
         this.$.api.call("getPlaylists");
@@ -316,15 +325,19 @@ enyo.kind({
     addSongToPlaylist: function(song)
     {
         enyo.application.playlist.push(song);
-        enyo.nextTick(this, this.$.PlaylistView.render);
-        //this.$.PlaylistView.render();
+        // TODO: we need to figure out how to get these to actually work properly, so our list renders NEXT tick instead of this one.. so the drag and drop notification disappears.
+        //enyo.nextTick(this, enyo.bind(this, this.$.PlaylistView.render));
+        //enyo.asyncMethod(this, this.$.PlaylistView.render)
+        this.$.PlaylistView.render();
         prefs.set("playlist", enyo.application.playlist);        
     },
     insertSongInPlaylist: function(song, row)
     {
         enyo.application.playlist.insert(row, song);
-        enyo.nextTick(this, this.$.PlaylistView.render);
-        //this.$.PlaylistView.render();
+        //enyo.nextTick(this, enyo.bind(this, this.$.PlaylistView.render));
+        //enyo.nextTick(this, this.$.PlaylistView.render);
+        //enyo.asyncMethod(this, this.$.PlaylistView.render);
+        this.$.PlaylistView.render();
         prefs.set("playlist", enyo.application.playlist);        
     },
     removeSongFromPlaylist: function(song)
@@ -491,6 +504,10 @@ enyo.kind({
     {
         this.$.api.call("getLicense");
     },
+    getRandomList: function(inSender, inEvent, inFolderId)
+    {
+        this.$.api.call("getRandomSongs", { size: 50, musicFolderId: inFolderId });
+    },
     changedServer: function()
     {
         this.$.api.serverChanged();
@@ -502,13 +519,18 @@ enyo.kind({
     },
     delayedStartup: function()
     {
-        this.changedServer();
+        if(!this.startupcomplete)
+        {
+            this.changedServer();
+            this.startupcomplete = true;
+        }
     },
     rendered: function()
     {
         this.inherited(arguments);
         this.$.MainPane.selectViewByName("slider");
         
+        //enyo.nextTick(this, this.delayedStartup);
         enyo.asyncMethod(this, "delayedStartup");
     },
     openServerDialog: function()
@@ -581,7 +603,7 @@ enyo.kind({
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
-        this.log();
+        //this.log(inAlbumList);
         this.$.HomeView.$.ServerSpinner.hide();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
@@ -602,12 +624,13 @@ enyo.kind({
         this.$.SearchView.setSongList(inSearchRes.song);
         this.$.SearchView.setArtistList(inSearchRes.artist);
     },
-    receivedDirectory: function(inSender, inDirectory)
+    receivedDirectory: function(inSender, inDirectory, inRequest)
     {
-        //this.log(inDirectory);
+        //this.log(inDirectory, inRequest);
         var x = inDirectory.directory.child;
         if(x.artist) // a single was received.. sigh
             x = [ x ];
+        x.folderId = inRequest.params.id;
         this.$.MusicView.setMusic(x);
     },
     receivedPlaylist: function(inSender, inPlaylist)

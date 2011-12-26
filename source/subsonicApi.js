@@ -64,6 +64,7 @@ enyo.kind({
         "onSearchResults": "",
         "onReceivedFolders": "",
         "onReceivedIndexes": "",
+        "onRandomSongsReceived": "",
     },
     serverChanged: function()
     {
@@ -133,7 +134,9 @@ enyo.kind({
         this.doAlbumListReceived(inResponse["subsonic-response"]);
     },
     gotRandomSongs: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        //this.log(inResponse, inRequest);
+        this.log();
+        this.doRandomSongsReceived(inResponse["subsonic-response"]);
     },
     gotLyrics: function(inSender, inResponse, inRequest) {
 // no lyrics: {"subsonic-response":{"lyrics":"","status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}        
@@ -201,7 +204,7 @@ enyo.kind({
     },
     directoryReceived:  function(inSender, inResponse, inRequest) {
         //this.log(inResponse["subsonic-response"]);
-        this.doDirectoryReceived(inResponse["subsonic-response"]);
+        this.doDirectoryReceived(inResponse["subsonic-response"], inRequest);
     },
     gotSearch: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);        

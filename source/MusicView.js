@@ -90,6 +90,7 @@ enyo.kind({
         "onSongClicked": "",
         "onSongHeld": "",
         "onAlbumHeld": "",
+        "onGetRandom": "",
     },
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
@@ -107,36 +108,58 @@ enyo.kind({
         this.inherited(arguments);
         //this.createNewView();
     },
-    createNewView: function()
+    createNewView: function(folderId)
     {
         var newview;
         var stamp = Date.now();
         if(!this.myViews)
             this.myViews = new Array();
         this.myViews.push(newview = this.$.ViewPane.createComponent({ kind: "MusicListView", "onSongHeld": "songHeld", "onAlbumHeld":"albumHeld", "onSongClicked":"songClicked", "onAlbumClicked":"albumClicked" }, { owner: this }));
-        newview.$.ViewLabel.setContent("View " + this.myViews.length);
+        newview.$.ViewLabel.setContent("View " + this.myViews.length + (folderId ? (" folder " + folderId) : ""));
         this.log("create new view completed in " + (Date.now() - stamp) + " ms");
+        // TODO: Figure out a way to display this toolbar if there are any songs in the list .. or just display it all the time? argh. we want to be able to Select All on a Random.
         if(this.myViews.length > 1)
         {
             newview.createComponent(
                 { kind: "Toolbar", components:
                     [
                         { kind: "ToolButton", caption: "Back", onclick: "goBack", },
+                        { kind: "Spacer" },
+                        //folderId ? { kind: "ToolButton", caption: "Random", onclick: "getRandomList", } : {},
                         { kind: "ToolButton", caption: "Select All", onclick: "selectAll" },
                         { kind: "ToolButton", caption: "Unselect All", onclick: "unselectAll" },
                     ]
                 },
                 { owner: this }
             );
-            //newview.createComponent({ kind: "Button", caption: "Back", onclick: "goBack" }, { owner: this });
         }
+        /*else
+        {
+            if(folderId)
+            {
+                newview.createComponent(
+                    { kind: "Toolbar", components:
+                        [
+                            { kind: "ToolButton", caption: "Random", onclick: "getRandomList", },
+                        ]
+                    },
+                    { owner: this }
+                )
+            }
+        }*/
         this.$.ViewPane.selectView(newview);
         //this.$.ViewPane.render();
         newview.render();
         return newview;
     },
+    /*getRandomList: function(inSender, inEvent)
+    {
+        var view = this.$.ViewPane.getView();
+        this.doGetRandom(inEvent, view.folderId);
+    },*/
     selectAll: function(inSender, inEvent) // TODO: selectAll and unselectAll are -really- slow due to some junk the intermediate functions are doing..
     {
+        this.log();
         var view = this.$.ViewPane.getView();
         var songs = view.songs;
         for(var x in songs)
@@ -151,6 +174,7 @@ enyo.kind({
     },
     unselectAll: function(inSender, inEvent)
     {
+        this.log();
         var view = this.$.ViewPane.getView();
         var songs = view.songs;
         for(var x in songs)
@@ -259,12 +283,16 @@ enyo.kind({
     },
     musicChanged: function()
     {
+        this.log();
         //this.log("music=", this.music );
-        var view = this.createNewView();
-        if(this.music && this.music.albumList)
+        var view = this.createNewView(this.music.folderId);
+        if(this.music && this.music.album)
+            this.music = [ this.music ];
+        else if(this.music && this.music.albumList)
             this.music = this.music.albumList.album;
         else if(this.music && this.music.directory)
             this.music = this.music.directory.child;
+        //this.log("music=", this.music );
         view.albums = new Array();
         view.songs = new Array();
         for(var x = 0; x < this.music.length; x++)
@@ -276,6 +304,7 @@ enyo.kind({
             else
                 view.songs.push(this.music[x]);
         }
+        view.folderId = this.music.folderId;
         view.$.SongList.render();
         view.$.AlbumList.render();
     },

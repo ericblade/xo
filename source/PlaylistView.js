@@ -44,9 +44,19 @@ enyo.kind({
                 //this.log("Now dragging over ", this.dragTarget);
                 if(this.oldDragTarget !== undefined) {
                     this.$.PlaylistRepeater.renderRow(this.oldDragTarget);
+                    //this.$.PlaylistRepeater.controlsToRow(this.oldDragTarget);
+                    //this.$.PlaylistRepeater.$.client.transitionRow(this.oldDragTarget);
+                    //this.$.Song.addRemoveClass("dragoverhighlight", enyo.application.dragging && inEvent.rowIndex == this.dragTarget);
+                    //this.log("old", this.oldDragTarget, this.$.Song.$.TitleLabel.content);
                 }
                 if(this.dragTarget !== undefined)
+                {
+                    //this.$.PlaylistRepeater.controlsToRow(this.dragTarget);
+                    //this.$.PlaylistRepeater.$.client.transitionRow(this.dragTarget);
                     this.$.PlaylistRepeater.renderRow(this.dragTarget);
+                    //this.$.Song.addRemoveClass("dragoverhighlight", enyo.application.dragging && inEvent.rowIndex == this.dragTarget);
+                    //this.log("new", this.dragTarget, this.$.Song.$.TitleLabel.content);
+                }
             }
         }
     },

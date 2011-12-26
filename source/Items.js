@@ -34,8 +34,11 @@ enyo.kind({
     },
     srcChanged: function()
     {
-        this.$.MainImage.setSrc(this.src);
-        this.$.MainImage.setClassName("albumimagenoanim");
+        if(this.$.MainImage.src != this.src)
+        {
+            this.$.MainImage.setSrc(this.src);
+            this.$.MainImage.setClassName("albumimagenoanim");
+        }
     },
     fallbackSrcChanged: function()
     {

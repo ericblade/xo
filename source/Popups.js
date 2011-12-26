@@ -47,6 +47,7 @@ enyo.kind({
     }
 });
 
+// TODO: "Go To Album" for use when we find a song via random selection?
 enyo.kind({
     name: "SongMenu",
     kind: enyo.Menu,
