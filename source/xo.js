@@ -1,3 +1,4 @@
+// TODO: use getUser API to get user information to see if we actually -have- playlist save/delete and jukebox permissions
 // TODO: add a popup that allows us to select an existing playlist to overwrite or enter a name to save over
 // TODO: have Random button open up a popup that gives options for what to pull?
 // TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
