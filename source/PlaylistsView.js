@@ -20,18 +20,19 @@ enyo.kind({
         "onRefreshPlaylists":"",
         "onOpenPlaylist":"",
         "onPlayPlaylist":"",
+        "onDeletePlaylist":"",
     },
     components: [
         { kind: "FadeScroller", flex: 1, components:
             [
                 { kind: "VirtualList", onSetupRow: "getPlaylistItem", components:
                     [
-                        { kind: "HFlexBox", components:
+                        { kind: "SwipeableItem", onclick: "clickItem", layoutKind: "HFlexLayout", onConfirm: "deletePlaylist", components:
                             [
-                                { name: "PlaylistName", flex: 1, kind: "Item", onclick: "clickItem" },
-                                { caption: "Play", kind: "Button", onclick: "clickPlay" },
+                                { name: "PlaylistName", flex: 1 },
+                                { kind: "Button", caption: "Play", onclick: "clickPlay" },
                             ]
-                        }
+                        },
                     ]
                 }
             ]
@@ -42,16 +43,26 @@ enyo.kind({
             ]
         },
     ],
+    deletePlaylist: function(inSender, inRow)
+    {
+        //this.log(inSender, inEvent);
+        this.doDeletePlaylist(this.playlists[inRow].id);
+    },
+    clearPlaylists: function() {
+        this.playlists = [ ];
+    },
     clickItem: function(inSender, inEvent)
     {
         var row = inEvent.rowIndex;
         this.doOpenPlaylist(inEvent, this.playlists[row].id);
+        inEvent.stopPropagation();
     },
     clickPlay: function(inSender, inEvent)
     {
         this.log();
         var row = inEvent.rowIndex;
         this.doPlayPlaylist(inEvent, this.playlists[row].id);
+        inEvent.stopPropagation();
     },
     addPlaylist: function(list)
     {

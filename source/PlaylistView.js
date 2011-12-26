@@ -8,6 +8,7 @@ enyo.kind({
         "onSongRemove": "",
         "onCycleTab": "",
         "onShuffle": "",
+        "onSavePlaylist": "",
     },
     components: [
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
@@ -28,6 +29,7 @@ enyo.kind({
                         { caption: "Shuffle", onclick: "shuffleTap" },
                         { caption: "Play", onclick: "doStartPlaylist" },
                         { caption: "Clear", onclick: "clearPlaylist" },
+                        { caption: "Save", onclick: "savePlaylist" },
                     ]
                 },
             ]
@@ -72,6 +74,11 @@ enyo.kind({
             this.log("WTF IS GOING ON", inEvent.defaultPrevented);
             this.doCycleTab(inEvent);
         }
+    },
+    savePlaylist: function(inSender, inEvent)
+    {
+        this.log(inSender, inEvent);
+        this.doSavePlaylist(inEvent);
     },
     removeSong: function(inSender, inIndex) // TODO: This is all fucked in Chrome .. will it be all fucked on devices?
     {

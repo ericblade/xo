@@ -65,6 +65,7 @@ enyo.kind({
         "onReceivedFolders": "",
         "onReceivedIndexes": "",
         "onRandomSongsReceived": "",
+        "onDeletedPlaylist":"",
     },
     serverChanged: function()
     {
@@ -154,7 +155,7 @@ enyo.kind({
     gotPlaylists: function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
         //{"subsonic-response":{"playlists":{"playlist":{"id":"72616e646f6d20706c61796c6973742e6d3375","name":"random playlist"}},"status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}
-        this.doReceivedPlaylists(inResponse["subsonic-response"].playlists);
+        this.doReceivedPlaylists(inResponse["subsonic-response"]);
     },
     gotPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
@@ -165,6 +166,7 @@ enyo.kind({
     },
     deletedPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
+        this.doDeletedPlaylist();
     },
     downloaded: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);

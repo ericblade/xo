@@ -1,3 +1,5 @@
+// TODO: add a popup that allows us to select an existing playlist to overwrite or enter a name to save over
+// TODO: have Random button open up a popup that gives options for what to pull?
 // TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
 // TODO: TouchPad in portrait mode has a shitton of extra space we can use
 // TODO: need to have Clear playlist re-render the music view
@@ -86,6 +88,7 @@ enyo.kind({
             onReceivedFolders: "receivedFolders",
             onReceivedIndexes: "receivedIndexes",
             onRandomSongsReceived: "receivedRandomSongs",
+            onDeletedPlaylist: "deletedPlaylist",
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
@@ -107,7 +110,7 @@ enyo.kind({
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView", onRandomList: "getRandomList" },
                                         { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection", onSongHeld: "showSongMenu", },
-                                        { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist" },
+                                        { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist", onDeletePlaylist: "deletePlaylist" },
                                     ]
                                 },
                             ]
@@ -126,7 +129,7 @@ enyo.kind({
                                 
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
-                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist" },
+                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist", onSavePlaylist: "savePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1, onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", style: "background: black; ", kind: "subsonic.MediaPlayerView" },
@@ -164,6 +167,15 @@ enyo.kind({
     {
         this.$.ErrorDialog.open();
         this.$.ErrorDialog.setMessage("Video Player Error: " + y.errorText + " - Do you have TouchPlayer installed?");
+    },
+    deletePlaylist: function(inSender, inId)
+    {
+        this.$.api.call( "deletePlaylist", { id: inId} );
+    },
+    deletedPlaylist: function(inSender, inResponse)
+    {
+        this.log(inSender, inResponse);
+        this.refreshPlaylists();
     },
     shakeNotify: function(inSender, inEvent)
     {
@@ -364,6 +376,17 @@ enyo.kind({
         enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
         this.$.PlaylistView.render();
     },
+    savePlaylist: function(inSender, inEvent)
+    {
+        this.log();
+        var arr = new Array();
+        for(var x = 0; x < enyo.application.playlist.length; x++)
+        {
+            arr.push(enyo.application.playlist[x].id);
+        }
+        this.$.api.call("createPlaylist", { name: "Playlist created by XO", songId: arr })
+        inEvent.stopPropagation();
+    },
     menuRemoveSongFromPlaylist: function(inSender, song)
     {
         this.removeSongFromPlaylist(song);
@@ -438,7 +461,13 @@ enyo.kind({
     receivedPlaylists: function(inSender, inLists)
     {
         this.log(inLists);
-        var list = inLists.playlist;
+        var list = inLists.playlists.playlist;
+        this.$.PlaylistsView.clearPlaylists();
+        if(!list)
+        {
+            this.$.PlaylistsView.render();
+            return;
+        }
         if(list.id)
             list[0] = list;
             
