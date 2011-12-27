@@ -273,9 +273,9 @@ enyo.kind({
         {
             this.setupPlayer();
         }
-        console.log("songChanged", this.song.isVideo);
+        //console.log("songChanged", this.song.isVideo);
         console.log(this.song);
-        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var player = this.song && (this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer);
         var node = player && player.audio;        
         if(!enyo.application.jukeboxMode && !this.justToggled)
         {
@@ -283,7 +283,7 @@ enyo.kind({
             if(this.$.VideoPlayer && this.$.VideoPlayer.node)
                 this.$.VideoPlayer.node.pause();
         }
-        if(this.song.isVideo)
+        if(this.song && this.song.isVideo)
         {
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
             url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
@@ -335,7 +335,8 @@ enyo.kind({
 
         } else {
             this.$.SongInfoBox.hide();
-            player.setSrc("");
+            if(player)
+                player.setSrc("");
             this.clearTimer();
             delete this.timer;
             this.checkStatus();
@@ -443,8 +444,12 @@ enyo.kind({
         /* {"currentIndex":0,"gain":0.5,"playing":true,"position":0} */
         //this.log(inStatus.gain, inStatus.playing);
         if(this.song != enyo.application.jukeboxList[inStatus.currentIndex])
-            this.setSong(enyo.application.jukeboxList[inStatus.currentIndex]);        
-        var prog = (inStatus.position / this.song.duration) * 100;
+            this.setSong(enyo.application.jukeboxList[inStatus.currentIndex]);
+        var prog;
+        if(this.song && this.song.duration)
+            prog = (inStatus.position / this.song.duration) * 100;
+        else
+            prog = 0;
         //this.log("song progress = ", inStatus.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
         //if(!this.$.MusicPlayer.audio.seeking)

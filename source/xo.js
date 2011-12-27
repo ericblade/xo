@@ -176,8 +176,8 @@ enyo.kind({
     },
     clearJukeboxPlaylist: function(inSender)
     {
-        this.$.api.call("clear");
-        enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "clear" });
+        this.$.api.call("jukeboxControl", { action: "clear" });
+        enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "get" });
     },
     jukeboxToggled: function(inSender)
     {
@@ -337,10 +337,12 @@ enyo.kind({
     receivedJukeboxPlaylist: function(inSender, inPlaylist)
     {
         this.log(inPlaylist);
-        if(inPlaylist.entry.album)
+        if(inPlaylist.entry && inPlaylist.entry.album)
             enyo.application.jukeboxList = [ inPlaylist.entry ];
         else
             enyo.application.jukeboxList = inPlaylist.entry;
+        if(!enyo.application.jukeboxList)
+            enyo.application.jukeboxList = new Array();
         enyo.application.jukeboxList.index = inPlaylist.currentIndex;
         this.$.PlaylistView.render();
     },
