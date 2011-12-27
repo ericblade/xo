@@ -66,6 +66,9 @@ enyo.kind({
         "onReceivedIndexes": "",
         "onRandomSongsReceived": "",
         "onDeletedPlaylist":"",
+        "onReceivedUser":"",
+        "onJukeboxPlaylist":"",
+        "onJukeboxStatus":"",
     },
     serverChanged: function()
     {
@@ -77,7 +80,8 @@ enyo.kind({
     },
     call: function(name, params)
     {
-        this.log(name, params);
+        if(name != "jukeboxControl" || params.action != "status")
+            this.log(name, params);
 
         var userid = prefs.get("username");
         var password = prefs.get("password");
@@ -115,7 +119,8 @@ enyo.kind({
         this.log(inResponse, inRequest);
     },
     gotUser: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        //this.log(inResponse, inRequest);
+        this.doReceivedUser(inResponse["subsonic-response"].user);
     },
     createdUser: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
@@ -144,7 +149,12 @@ enyo.kind({
         this.log(inResponse, inRequest);
     },
     controlledJukebox: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        //this.log(inResponse, inRequest);
+        var x = inResponse["subsonic-response"];
+        if(x.jukeboxPlaylist)
+            this.doJukeboxPlaylist(x.jukeboxPlaylist);
+        else
+            this.doJukeboxStatus(x.jukeboxStatus);
     },
     gotPodcasts: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);

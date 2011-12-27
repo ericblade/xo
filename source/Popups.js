@@ -64,8 +64,13 @@ enyo.kind({
         { caption: "Play Now", onclick: "playSong" },
         { caption: "Play Next", onclick: "insertSong" },
         { caption: "Add to Now Playing", onclick: "addSong" },
-        { caption: "Download", onclick: "downloadSong" },
+        { name: "DownloadButton", caption: "Download", onclick: "downloadSong", disabled: true },
     ],
+    afterOpen: function() {
+        this.inherited(arguments);
+        if(enyo.application.subsonicUser.downloadRole)
+            this.$.DownloadButton.setDisabled(false);
+    },
     playSong: function() { this.doPlaySong(this.song); },
     insertSong: function() { this.doInsertSong(this.song); },
     addSong: function() { this.doAddSong(this.song); },

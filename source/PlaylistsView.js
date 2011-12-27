@@ -27,7 +27,7 @@ enyo.kind({
             [
                 { kind: "VirtualList", onSetupRow: "getPlaylistItem", components:
                     [
-                        { kind: "SwipeableItem", onclick: "clickItem", layoutKind: "HFlexLayout", onConfirm: "deletePlaylist", components:
+                        { name: "PlaylistItem", kind: "SwipeableItem", swipeable: false, onclick: "clickItem", layoutKind: "HFlexLayout", onConfirm: "deletePlaylist", components:
                             [
                                 { name: "PlaylistName", flex: 1 },
                                 { kind: "Button", caption: "Play", onclick: "clickPlay" },
@@ -82,6 +82,8 @@ enyo.kind({
         {
             this.$.PlaylistName.setContent("Playlist: " + this.playlists[inRow].name);
             this.$.PlaylistName.playlistID = this.playlists[inRow].id;
+            if(enyo.application.subsonicUser.playlistRole)
+                this.$.PlaylistItem.setSwipeable(true);
             return true;
         }
         return false;

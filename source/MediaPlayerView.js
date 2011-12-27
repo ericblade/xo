@@ -10,6 +10,11 @@ enyo.kind({
         "onSongChanged": "",
         "onVideoError": "",
         "onVideoPlay": "",
+        "onShare": "",
+        "onJukeboxMode": "",
+        "onJukeboxStatus": "",
+        "onPlayPauseJukebox": "",
+        "onSetJukeboxPosition": "",
     },
         videoLaunched: function(inSender, x, y, z)
         {
@@ -84,26 +89,59 @@ enyo.kind({
                 { kind: "HFlexBox", components:
                     [
                         { kind: "GrabButton", style: "background-color: #121212" },
+                        { name: "JukeboxButton", style: "padding-left: 50px;", kind: "ToggleButton", onLabel: "Jukebox On", offLabel: "Jukebox Off", onChange: "toggleJukebox", disabled: true },
                         { kind: "Spacer", },
-                        { kind: "Button", caption: "Prev", onclick: "doPrevSong", },
+                        { name: "PrevButton", kind: "Button", caption: "Prev", onclick: "doPrevSong", },
                         { kind: "Button", caption: "Play/Pause", onclick: "playPauseClicked", },
                         { kind: "Button", caption: "Next", onclick: "doNextSong", },
                         { kind: "Spacer", },
+                        //{ name: "ShareButton", kind: "Button", caption: "Share", onclick: "clickShare", disabled: true },
+                        // TODO : wtf? Sharing is only supported for *.subsonic.org domain names.
                     ]
                 },
             ]                            
         },
     ],
     hideTips: function() { this.log(this); this.$.MediaPlayer.$.PlayerTips.hide(); },
+    toggleJukebox: function(inSender, inState)
+    {
+        this.log("Jukebox state ", inState);
+        enyo.application.jukeboxMode = inState;
+        this.doJukeboxMode();
+        if(inState)
+        {
+            var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+            var node = player && player.audio;
+            this.localSong = this.song;
+            // don't need to set this now that i've got it not pausing
+            //this.localSong.startTime = node.currentTime;
+            this.setSong(undefined); // the jukebox status should come back and tell us what song it's playing
+        } else {
+            if(this.localSong)
+            {
+                this.justToggled = true;
+                this.setSong(this.localSong);
+            }
+        }
+    },
     progressSliderChange: function(inSender, x)
     {
         this.log(x);
         //this.log(this.$.MusicPlayer.audio.currentTime, this.$.ProgressSlider.getPosition(), (this.$.ProgressSlider.getPosition() / 100) * this.song.duration);
         var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var node = player && player.audio;
+        var newTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
         
-        player.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
+        if(enyo.application.jukeboxMode)
+            this.doSetJukeboxPosition(newTime);
+        else
+            node.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
         //this.log(this.$.MusicPlayer.audio.currentTime);
         return true;
+    },
+    clickShare: function(inSender, inEvent)
+    {
+        this.doShare(inEvent, this.song);
     },
     published: {
         song: "",
@@ -113,6 +151,13 @@ enyo.kind({
         this.inherited(arguments);
         this.checkStatus();
         this.checkTimer();
+    },
+    receivedUser: function()
+    {
+        if(this.$.ShareButton && this.$.ShareButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.shareRole)
+            this.$.ShareButton.setDisabled(false);
+        if(this.$.JukeboxButton && this.$.JukeboxButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.jukeboxRole)
+            this.$.JukeboxButton.setDisabled(false);
     },
     setupPlayer: function()
     {
@@ -197,7 +242,7 @@ enyo.kind({
     },
     checkTimer: function() {
         if(!this.timer)
-            this.timer = setInterval(enyo.bind(this, this.checkStatus), 500);
+            this.timer = setInterval(enyo.bind(this, this.checkStatus), enyo.application.jukeboxMode ? 1000 : 500);
     },
     clearTimer: function() {
         if(this.timer)
@@ -211,15 +256,33 @@ enyo.kind({
         player.play();
         this.checkTimer();
     },
+    jukeboxPlaying: function()
+    {
+        this.log();
+        this.checkTimer();
+    },
+    jukeboxStopped: function()
+    {
+        this.log();
+        this.clearTimer();
+    },
     songChanged: function()
     {
-        this.setupPlayer();
+        this.log(this.justToggled);
+        if(!enyo.application.jukeboxMode && !this.justToggled) // don't create a new player if we're just going back to controlling the already playing one from jukebox mode
+        {
+            this.setupPlayer();
+        }
         console.log("songChanged", this.song.isVideo);
         console.log(this.song);
         var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
-        this.$.MusicPlayer.audio.pause();
-        if(this.$.VideoPlayer && this.$.VideoPlayer.node)
-            this.$.VideoPlayer.node.pause();
+        var node = player && player.audio;        
+        if(!enyo.application.jukeboxMode && !this.justToggled)
+        {
+            this.$.MusicPlayer.audio.pause();
+            if(this.$.VideoPlayer && this.$.VideoPlayer.node)
+                this.$.VideoPlayer.node.pause();
+        }
         if(this.song.isVideo)
         {
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
@@ -235,7 +298,8 @@ enyo.kind({
             this.$.VideoService.request( { itemId: this.song.id });
             return;
         }
-        enyo.application.nowplaying = this.song;
+        if(!enyo.application.jukeboxMode)
+            enyo.application.nowplaying = this.song;
         if(this.song)
         {
             this.log("using player", player);
@@ -258,15 +322,17 @@ enyo.kind({
             this.$.SongNameLabel.addRemoveClass("enyo-item-secondary", this.song.title.length > 15);
             this.$.SongNameLabel.addRemoveClass("enyo-item-ternary", this.song.title.length > 25);
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
-            player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
-            this.$.ProgressSlider.setBarPosition(0);
-            this.$.ProgressSlider.setAltBarPosition(0);        
-            player.play();
-            this.checkTimer();
-            if(this.song.startTime)
+            if(!enyo.application.jukeboxMode && !this.justToggled)
             {
-                player.currentTime =  this.song.startTime;
+                player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
+                this.$.ProgressSlider.setBarPosition(0);
+                this.$.ProgressSlider.setAltBarPosition(0);
             }
+            if(!enyo.application.jukeboxMode && !this.justToggled)
+                player.play();
+            this.checkTimer();
+            this.justToggled = false;
+
         } else {
             this.$.SongInfoBox.hide();
             player.setSrc("");
@@ -278,18 +344,24 @@ enyo.kind({
     },
     playPauseClicked: function(inSender, inEvent)
     {
+        this.log();
         var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
-        if(this.song.isVideo)
+        if(enyo.application.jukeboxMode)
         {
-            if(!player.node.paused)
-                player.node.pause();
-            else
-                player.node.play();
+            this.doPlayPauseJukebox();
         } else {
-            if(!this.$.MusicPlayer.audio.paused)
-                this.$.MusicPlayer.audio.pause();
-            else
-                this.$.MusicPlayer.audio.play();
+            if(this.song.isVideo)
+            {
+                if(!player.node.paused)
+                    player.node.pause();
+                else
+                    player.node.play();
+            } else {
+                if(!this.$.MusicPlayer.audio.paused)
+                    this.$.MusicPlayer.audio.pause();
+                else
+                    this.$.MusicPlayer.audio.play();
+            }
         }
         this.checkTimer();
         inEvent.stopPropagation();
@@ -305,8 +377,14 @@ enyo.kind({
         //var node = this.song.isVideo ? player.node : player.audio;
         var player = this.$.MusicPlayer;
         var node = player && player.audio;
-        if(!player || !node)
+        if(!enyo.application.jukeboxMode && (!player || !node))
             return;
+        if(enyo.application.jukeboxMode)
+        {
+            //this.log("checkStatus in Jukebox Mode");
+            this.doJukeboxStatus();
+            return;
+        }
         switch(node.readyState)
         {
             case 0:
@@ -324,6 +402,12 @@ enyo.kind({
             case 4:
                 state = "HAVE ENOUGH DATA";
                 break;
+        }
+        // we have to wait until readyState >= 1 to restore our current time in the song
+        if(node.readyState >= 1 && this.song.startTime)
+        {
+            node.currentTime = this.song.startTime;
+            this.song.startTime = 0;
         }
         this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         if(!this.song)
@@ -353,5 +437,18 @@ enyo.kind({
         {
             this.doNextSong();
         }
+    },
+    updateJukebox: function(inStatus)
+    {
+        /* {"currentIndex":0,"gain":0.5,"playing":true,"position":0} */
+        //this.log(inStatus.gain, inStatus.playing);
+        if(this.song != enyo.application.jukeboxList[inStatus.currentIndex])
+            this.setSong(enyo.application.jukeboxList[inStatus.currentIndex]);        
+        var prog = (inStatus.position / this.song.duration) * 100;
+        //this.log("song progress = ", inStatus.currentTime, this.song.duration, prog);
+        this.$.ProgressSlider.setBarPosition( prog );
+        //if(!this.$.MusicPlayer.audio.seeking)
+            this.$.ProgressSlider.setPosition(prog);
+        
     }
 });

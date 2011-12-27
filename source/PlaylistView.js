@@ -9,6 +9,7 @@ enyo.kind({
         "onCycleTab": "",
         "onShuffle": "",
         "onSavePlaylist": "",
+        "onClearJukebox": "",
     },
     components: [
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
@@ -29,7 +30,7 @@ enyo.kind({
                         { caption: "Shuffle", onclick: "shuffleTap" },
                         { caption: "Play", onclick: "doStartPlaylist" },
                         { caption: "Clear", onclick: "clearPlaylist" },
-                        { caption: "Save", onclick: "savePlaylist" },
+                        { name: "SaveButton", caption: "Save", onclick: "savePlaylist", disabled: true, },
                     ]
                 },
             ]
@@ -62,6 +63,12 @@ enyo.kind({
             }
         }
     },
+    receivedUser: function()
+    {
+        if(this.$.SaveButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
+            this.$.SaveButton.setDisabled(false);
+
+    },
     shuffleTap: function(inSender, inEvent)
     {
         this.doShuffle(inEvent);
@@ -83,12 +90,14 @@ enyo.kind({
     removeSong: function(inSender, inIndex) // TODO: This is all fucked in Chrome .. will it be all fucked on devices?
     {
         this.log();
-        this.doSongRemove(enyo.application.playlist[inIndex]);
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.doSongRemove(playlist[inIndex]);
     },
     songHeld: function(inSender, inEvent)
     {
         this.log();
-        this.doItemMenu(inEvent, enyo.application.playlist[inEvent.rowIndex]);
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.doItemMenu(inEvent, playlist[inEvent.rowIndex]);
         inEvent.stopPropagation();
     },
     scrollUp: function(inSender, inEvent)
@@ -107,9 +116,12 @@ enyo.kind({
     },
     songClicked: function(inSender, inEvent)
     {
-        enyo.application.playlist.index = inEvent.rowIndex;
-        this.render();
-        this.doSongClicked(inEvent, enyo.application.playlist[inEvent.rowIndex]);
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.renderRow(enyo.application.playlist.index);
+        playlist.index = inEvent.rowIndex;
+        this.renderRow(inEvent.rowIndex);
+        //this.render();
+        this.doSongClicked(inEvent, playlist[inEvent.rowIndex]);
         inEvent.stopPropagation();
         inEvent.preventDefault();
         this.log();
@@ -117,15 +129,16 @@ enyo.kind({
     },
     getListItem: function(inSender, inRow)
     {
-        if(enyo.application.playlist && enyo.application.playlist[inRow])
-        {
-            this.$.Song.addRemoveClass("playhighlight", inRow == enyo.application.playlist.index);
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        if(playlist && playlist[inRow])
+        {            
+            this.$.Song.addRemoveClass("playhighlight", inRow == playlist.index);
             this.$.Song.addRemoveClass("dragoverhighlight", enyo.application.dragging && inRow == this.dragTarget);
-            var p = enyo.application.playlist[inRow];
+            var p = playlist[inRow];
             var si = this.$.Song;
             
             si.setSongInfo(p);
-            this.$.Song.setDraggable(false); 
+            this.$.Song.setDraggable(false);
             
             /*this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
             if(enyo.application.dragging && enyo.application.dropIndex != undefined && enyo.application.dropIndex > -1)
@@ -167,8 +180,13 @@ enyo.kind({
     },
     clearPlaylist: function(inSender, inEvent)
     {
-        enyo.application.playlist = [ ];
-        this.$.PlaylistRepeater.render();
+        if(enyo.application.jukeboxMode)
+            this.doClearJukebox();
+        else
+        {
+            enyo.application.playlist = [ ];
+            this.$.PlaylistRepeater.render();
+        }
         inEvent.stopPropagation();
     },
     scrollUp: function(inSender, inEvent)

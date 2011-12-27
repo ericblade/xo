@@ -1,3 +1,6 @@
+// TODO: need to do some checking on the Timer in MediaPlayerView and make sure that it's only running when we really need it to be.
+// TODO: docs say "jukeboxControl" "set" doesn't stop the current play .. so if that's correct, then we're stopping it when we receive the new playlist?
+
 // TODO: use getUser API to get user information to see if we actually -have- playlist save/delete and jukebox permissions
 // TODO: add a popup that allows us to select an existing playlist to overwrite or enter a name to save over
 // TODO: have Random button open up a popup that gives options for what to pull?
@@ -90,6 +93,9 @@ enyo.kind({
             onReceivedIndexes: "receivedIndexes",
             onRandomSongsReceived: "receivedRandomSongs",
             onDeletedPlaylist: "deletedPlaylist",
+            onReceivedUser: "receivedUserInfo",
+            onJukeboxPlaylist: "receivedJukeboxPlaylist",
+            onJukeboxStatus: "receivedJukeboxStatus",
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
@@ -130,10 +136,10 @@ enyo.kind({
                                 
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
-                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist", onSavePlaylist: "savePlaylist" },
+                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onClearJukebox: "clearJukeboxPlaylist", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist", onSavePlaylist: "savePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
-                                                { name: "MediaPlayer", flex: 1, onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", style: "background: black; ", kind: "subsonic.MediaPlayerView" },
+                                                { name: "MediaPlayer", flex: 1, onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
                                             ]
                                         },
                                         //{ name: "LyricsView", flex: 1, kind: "LyricsView", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" }
@@ -163,6 +169,50 @@ enyo.kind({
     onRelaunch: function(x, y, z)
     {
         this.log(x, y, z);
+    },
+    shareMedia: function(inSender, inEvent, inSong)
+    {
+        this.$.api.call("createShare", { id: inSong.id });
+    },
+    clearJukeboxPlaylist: function(inSender)
+    {
+        this.$.api.call("clear");
+        enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "clear" });
+    },
+    jukeboxToggled: function(inSender)
+    {
+        if(enyo.application.jukeboxMode)
+        {
+            this.$.api.call("jukeboxControl", { action: "status" });
+            this.$.api.call("jukeboxControl", { action: "get" }); // TODO: get implies a status as well, need to extract the status and set it in jukeboxStatus rather than making two calls
+        }
+        this.$.PlaylistView.render(); // switch playlists
+    },
+    getJukeboxStatus: function(inSender)
+    {
+        this.$.api.call("jukeboxControl", { action: "status" });
+    },
+    setJukeboxPosition: function(inSender, inPos)
+    {
+        this.$.api.call("jukeboxControl", { action: "skip", index: enyo.application.jukeboxList.index, offset: Math.floor(inPos) });
+    },
+    playPauseJukebox: function(inSender)
+    {
+        if(enyo.application.jukeboxStatus.playing)
+            this.$.api.call("jukeboxControl", { action: "stop" });
+        else
+            this.$.api.call("jukeboxControl", { action: "start" });
+    },
+    receivedUserInfo: function(inSender, inUser)
+    {
+        /* {"adminRole":true,"commentRole":true,"coverArtRole":true,"downloadRole":true,"email":"blade.eric@gmail.com","jukeboxRole":true,"playlistRole":true,
+          "podcastRole":true,"scrobblingEnabled":false,"settingsRole":true,"shareRole":true,"streamRole":true,"uploadRole":true,"username":"admin"}
+        */
+        this.log(inUser);
+        enyo.application.subsonicUser = inUser;
+        this.user = enyo.application.subsonicUser;
+        this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
+        this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
     },
     videoError: function(inSender, x, y, z)
     {
@@ -260,6 +310,58 @@ enyo.kind({
         this.$.MusicView.setMusic(inSongs.randomSongs.song);
         this.selectMusicView();
     },
+    /*
+        {
+            "currentIndex":-1,
+            "entry":
+            {
+                "album":"Appetite for Destruction",
+                "artist":"Guns N' Roses",
+                "bitRate":128,
+                "contentType":"audio/mpeg",
+                "coverArt":"633a5c6d757369635c47756e7320274e2720526f7365735c416c62756d735c31393837202d20417070657469746520466f72204465737472756374696f6e5c466f6c6465722e6a7067",
+                "duration":407,
+                "genre":"Rock",
+                "id":"633a5c6d757369635c47756e7320274e2720526f7365735c416c62756d735c31393837202d20417070657469746520466f72204465737472756374696f6e5c30362e20506172616469736520436974792e6d7033","isDir":false,"isVideo":false,"parent":"633a5c6d757369635c47756e7320274e2720526f7365735c416c62756d735c31393837202d20417070657469746520466f72204465737472756374696f6e","path":"Guns 'N' Roses/Albums/1987 - Appetite For Destruction/06. Paradise City.mp3",
+                "size":6541312,
+                "suffix":"mp3",
+                "title":"Paradise City",
+                "track":6,
+                "year":1987
+            },
+            "gain":0.5,
+            "playing":false,
+            "position":0
+        }
+    */
+    receivedJukeboxPlaylist: function(inSender, inPlaylist)
+    {
+        this.log(inPlaylist);
+        if(inPlaylist.entry.album)
+            enyo.application.jukeboxList = [ inPlaylist.entry ];
+        else
+            enyo.application.jukeboxList = inPlaylist.entry;
+        enyo.application.jukeboxList.index = inPlaylist.currentIndex;
+        this.$.PlaylistView.render();
+    },
+    receivedJukeboxStatus: function(inSender, inStatus)
+    {
+        //this.log(inStatus);
+        /* {"currentIndex":0,"gain":0.5,"playing":true,"position":0} */
+        if(enyo.application.jukeboxStatus)
+        {
+            if(inStatus.playing && !enyo.application.jukeboxStatus.playing)
+                this.$.MediaPlayer.jukeboxPlaying();
+            else if(!inStatus.playing && enyo.application.jukeboxStatus.playing)
+                this.$.MediaPlayer.jukeboxStopped();
+        }
+        if(enyo.application.jukeboxStatus && !enyo.application.jukeboxStatus.playing && inStatus.playing)
+        {
+            this.$.MediaPlayer.jukeboxPlaying();
+        }
+        this.$.MediaPlayer.updateJukebox(inStatus);
+        enyo.application.jukeboxStatus = inStatus;
+    },
     refreshPlaylists: function(inSender, inEvent)
     {
         this.$.api.call("getPlaylists");
@@ -299,6 +401,7 @@ enyo.kind({
     dropOnPlaylist: function(inSender, inEvent)
     {
         if(!enyo.application.dragging) return;
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         /* dispatchTarget: enyo object we're dropping onto
            dragInfo: undefined?
            dx: x distance of drop?
@@ -315,9 +418,9 @@ enyo.kind({
         //console.log("rowIndex", inEvent.rowIndex);
         if(inEvent.dragInfo != undefined)
         {
-            if(!enyo.application.playlist)
+            if(!playlist)
             {
-                enyo.application.playlist = [ ];
+                playlist = [ ];
             }
             var songitem = inEvent.dragInfo.list.querySongItem(inEvent.dragInfo.index);
             if(inEvent.rowIndex == undefined)
@@ -333,57 +436,82 @@ enyo.kind({
         if(inEvent.rowIndex == undefined) // we're inserting it last
             this.$.PlaylistView.scrollToBottom();
 
-        prefs.set("playlist", enyo.application.playlist);
+        if(!enyo.application.jukeboxMode)
+            prefs.set("playlist", enyo.application.playlist);
     },
     addSongToPlaylist: function(song)
     {
-        enyo.application.playlist.push(song);
-        // TODO: we need to figure out how to get these to actually work properly, so our list renders NEXT tick instead of this one.. so the drag and drop notification disappears.
-        //enyo.nextTick(this, enyo.bind(this, this.$.PlaylistView.render));
-        //enyo.asyncMethod(this, this.$.PlaylistView.render)
-        this.$.PlaylistView.render();
-        prefs.set("playlist", enyo.application.playlist);        
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.log();
+        playlist.push(song);
+        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        this.log(enyo.application.jukeboxMode);
+        if(!enyo.application.jukeboxMode)
+            prefs.set("playlist", enyo.application.playlist);
+        else
+        {
+            this.log("jukeboxControl adding ", song.id);
+            this.$.api.call("jukeboxControl", { action: "add", id: song.id });
+        }
     },
     insertSongInPlaylist: function(song, row)
     {
+        // TODO: we need to support inserting into Jukebox playlists, but that's difficult since there is no "add" command, we'll need to clear it and resend it
+        if(enyo.application.jukeboxMode)
+        {
+            this.addSongToPlaylist(song);
+            return;
+        }
         enyo.application.playlist.insert(row, song);
-        //enyo.nextTick(this, enyo.bind(this, this.$.PlaylistView.render));
-        //enyo.nextTick(this, this.$.PlaylistView.render);
-        //enyo.asyncMethod(this, this.$.PlaylistView.render);
-        this.$.PlaylistView.render();
+        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
         prefs.set("playlist", enyo.application.playlist);        
     },
     removeSongFromPlaylist: function(song)
     {
         var x;
-        if(x = this.findItemInPlaylist(song.id))
+        this.log(song.id, this.findItemInPlaylist(song.id));
+        if( (x = this.findItemInPlaylist(song.id)) !== false)
         {
             this.log("Removing item ", x, "from playlist");
-            enyo.application.playlist.remove(x);
-            if(enyo.application.playlist.index >= x)
+            if(enyo.application.jukeboxMode)
             {
-                enyo.application.playlist.index--;
+                this.$.api.call("jukeboxControl", { action: "remove", index: x });
+                enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "get" });
+                // TODO: do we want to remove this from the list right away, or just depend on a fast connection making it look good?
+            } else {
+                enyo.application.playlist.remove(x);
+                if(enyo.application.playlist.index >= x)
+                {
+                    enyo.application.playlist.index--;
+                }
+                this.$.PlaylistView.render();
+                prefs.set("playlist", enyo.application.playlist);
             }
         }
-        this.$.PlaylistView.render();
-        prefs.set("playlist", enyo.application.playlist);        
     },
     shufflePlaylist: function(inSender, inEvent)
     {
         this.log();
         if(inEvent)
             inEvent.stopPropagation();
-        enyo.application.playlist.index = 0;
-        enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
-        this.$.PlaylistView.render();
+        if(enyo.application.jukeboxMode)
+        {
+            this.$.api.call("jukeboxControl", { action: "shuffle" });
+            enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "get" }); /* hope for no race conditions .. sigh */
+        } else {
+            enyo.application.playlist.index = 0;
+            enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
+            this.$.PlaylistView.render();
+        }
     },
     savePlaylist: function(inSender, inEvent)
     {
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         this.log();
         var arr = new Array();
-        for(var x = 0; x < enyo.application.playlist.length; x++)
+        for(var x = 0; x < playlist.length; x++)
         {
-            arr.push(enyo.application.playlist[x].id);
+            arr.push(playlist[x].id);
         }
         this.$.api.call("createPlaylist", { name: "Playlist created by XO", songId: arr })
         inEvent.stopPropagation();
@@ -492,6 +620,7 @@ enyo.kind({
         
         enyo.application.playlist = prefs.get("playlist");
         enyo.application.playlist.index = parseInt(enyo.application.playlist.index);
+        enyo.application.jukeboxList = new Array();
         
         enyo.application.setDragTracking = enyo.bind(this, function(on, inEvent)
             {
@@ -545,6 +674,7 @@ enyo.kind({
         this.$.HomeView.$.ServerSpinner.show();
         this.pingServer();
         this.getServerLicense();
+        this.$.api.call("getUser", { username: prefs.get("username") });
         //this.$.api.call("getIndexes");        
     },
     delayedStartup: function()
@@ -672,8 +802,25 @@ enyo.kind({
             this.$.MusicView.setMusic(stupid);
             this.selectMusicView();
         } else {
-            enyo.application.playlist = inPlaylist;
-            enyo.application.playlist.index = 0;
+            var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+            playlist = inPlaylist;
+            playlist.index = 0;
+            if(enyo.application.jukeboxMode)
+            {
+                enyo.application.jukeboxList = playlist;
+                var arr = new Array();
+                for(var x = 0; x < playlist.length; x++)
+                {
+                    arr.push(playlist[x].id);
+                }                
+                this.$.api.call("jukeboxControl", { action: "set", id: arr });
+                // .. we don't need to call a get. . . does the "set" return the playlist?
+                //enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", "get");
+            }
+            else
+            {
+                enyo.application.playlist = playlist;
+            }
             this.$.PlaylistView.render();
             this.startPlaylist();
         }
@@ -707,7 +854,10 @@ enyo.kind({
             this.loadAlbum(inSender, inEvent, inSongData.id);
             return;
         }
-        this.$.MediaPlayer.setSong(inSongData);
+        if(enyo.application.jukeboxMode)
+            this.$.api.call("jukeboxControl", { action: "skip", index: inEvent.rowIndex });
+        else
+            this.$.MediaPlayer.setSong(inSongData);
         if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
             this.selectPlayerView();
         if(inEvent)
@@ -720,6 +870,11 @@ enyo.kind({
     resumePlaylist: function(inSender, inEvent)
     {
         this.log();
+        if(enyo.application.jukeboxMode)
+        {
+            this.$.api.call("jukeboxControl", { action: "start" });
+            return;
+        }
         if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
             enyo.application.playlist.index = 0;
         enyo.application.playlist[enyo.application.playlist.index].startTime = prefs.get("savedtime");
@@ -731,6 +886,11 @@ enyo.kind({
     {
         //enyo.application.playlist.index = 0;
         this.log();
+        if(enyo.application.jukeboxMode)
+        {
+            this.$.api.call("jukeboxControl", { action: "start" });
+            return;
+        }
         if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
             enyo.application.playlist.index = 0;
         this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
@@ -740,33 +900,44 @@ enyo.kind({
     playNext: function(inSender, inEvent)
     {
         var currId = this.$.MediaPlayer.song.id;
-        var currindex = enyo.application.playlist.index;
-        var p = enyo.application.playlist[currindex];
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        var currindex = playlist.index;
+        var p = playlist[currindex];
         
         this.log("playNext", currId, currindex, p);
         if(p && p.id != currId)
         {
             currindex = this.findItemInPlaylist(currId);
         }
-        enyo.application.playlist.index = parseInt(currindex) + 1;
-        this.log("moving to ", enyo.application.playlist.index, enyo.application.playlist[enyo.application.playlist.index]);
-        this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
+        playlist.index = parseInt(currindex) + 1;
+        this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
+        if(enyo.application.jukeboxMode)
+            this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
+        else
+            this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
     },
     playPrev: function(inSender, inEvent)
     {
         var currId = this.$.MediaPlayer.song.id;
-        var currindex = enyo.application.playlist.index;
-        var p = enyo.application.playlist[currindex];
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        var currindex = playlist.index;
+        var p = playlist[currindex];
+        
+        this.log("playPrev", currId, currindex, p);
         if(p && p.id != currId)
         {
             currindex = this.findItemInPlaylist(currId);
         }
-        enyo.application.playlist.index = parseInt(currindex) - 1;
-        this.$.MediaPlayer.setSong(enyo.application.playlist[currindex-1]);
+        playlist.index = parseInt(currindex) - 1;
+        this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
+        if(enyo.application.jukeboxMode)
+            this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
+        else
+            this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
     },
     songChanged: function(inSender, inSong) // reset a highlight...
     {
-        if(inSong && inSong.id)
+        if(inSong && inSong.id && !enyo.application.jukeboxMode)
         {
             enyo.application.playlist.index = this.findItemInPlaylist(inSong.id);
             this.log("song changed, now playing playlist #" + enyo.application.playlist.index);
@@ -775,9 +946,11 @@ enyo.kind({
     },
     findItemInPlaylist: function(itemID)
     {
-        for(x in enyo.application.playlist)
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        for(x in playlist)
         {
-            if(x && enyo.application.playlist[x].id == itemID)
+            this.log(x, playlist[x].id);
+            if(x && playlist[x].id == itemID)
             {
                 return x;
             }
@@ -858,7 +1031,7 @@ enyo.kind({
         // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
         this.log(id, filename);
         this.$.fileDownload.call( {
-            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
+            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
             mime: "audio/mpeg3",
             targetDir: "/media/internal/xo/",
             //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,
