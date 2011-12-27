@@ -66,7 +66,7 @@ enyo.kind({
     receivedUser: function()
     {
         if(this.$.SaveButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
-            this.$.SaveButton.setDisabled(false);
+            this.$.SaveButton.setShowing(enyo.application.subsonicUser.playlistRole);
 
     },
     shuffleTap: function(inSender, inEvent)

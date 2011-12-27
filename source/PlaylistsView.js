@@ -23,9 +23,9 @@ enyo.kind({
         "onDeletePlaylist":"",
     },
     components: [
-        { kind: "FadeScroller", flex: 1, components:
-            [
-                { kind: "VirtualList", onSetupRow: "getPlaylistItem", components:
+        //{ kind: "FadeScroller", flex: 1, components:
+        //    [
+                { kind: "VirtualRepeater", flex: 1, onSetupRow: "getPlaylistItem", components:
                     [
                         { name: "PlaylistItem", kind: "SwipeableItem", swipeable: false, onclick: "clickItem", layoutKind: "HFlexLayout", onConfirm: "deletePlaylist", components:
                             [
@@ -34,9 +34,9 @@ enyo.kind({
                             ]
                         },
                     ]
-                }
-            ]
-        },
+                },
+        //    ]
+        //},
         { kind: "Toolbar", components:
             [
                 { caption: "Refresh", onclick: "doRefreshPlaylists" },
@@ -73,8 +73,10 @@ enyo.kind({
     },
     getPlaylistItem: function(inSender, inRow)
     {
+        this.log(inRow);
         if(this.playlists == undefined)
         {
+            this.log("loading playlists");
             this.doRefreshPlaylists();
             return false;
         }
@@ -82,7 +84,7 @@ enyo.kind({
         {
             this.$.PlaylistName.setContent("Playlist: " + this.playlists[inRow].name);
             this.$.PlaylistName.playlistID = this.playlists[inRow].id;
-            if(enyo.application.subsonicUser.playlistRole)
+            if(enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
                 this.$.PlaylistItem.setSwipeable(true);
             return true;
         }

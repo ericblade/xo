@@ -361,6 +361,11 @@ enyo.kind({
         {
             this.$.MediaPlayer.jukeboxPlaying();
         }
+        if(enyo.application.jukeboxList.index != inStatus.currentIndex)
+        {
+            enyo.application.jukeboxList.index = inStatus.currentIndex
+            this.$.PlaylistView.render();
+        }
         this.$.MediaPlayer.updateJukebox(inStatus);
         enyo.application.jukeboxStatus = inStatus;
     },
@@ -503,6 +508,7 @@ enyo.kind({
         } else {
             enyo.application.playlist.index = 0;
             enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
+            this.$.MediaPlayer.setSong(enyo.application.playlist[0]);
             this.$.PlaylistView.render();
         }
     },
@@ -592,19 +598,15 @@ enyo.kind({
     receivedPlaylists: function(inSender, inLists)
     {
         this.log(inLists);
-        var list = inLists.playlists.playlist;
+        var list = inLists && inLists.playlists && inLists.playlists.playlist;
         this.$.PlaylistsView.clearPlaylists();
-        if(!list)
-        {
-            this.$.PlaylistsView.render();
-            return;
-        }
-        if(list.id)
+        if(list && list.id)
             list[0] = list;
-            
+
+        this.$.PlaylistsView.clearPlaylists();            
         for(var x in list)
         {
-            //this.log(list[x].id);
+            this.log(list[x].id);
             if(list[x].id)
                 this.$.PlaylistsView.addPlaylist(list[x]);
         }
@@ -856,7 +858,7 @@ enyo.kind({
             this.loadAlbum(inSender, inEvent, inSongData.id);
             return;
         }
-        if(enyo.application.jukeboxMode)
+        if(enyo.application.jukeboxMode && inEvent && inEvent.rowIndex !== undefined)
             this.$.api.call("jukeboxControl", { action: "skip", index: inEvent.rowIndex });
         else
             this.$.MediaPlayer.setSong(inSongData);

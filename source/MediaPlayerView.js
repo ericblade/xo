@@ -346,7 +346,7 @@ enyo.kind({
     playPauseClicked: function(inSender, inEvent)
     {
         this.log();
-        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.$.MusicPlayer;
         if(enyo.application.jukeboxMode)
         {
             this.doPlayPauseJukebox();

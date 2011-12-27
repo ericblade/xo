@@ -61,7 +61,7 @@ enyo.kind({
         "onDownloadSong": "",
     },
     components: [
-        { caption: "Play Now", onclick: "playSong" },
+        { name: "PlayNowButton", caption: "Play Now", onclick: "playSong" },
         { caption: "Play Next", onclick: "insertSong" },
         { caption: "Add to Now Playing", onclick: "addSong" },
         { name: "DownloadButton", caption: "Download", onclick: "downloadSong", disabled: true },
@@ -70,6 +70,10 @@ enyo.kind({
         this.inherited(arguments);
         if(enyo.application.subsonicUser.downloadRole)
             this.$.DownloadButton.setDisabled(false);
+        if(enyo.application.jukeboxMode)
+            this.$.PlayNowButton.hide();
+        else
+            this.$.PlayNowButton.show();
     },
     playSong: function() { this.doPlaySong(this.song); },
     insertSong: function() { this.doInsertSong(this.song); },
