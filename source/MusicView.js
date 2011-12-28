@@ -28,7 +28,8 @@ enyo.kind({
     getSongListItem: function(inSender, inRow)
     {
         var s = this.songs;
-        if(s) s = s[inRow];
+        if(s)
+            s = s[inRow];
         if(s)
         {
             //this.log(inRow, s.title);
@@ -46,7 +47,8 @@ enyo.kind({
     getAlbumListItem: function(inSender, inRow)
     {
         var a = this.albums;
-        if(a) a = a[inRow];
+        if(a)
+            a = a[inRow];
         if(a)
         {
             //this.log(inRow, a.title);
@@ -91,6 +93,8 @@ enyo.kind({
         "onSongHeld": "",
         "onAlbumHeld": "",
         "onGetRandom": "",
+        "onEnableSelectButtons": "",
+        "onDisableSelectButtons": "",
     },
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
@@ -102,6 +106,10 @@ enyo.kind({
     viewSelected: function(inSender, inNewView, inOldView)
     {
         this.log();
+        if(inNewView.songs && inNewView.songs.length > 0)
+            this.doEnableSelectButtons();
+        else
+            this.doDisableSelectButtons();
     },
     ready: function()
     {
@@ -120,7 +128,7 @@ enyo.kind({
         // TODO: Figure out a way to display this toolbar if there are any songs in the list .. or just display it all the time? argh. we want to be able to Select All on a Random.
         if(this.myViews.length > 1)
         {
-            newview.createComponent(
+            /*newview.createComponent(
                 { kind: "Toolbar", components:
                     [
                         { kind: "ToolButton", caption: "Back", onclick: "goBack", },
@@ -131,7 +139,7 @@ enyo.kind({
                     ]
                 },
                 { owner: this }
-            );
+            );*/
         }
         /*else
         {
@@ -157,35 +165,10 @@ enyo.kind({
         var view = this.$.ViewPane.getView();
         this.doGetRandom(inEvent, view.folderId);
     },*/
-    selectAll: function(inSender, inEvent) // TODO: selectAll and unselectAll are -really- slow due to some junk the intermediate functions are doing..
+    getSongs: function()
     {
-        this.log();
         var view = this.$.ViewPane.getView();
-        var songs = view.songs;
-        for(var x in songs)
-        {
-            if(songs[x].id)
-            {
-                songs[x].isSelected = true;
-                enyo.application.addSongToPlaylist(songs[x]); // TODO: need to write a function that will add only if they aren't already there..
-            }
-        }
-        view.$.SongList.render();
-    },
-    unselectAll: function(inSender, inEvent)
-    {
-        this.log();
-        var view = this.$.ViewPane.getView();
-        var songs = view.songs;
-        for(var x in songs)
-        {
-            if(songs[x].id)
-            {
-                songs[x].isSelected = false;
-                enyo.application.removeSongFromPlaylist(songs[x]);
-            }
-        }
-        view.$.SongList.render();
+        return view.songs;
     },
     selectSongItem: function(index, selected)
     {
@@ -207,6 +190,12 @@ enyo.kind({
     {
         var view = this.$.ViewPane.getView();
         view.$.albums[index].isSelected = selected;
+    },
+    renderView: function()
+    {
+        var view = this.$.ViewPane.getView();
+        view.$.SongList.render();
+        view.$.AlbumList.render();
     },
     resetViews: function()
     {
@@ -299,6 +288,7 @@ enyo.kind({
         {
             this.music[x].isSelected = (this.findItemInPlaylist(this.music[x].id) !== false);
 
+            //this.log(this.music[x].path);
             if(this.music[x].isDir)
                 view.albums.push(this.music[x]);
             else
@@ -307,6 +297,10 @@ enyo.kind({
         view.folderId = this.music.folderId;
         view.$.SongList.render();
         view.$.AlbumList.render();
+        if(view.songs.length > 0)
+            this.doEnableSelectButtons();
+        else
+            this.doDisableSelectButtons();
     },
 
     songClicked: function(inSender, inEvent, songInfo)

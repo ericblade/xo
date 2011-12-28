@@ -86,19 +86,19 @@ enyo.kind({
                         },
                     ]
                 },
-                { kind: "HFlexBox", components:
-                    [
-                        { kind: "GrabButton", style: "background-color: #121212" },
-                        { name: "JukeboxButton", style: "padding-left: 50px;", kind: "ToggleButton", onLabel: "Jukebox On", offLabel: "Jukebox Off", onChange: "toggleJukebox", disabled: true },
+                //{ kind: "HFlexBox", flex: 1, components:
+                //    [
+                //        { kind: "GrabButton", style: "background-color: #121212" },
+                        /*{ name: "JukeboxButton", style: "padding-left: 50px;", kind: "ToggleButton", onLabel: "Jukebox On", offLabel: "Jukebox Off", onChange: "toggleJukebox", disabled: true },
                         { kind: "Spacer", },
                         { name: "PrevButton", kind: "Button", caption: "Prev", onclick: "doPrevSong", },
                         { kind: "Button", caption: "Play/Pause", onclick: "playPauseClicked", },
                         { kind: "Button", caption: "Next", onclick: "doNextSong", },
-                        { kind: "Spacer", },
+                        { kind: "Spacer", },*/
                         //{ name: "ShareButton", kind: "Button", caption: "Share", onclick: "clickShare", disabled: true },
                         // TODO : wtf? Sharing is only supported for *.subsonic.org domain names.
-                    ]
-                },
+                //    ]
+                //},
             ]                            
         },
     ],
@@ -155,9 +155,13 @@ enyo.kind({
     receivedUser: function()
     {
         if(this.$.ShareButton && this.$.ShareButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.shareRole)
-            this.$.ShareButton.setDisabled(false);
+        {
+            this.$.ShareButton.setShowing(enyo.application.subsonicUser.shareRole);
+        }
         if(this.$.JukeboxButton && this.$.JukeboxButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.jukeboxRole)
-            this.$.JukeboxButton.setDisabled(false);
+        {
+            this.$.JukeboxButton.setShowing(enyo.application.subsonicUser.jukeboxRole);
+        }
     },
     setupPlayer: function()
     {
@@ -221,6 +225,14 @@ enyo.kind({
             this.$.VideoPlayer.node.addEventListener('waiting', e);
         }
 
+    },
+    enableControls: function()
+    {
+    
+    },
+    disableControls: function()
+    {
+        
     },
     playerEvent: function(inEvent, x, y)
     {
@@ -346,6 +358,14 @@ enyo.kind({
     playPauseClicked: function(inSender, inEvent)
     {
         this.log();
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        if(!this.song)
+        {
+            if(isNaN(playlist.index) || playlist.index > playlist.length)
+                playlist.index = 0;
+            this.log("starting song ", playlist.index);
+            this.setSong(playlist[playlist.index]);
+        }
         var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.$.MusicPlayer;
         if(enyo.application.jukeboxMode)
         {

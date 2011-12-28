@@ -115,7 +115,7 @@ enyo.kind({
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView", onRandomList: "getRandomList" },
-                                        { name: "MusicView", kind: "subsonic.NewMusicView", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
+                                        { name: "MusicView", kind: "subsonic.NewMusicView", onEnableSelectButtons: "enableSelectButtons", onDisableSelectButtons: "disableSelectButtons", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection", onSongHeld: "showSongMenu", },
                                         { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist", onDeletePlaylist: "deletePlaylist" },
                                     ]
@@ -136,7 +136,15 @@ enyo.kind({
                                 
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
-                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView", onClearJukebox: "clearJukeboxPlaylist", onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong", onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist", onSavePlaylist: "savePlaylist" },
+                                        { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView",
+                                            onEnablePrev: "enablePrev", onDisablePrev: "disablePrev", onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
+                                            onEnableNext: "enableNext", onDisableNext: "disableNext", onEnableSave: "enableSave", onDisableSave: "disableSave",
+                                            onEnableClear: "enableClear", onDisableClear: "disableClear", onEnableShuffle: "enableShuffle", onDisableShuffle: "disableShuffle",
+                                            onClearJukebox: "clearJukeboxPlaylist",
+                                            onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong",
+                                            onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist",
+                                            ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist",
+                                            onSavePlaylist: "savePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1, onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
@@ -151,6 +159,20 @@ enyo.kind({
                 },
             ]
         },
+        { kind: "Toolbar", components: [
+            { caption: "Back", onclick: "doBack", showing: isLargeScreen() },
+            { name: "SelectAllButton", caption: "+ All", onclick: "selectAll", showing: false, },
+            { name: "UnselectAllButton", caption: "- All", onclick: "unselectAll", showing: false, },
+            { kind: "Spacer" },
+            { name: "PrevButton", caption: "<<", onclick: "playPrev", },
+            { name: "PlayButton", caption: "Play", onclick: "playOrPause" },
+            { name: "NextButton", caption: ">>", onclick: "playNext", },
+            { kind: "Spacer" },
+            { name: "ClearButton", caption: "Clear", onclick: "clearPlaylist" },
+            { name: "ShuffleButton", caption: "Shuffle", onclick: "shufflePlaylist" },
+            { name: "SaveButton", caption: "Save", onclick: "savePlaylist" },
+            { name: "JukeboxToggle", kind: "ToggleButton", onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+        ]},
         { kind: "VFlexBox", components:
             [
                 { name: "serverDialog", kind: "subsonic.ServerDialog",
@@ -166,9 +188,76 @@ enyo.kind({
     {
         this.log(x, y, z);
     },
+    enablePrev: function() { this.$.PrevButton.show(); },
+    disablePrev: function() { this.$.PrevButton.hide(); },
+    enablePlay: function() { this.$.PlayButton.show(); },
+    disablePlay: function() { this.$.PlayButton.hide(); },
+    enableNext: function() { this.$.NextButton.show(); },
+    disableNext: function() { this.$.NextButton.hide(); },
+    enableClear: function() { this.$.ClearButton.show(); },
+    disableClear: function() { this.$.ClearButton.hide(); },
+    enableShuffle: function() { this.$.ShuffleButton.show(); },
+    disableShuffle: function() { this.$.ShuffleButton.hide(); },
+    enableSave: function() { this.$.SaveButton.show(); },
+    disableSave: function() { this.$.SaveButton.hide(); },
+    enableJukebox: function() { this.$.JukeboxToggle.show(); },
+    disableJukebox: function() { this.$.JukeboxToggle.hide(); },
+    toggleJukebox: function(inSender, inStatus)
+    {
+        this.$.MediaPlayer.toggleJukebox(inSender, inStatus);
+    },
+    clearPlaylist: function() {
+        this.$.PlaylistView.clearPlaylist();
+    },
+    playOrPause: function(inSender, inEvent)
+    {
+        this.$.MediaPlayer.playPauseClicked(inSender, inEvent);
+    },
+    selectAll: function()
+    {
+        var songs = this.$.MusicView.getSongs();
+        for(var x in songs)
+        {
+            if(songs[x].id)
+            {
+                songs[x].isSelected = true;
+                enyo.application.addSongToPlaylist(songs[x], true); // TODO: need to write a function that will add only if they aren't already there..
+            }
+        }
+        //enyo.nextTick(this.$.MusicView, this.$.MusicView.renderView);
+        this.$.MusicView.renderView();
+        this.$.PlaylistView.render();
+    },
+    unselectAll: function()
+    {
+        var songs = this.$.MusicView.getSongs();
+        for(var x in songs)
+        {
+            if(songs[x].id)
+            {
+                songs[x].isSelected = false;
+                enyo.application.removeSongFromPlaylist(songs[x], true); // TODO: need to write a function that will add only if they aren't already there..
+            }
+        }
+        this.$.MusicView.renderView();
+        //enyo.nextTick(this.$.MusicView, this.$.MusicView.renderView);
+        this.$.PlaylistView.render();
+    },
     onRelaunch: function(x, y, z)
     {
         this.log(x, y, z);
+    },
+    enableSelectButtons: function()
+    {
+        this.log();
+        this.$.SelectAllButton.show();
+        this.$.UnselectAllButton.show();
+    },
+    disableSelectButtons: function()
+    {
+        this.log();
+        this.$.SelectAllButton.hide();
+        this.$.UnselectAllButton.hide();
     },
     shareMedia: function(inSender, inEvent, inSong)
     {
@@ -213,6 +302,7 @@ enyo.kind({
         this.user = enyo.application.subsonicUser;
         this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
         this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
+        this.$.JukeboxToggle.setShowing(inUser.jukeboxRole);
     },
     videoError: function(inSender, x, y, z)
     {
@@ -446,12 +536,13 @@ enyo.kind({
         if(!enyo.application.jukeboxMode)
             prefs.set("playlist", enyo.application.playlist);
     },
-    addSongToPlaylist: function(song)
+    addSongToPlaylist: function(song, noRefresh)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         this.log();
         playlist.push(song);
-        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        if(!noRefresh)
+            enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
         this.log(enyo.application.jukeboxMode);
         if(!enyo.application.jukeboxMode)
             prefs.set("playlist", enyo.application.playlist);
@@ -473,13 +564,13 @@ enyo.kind({
         enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
         prefs.set("playlist", enyo.application.playlist);        
     },
-    removeSongFromPlaylist: function(song)
+    removeSongFromPlaylist: function(song, noRefresh)
     {
         var x;
-        this.log(song.id, this.findItemInPlaylist(song.id));
+        //this.log(song.id, this.findItemInPlaylist(song.id));
         if( (x = this.findItemInPlaylist(song.id)) !== false)
         {
-            this.log("Removing item ", x, "from playlist");
+            //this.log("Removing item ", x, "from playlist");
             if(enyo.application.jukeboxMode)
             {
                 this.$.api.call("jukeboxControl", { action: "remove", index: x });
@@ -491,7 +582,8 @@ enyo.kind({
                 {
                     enyo.application.playlist.index--;
                 }
-                this.$.PlaylistView.render();
+                if(!noRefresh)
+                    this.$.PlaylistView.render();
                 prefs.set("playlist", enyo.application.playlist);
             }
         }
@@ -574,7 +666,13 @@ enyo.kind({
     },
     rightPaneSelected: function(inSender, inNewView, inOldView)
     {
-        this.log(inNewView.name, this.$.MediaPlayerView.song);
+        if(inNewView == this.$.MediaPlayerView)
+            inNewView = this.$.MediaPlayer;
+        if(inOldView == this.$.MediaPlayerView)
+            inOldView = this.$.MediaPlayer;
+        enyo.application.rightPaneView = inNewView;
+        inOldView.disableControls();
+        inNewView.enableControls();
         /*if(inNewView.name == "LyricsView" && enyo.application.nowplaying)
         {
             inNewView.setSongArtist(enyo.application.nowplaying.artist);
@@ -953,7 +1051,7 @@ enyo.kind({
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         for(x in playlist)
         {
-            this.log(x, playlist[x].id);
+            //this.log(x, playlist[x].id);
             if(x && playlist[x].id == itemID)
             {
                 return x;

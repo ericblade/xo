@@ -10,6 +10,18 @@ enyo.kind({
         "onShuffle": "",
         "onSavePlaylist": "",
         "onClearJukebox": "",
+        "onEnablePrev": "",
+        "onDisablePrev": "",
+        "onEnablePlay": "",
+        "onDisablePlay": "",
+        "onEnableNext": "",
+        "onDisableNext": "",
+        "onEnableSave": "",
+        "onDisableSave": "",
+        "onEnableClear": "",
+        "onDisableClear": "",
+        "onEnableShuffle": "",
+        "onDisableShuffle": "",
     },
     components: [
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
@@ -24,7 +36,7 @@ enyo.kind({
                         },
                     ]
                 },
-                { kind: "Toolbar", ondragover: "scrollDown", components:
+                /*{ kind: "Toolbar", ondragover: "scrollDown", components:
                     [
                         { kind: "GrabButton" },
                         { caption: "Shuffle", onclick: "shuffleTap" },
@@ -32,7 +44,7 @@ enyo.kind({
                         { caption: "Clear", onclick: "clearPlaylist" },
                         { name: "SaveButton", caption: "Save", onclick: "savePlaylist", disabled: true, },
                     ]
-                },
+                },*/
             ]
         },
     ],
@@ -63,11 +75,54 @@ enyo.kind({
             }
         }
     },
+    rendered: function()
+    {
+        this.inherited(arguments);
+        this.enableControls();
+        this.log(enyo.application.rightPaneView);
+        if(enyo.application.rightPaneView != this)
+            this.disableControls();
+    },
+    enableControls: function()
+    {
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        if(playlist.index > 0)
+            this.doEnablePrev();
+        else
+            this.doDisablePrev();
+        if(playlist.length > 0)
+        {
+            this.doEnablePlay();
+            this.doEnableClear();
+            if(enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
+                this.doEnableSave();
+        }
+        else
+        {
+            this.doDisablePlay();
+            this.doDisableClear();
+            this.doDisableSave();
+        }
+        if(playlist.length > 1)
+            this.doEnableShuffle();
+        else
+            this.doDisableShuffle();
+
+        if(playlist.index < playlist.length-1)
+            this.doEnableNext();
+        else
+            this.doDisableNext();        
+    },
+    disableControls: function()
+    {
+        // play, prev, next, should always be visible if available
+        //this.doDisablePlay();
+        this.doDisableClear();
+        this.doDisableSave();
+        this.doDisableShuffle();
+    },
     receivedUser: function()
     {
-        if(this.$.SaveButton.disabled && enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
-            this.$.SaveButton.setShowing(enyo.application.subsonicUser.playlistRole);
-
     },
     shuffleTap: function(inSender, inEvent)
     {
