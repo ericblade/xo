@@ -1001,17 +1001,20 @@ enyo.kind({
     },
     playNext: function(inSender, inEvent)
     {
-        var currId = this.$.MediaPlayer.song.id;
+        var currId = this.$.MediaPlayer.song && this.$.MediaPlayer.song.id;
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         var currindex = playlist.index;
         var p = playlist[currindex];
         
         this.log("playNext", currId, currindex, p);
-        if(p && p.id != currId)
+        if(p && p.id != currId && currId !== undefined)
         {
             currindex = this.findItemInPlaylist(currId);
         }
-        playlist.index = parseInt(currindex) + 1;
+        if(!currindex)
+            playlist.index = 0;
+        else
+            playlist.index = parseInt(currindex) + 1;
         this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
@@ -1020,17 +1023,20 @@ enyo.kind({
     },
     playPrev: function(inSender, inEvent)
     {
-        var currId = this.$.MediaPlayer.song.id;
+        var currId = this.$.MediaPlayer.song && this.$.MediaPlayer.song.id;
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         var currindex = playlist.index;
         var p = playlist[currindex];
         
         this.log("playPrev", currId, currindex, p);
-        if(p && p.id != currId)
+        if(p && p.id != currId && currId !== undefined)
         {
             currindex = this.findItemInPlaylist(currId);
         }
-        playlist.index = parseInt(currindex) - 1;
+        if(!currindex)
+            playlist.index = 0;
+        else
+            playlist.index = parseInt(currindex) - 1;
         this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });

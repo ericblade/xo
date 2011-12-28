@@ -178,7 +178,7 @@ enyo.kind({
         this.$.SongFileTypeLabel.setContent(song.bitRate + " " + song.suffix);
         if(!song.coverArt)
         {
-            this.log(" *** NO COVER ART ", song.title);
+            //this.log(" *** NO COVER ART ", song.title);
         }
         this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
         this.oldSongId = song.id;
