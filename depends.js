@@ -1,4 +1,5 @@
 enyo.depends(
+        "source/xolauncher.js",
         "source/globals.js",
         "source/base64.js",
 	"source/morf.js",

@@ -1,12 +1,12 @@
+// TODO: Multiple server configs
+// TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle
 // TODO: when tap selecting song, if not already playing, add and start playing
-// TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add)
+// TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add, "Just Select")
 // TODO: tablets default to Play Now, phones to Add / Play ?
 
 // TODO: need to do some checking on the Timer in MediaPlayerView and make sure that it's only running when we really need it to be.
 // TODO: docs say "jukeboxControl" "set" doesn't stop the current play .. so if that's correct, then we're stopping it when we receive the new playlist?
 
-// TODO: use getUser API to get user information to see if we actually -have- playlist save/delete and jukebox permissions
-// TODO: add a popup that allows us to select an existing playlist to overwrite or enter a name to save over
 // TODO: have Random button open up a popup that gives options for what to pull?
 // TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
 // TODO: TouchPad in portrait mode has a shitton of extra space we can use
@@ -18,14 +18,11 @@
 
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
-// TODO: half implemented downloading of files
 // TODO: Jukebox mode .. with volume buttons on device directly controlling the jukebox volume
 // TODO: stop play at App Exit . . unless going to dashboard mode?
-// TODO: if a file in the list is playing or downloading, have it have it work as a ProgressButton ?
 // TODO: drag-drop to player (add to playlist, or play now?)
 // TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
 // TODO: when highlighting song in playlist that is active in player, attempt to scroll it into view?
-// TODO: download button on Search view doesn't work
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
 // TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
 // TODO: (option to?) disable sleep while player screen is up
@@ -42,7 +39,6 @@
 // TODO: Have search also send a search query to Amazon, linking for purchasing? hmmm...
 // TODO: Saving of current index in playlist does not appear to be working
 // TODO: Why is it when I hit "Play" in Now Playing, it refreshes the entire list?
-// TODO: is the draggable stuff draggable on phones? shouldn't be..
 // TODO: font sizing on artist/song title should be based on the lengths of both, not of each
 
 function stripHtml(html)
@@ -148,7 +144,7 @@ enyo.kind({
                                             onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong",
                                             onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist",
                                             ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist",
-                                            onSavePlaylist: "savePlaylist" },
+                                            onSavePlaylist: "openSavePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1, onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
@@ -174,7 +170,7 @@ enyo.kind({
             { kind: "Spacer" },
             { name: "ClearButton", caption: "Clear", onclick: "clearPlaylist" },
             { name: "ShuffleButton", caption: "Shuffle", onclick: "shufflePlaylist" },
-            { name: "SaveButton", caption: "Save", onclick: "savePlaylist" },
+            { name: "SaveButton", caption: "Save", onclick: "openSavePlaylist" },
             { name: "JukeboxToggle", kind: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
         { kind: "VFlexBox", components:
@@ -187,6 +183,17 @@ enyo.kind({
         { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong"},
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
+        { name: "SavePlaylistPopup", kind: "Dialog", components:
+            [
+                { kind: "RowGroup", components:
+                    [
+                        { content: "Enter Playlist Name" },
+                        { name: "SavePlaylistName", kind: "Input" },
+                    ]
+                },
+                { kind: "Button", caption: "OK", onclick: "savePlaylist" },
+            ]
+        },
         { kind: "AppMenu", lazy: false, components:
             [
                 { name: "JukeboxMenuItem", caption: "Jukebox OFF", onclick: "menuToggleJukebox" }
@@ -195,7 +202,8 @@ enyo.kind({
     ],
     onLoad: function(x, y, z)
     {
-        this.log(x, y, z);
+        this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
+        
     },
     enablePrev: function() { this.$.PrevButton.show(); },
     disablePrev: function() { this.$.PrevButton.hide(); },
@@ -289,7 +297,7 @@ enyo.kind({
     },
     onRelaunch: function(x, y, z)
     {
-        this.log(x, y, z);
+        this.log("windowType=", enyo.windowParams.windowType);        
     },
     enableSelectButtons: function()
     {
@@ -567,6 +575,8 @@ enyo.kind({
     addSongToPlaylist: function(song, noRefresh)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        if(this.findItemInPlaylist(song.id) !== false)
+            return;
         playlist.push(song);
         if(!noRefresh)
             enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
@@ -585,6 +595,8 @@ enyo.kind({
             this.addSongToPlaylist(song);
             return;
         }
+        if(this.findItemInPlaylist(song.id) !== false)
+            return;
         enyo.application.playlist.insert(row, song);
         enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
         prefs.set("playlist", enyo.application.playlist);        
@@ -627,6 +639,10 @@ enyo.kind({
             this.$.PlaylistView.render();
         }
     },
+    openSavePlaylist: function(inSender, inEvent)
+    {
+        this.$.SavePlaylistPopup.open();
+    },
     savePlaylist: function(inSender, inEvent)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
@@ -635,8 +651,9 @@ enyo.kind({
         {
             arr.push(playlist[x].id);
         }
-        this.$.api.call("createPlaylist", { name: "Playlist created by XO", songId: arr })
+        this.$.api.call("createPlaylist", { name: this.$.SavePlaylistName.getValue(), songId: arr })
         inEvent.stopPropagation();
+        this.$.SavePlaylistPopup.close();
     },
     menuRemoveSongFromPlaylist: function(inSender, song)
     {
@@ -762,8 +779,8 @@ enyo.kind({
         enyo.application.loadArtist = enyo.bind(this, this.loadSearchedAlbum); // TODO: well, i guess it'll work .. hmm.
         enyo.application.addSongToPlaylist = enyo.bind(this, this.addSongToPlaylist);
         enyo.application.removeSongFromPlaylist = enyo.bind(this, this.removeSongFromPlaylist);
-        document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
-        document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
+        //document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
+        //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
     },
     avatarTrack: function(inEvent) {

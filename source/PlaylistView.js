@@ -99,10 +99,11 @@ enyo.kind({
     rendered: function()
     {
         this.inherited(arguments);
-        this.enableControls();
-        this.log(enyo.application.rightPaneView);
-        if(enyo.application.rightPaneView != this)
+        if(enyo.application.rightPaneView != this && typeof enyo.application.rightPaneView !== 'undefined')
             this.disableControls();
+        else
+            this.enableControls();
+        this.log("rightPaneView=", enyo.application.rightPaneView);
     },
     enableControls: function()
     {

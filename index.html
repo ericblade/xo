@@ -6,7 +6,21 @@
 </head>
 <body>
 <script type="text/javascript">
-	new xo().renderInto(document.body);
+	new xolauncher().renderInto(document.body);
+/*(function()
+{
+    console.log("XO Headless Starting Up");
+    var unloadFunc = function() {
+        window.removeEventListener('unload', unloadFunc);
+    };
+    window.addEventListener('unload', unloadFunc);
+    var x = enyo.application.xo = new xo();
+    enyo.applicationRelaunchHandler = function(params) {
+        console.log("index-embedded relaunch handler params: " + params);
+        x.onRelaunch(params);
+    };
+    x.renderInto(document.body);
+})();*/
 </script>
 </body>
 </html>

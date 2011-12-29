@@ -138,6 +138,7 @@ enyo.kind({
         albumInfo: undefined,
         draggable: false,
     },
+    confirmRequired: false,
     components: [
         //{ kind: "ProgressButton", flex: 1, layoutKind: "HFlexLayout", pack: "center", position: 50, ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
         { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:

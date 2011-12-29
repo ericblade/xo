@@ -16,6 +16,7 @@ enyo.kind({
         "onPlayPauseJukebox": "",
         "onSetJukeboxPosition": "",
     },
+    style: "padding-left: 3px; padding-right: 3px; ",
         videoLaunched: function(inSender, x, y, z)
         {
             this.log(inSender, x, y, z);
@@ -399,6 +400,7 @@ enyo.kind({
     {
         //this.log(this.showing);
         //this.log();
+        this.log("windowType", enyo.windowParams.windowType);
         var state;
         var node;
         //var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
