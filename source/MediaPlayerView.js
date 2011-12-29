@@ -37,10 +37,11 @@ enyo.kind({
                 { kind: "HFlexBox", components:
                     [
                         { kind: "Spacer", },
-                        { name: "AlbumNameLabel", content: "Song Name", style: "color: white; max-width: 95%; ", },
+                        { name: "AlbumNameLabel", content: "", style: "color: white; max-width: 95%; ", },
                         { kind: "Spacer", },
                     ]
-                },                        
+                },
+
                 { kind: "HFlexBox", components:
                     [
                         { kind: "Spacer", },
@@ -50,7 +51,6 @@ enyo.kind({
                                 { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://img91.imageshack.us/img91/3550/nocoverni0.png"*/ },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
                                 { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs.", className: "enyo-item-ternary", style: "color: white;" },
-                                { name: "PlayerStatus", content: "", showing: false, className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
                             ]
                         },
@@ -58,6 +58,8 @@ enyo.kind({
                     ]
                 },
                 { kind: "Spacer", },
+                { name: "PlayerStatus", content: "", showing: true, className: "enyo-item-ternary", style: "color: white;" },
+                
                 { name: "SliderBox", kind: "VFlexBox", components:
                     [
                         { kind: "VFlexBox", components:
@@ -325,14 +327,14 @@ enyo.kind({
                     this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
             }
             this.$.ArtistNameLabel.setContent(this.song.artist);
-            this.$.ArtistNameLabel.addRemoveClass("enyo-item-secondary", this.song.artist.length > 15);
-            this.$.ArtistNameLabel.addRemoveClass("enyo-item-ternary", this.song.artist.length > 25);
+            this.$.ArtistNameLabel.addRemoveClass("enyo-item-secondary", !isLargeScreen() && this.song.artist.length > 15);
+            this.$.ArtistNameLabel.addRemoveClass("enyo-item-ternary", !isLargeScreen() && this.song.artist.length > 25);
             this.$.AlbumNameLabel.setContent(this.song.album);
-            this.$.AlbumNameLabel.addRemoveClass("enyo-item-secondary", this.song.album.length > 25);
-            this.$.AlbumNameLabel.addRemoveClass("enyo-item-ternary", this.song.album.length > 40);
+            this.$.AlbumNameLabel.addRemoveClass("enyo-item-secondary", !isLargeScreen() && this.song.album.length > 25);
+            this.$.AlbumNameLabel.addRemoveClass("enyo-item-ternary", !isLargeScreen() && this.song.album.length > 40);
             this.$.SongNameLabel.setContent(this.song.title);
-            this.$.SongNameLabel.addRemoveClass("enyo-item-secondary", this.song.title.length > 15);
-            this.$.SongNameLabel.addRemoveClass("enyo-item-ternary", this.song.title.length > 25);
+            this.$.SongNameLabel.addRemoveClass("enyo-item-secondary", !isLargeScreen() && this.song.title.length > 15);
+            this.$.SongNameLabel.addRemoveClass("enyo-item-ternary", !isLargeScreen() && this.song.title.length > 25);
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
@@ -388,6 +390,11 @@ enyo.kind({
         inEvent.stopPropagation();
         return true;
     },
+    playing: function()
+    {
+        var node = this.$.MusicPlayer && this.$.MusicPlayer.audio.node;
+        return !enyo.application.jukeboxMode && this.song && node && !node.ended;
+    },
     checkStatus: function()
     {
         //this.log(this.showing);
@@ -430,7 +437,10 @@ enyo.kind({
             node.currentTime = this.song.startTime;
             this.song.startTime = 0;
         }
-        this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
+        //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
+        this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
+        //this.$.PlayerStatus.setContent("status" + " " + node.buffered.length + " " + node.buffered.start(0) + " " + node.buffered.end(0) + " " + node.ended);
+        //this.log(node.buffered);
         if(!this.song)
             return;
         if(node.readyState != 4)
@@ -454,7 +464,7 @@ enyo.kind({
         if(!this.$.MusicPlayer.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
         // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
-        if(node.currentTime > (this.song.duration - 0.6))
+        if( (node.ended !== undefined && node.ended) || (node.currentTime > (this.song.duration - 0.6)) ) // use node.ended if it's available, otherwise fall back to old code
         {
             this.doNextSong();
         }

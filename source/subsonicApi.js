@@ -120,7 +120,8 @@ enyo.kind({
     },
     gotUser: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        this.doReceivedUser(inResponse["subsonic-response"].user);
+        if(inResponse && inResponse["subsonic-response"])
+            this.doReceivedUser(inResponse["subsonic-response"].user);
     },
     createdUser: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);

@@ -43,6 +43,14 @@ enyo.kind({
             ]
         },
     ],
+    enableControls: function()
+    {
+        // TODO: enable Refresh button?
+    },
+    disableControls: function()
+    {
+        // TODO: disable Refresh button?
+    },
     deletePlaylist: function(inSender, inRow)
     {
         //this.log(inSender, inEvent);

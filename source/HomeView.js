@@ -156,6 +156,14 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
+    enableControls: function()
+    {
+        
+    },
+    disableControls: function()
+    {
+        
+    },
     getRandomList: function(inSender, inEvent)
     {
         this.doRandomList(inEvent, this.folderList[inEvent.rowIndex].id);

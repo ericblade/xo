@@ -100,7 +100,7 @@ enyo.kind({
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
                 { name: "LogView", kind: "LogView", },
-                { name: "slider", kind: "SlidingPane", components:
+                { name: "slider", kind: "SlidingPane", onSelectView: "sliderSelected", components:
                     [
                         { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true, onSelectView: "leftViewSelected", components:
                             [
@@ -165,13 +165,13 @@ enyo.kind({
             { name: "UnselectAllButton", caption: "- All", onclick: "unselectAll", showing: false, },
             { kind: "Spacer" },
             { name: "PrevButton", caption: "<<", onclick: "playPrev", },
-            { name: "PlayButton", caption: "Play", onclick: "playOrPause" },
+            { name: "PlayButton", caption: ">", onclick: "playOrPause" },
             { name: "NextButton", caption: ">>", onclick: "playNext", },
             { kind: "Spacer" },
             { name: "ClearButton", caption: "Clear", onclick: "clearPlaylist" },
             { name: "ShuffleButton", caption: "Shuffle", onclick: "shufflePlaylist" },
             { name: "SaveButton", caption: "Save", onclick: "savePlaylist" },
-            { name: "JukeboxToggle", kind: "ToggleButton", onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+            { name: "JukeboxToggle", kind: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
         { kind: "VFlexBox", components:
             [
@@ -183,6 +183,11 @@ enyo.kind({
         { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong"},
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
+        { kind: "AppMenu", lazy: false, components:
+            [
+                { name: "JukeboxMenuItem", caption: "Jukebox OFF", onclick: "menuToggleJukebox" }
+            ]
+        }
     ],
     onLoad: function(x, y, z)
     {
@@ -200,11 +205,46 @@ enyo.kind({
     disableShuffle: function() { this.$.ShuffleButton.hide(); },
     enableSave: function() { this.$.SaveButton.show(); },
     disableSave: function() { this.$.SaveButton.hide(); },
-    enableJukebox: function() { this.$.JukeboxToggle.show(); },
-    disableJukebox: function() { this.$.JukeboxToggle.hide(); },
+    sliderSelected: function(inSender, inNewView, inOldView)
+    {
+        if(inNewView == this.$.RightView)
+        {
+            if(this.$.RightPane.getView() == this.$.MediaPlayerView)
+                this.$.MediaPlayer.disableControls();
+            else
+                this.$.RightPane.getView().enableControls();
+            this.$.LeftPane.getView().disableControls();
+        } else {
+            this.$.LeftPane.getView().enableControls();
+            if(!isLargeScreen()) // Tablets don't dismiss the right hand view
+            {
+                if(this.$.RightPane.getView() == this.$.MediaPlayerView) 
+                    this.$.MediaPlayer.disableControls();
+                else
+                    this.$.RightPane.getView().disableControls();
+            }
+        }
+    },
+    enableJukebox: function() {
+        if(isLargeScreen())
+            this.$.JukeboxToggle.show();
+        this.$.JukeboxMenuItem.setDisabled(false);
+    },
+    disableJukebox: function() {
+        if(isLargeScreen())
+            this.$.JukeboxToggle.hide();
+        this.$.JukeboxMenuItem.setDisabled(true);
+    },
+    menuToggleJukebox: function(inSender, inEvent)
+    {
+        enyo.application.jukeboxMode = !enyo.application.jukeboxMode;
+        this.$.JukeboxToggle.setState(enyo.application.jukeboxMode);
+        this.toggleJukebox(inSender, enyo.application.jukeboxMode);
+    },
     toggleJukebox: function(inSender, inStatus)
     {
         this.$.MediaPlayer.toggleJukebox(inSender, inStatus);
+        this.$.JukeboxMenuItem.setCaption("Jukebox " + (enyo.application.jukeboxMode ? "ON" : "OFF"));
     },
     clearPlaylist: function() {
         this.$.PlaylistView.clearPlaylist();
@@ -249,13 +289,11 @@ enyo.kind({
     },
     enableSelectButtons: function()
     {
-        this.log();
         this.$.SelectAllButton.show();
         this.$.UnselectAllButton.show();
     },
     disableSelectButtons: function()
     {
-        this.log();
         this.$.SelectAllButton.hide();
         this.$.UnselectAllButton.hide();
     },
@@ -297,12 +335,11 @@ enyo.kind({
         /* {"adminRole":true,"commentRole":true,"coverArtRole":true,"downloadRole":true,"email":"blade.eric@gmail.com","jukeboxRole":true,"playlistRole":true,
           "podcastRole":true,"scrobblingEnabled":false,"settingsRole":true,"shareRole":true,"streamRole":true,"uploadRole":true,"username":"admin"}
         */
-        this.log(inUser);
         enyo.application.subsonicUser = inUser;
         this.user = enyo.application.subsonicUser;
         this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
         this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
-        this.$.JukeboxToggle.setShowing(inUser.jukeboxRole);
+        this.$.JukeboxToggle.setShowing(isLargeScreen() && inUser.jukeboxRole);
     },
     videoError: function(inSender, x, y, z)
     {
@@ -315,7 +352,6 @@ enyo.kind({
     },
     deletedPlaylist: function(inSender, inResponse)
     {
-        this.log(inSender, inResponse);
         this.refreshPlaylists();
     },
     shakeNotify: function(inSender, inEvent)
@@ -332,7 +368,6 @@ enyo.kind({
     },
     showSongMenu: function(inSender, inEvent, inSongInfo)
     {
-        this.log();
         this.$.SongMenu.openAtEvent(inEvent);
         this.$.SongMenu.setSong(inSongInfo);
         this.$.SongMenu.sender = inSender;
@@ -340,9 +375,7 @@ enyo.kind({
     },
     toggleSongSelection: function(inSender, inEvent, inSongInfo)
     {
-        this.log(inSender, inEvent, inEvent.rowIndex, inSongInfo);
         this.$.MusicView.selectSongItem(inEvent.rowIndex, !inSongInfo.isSelected);
-        this.log(this.$.MusicView.querySongItem(inEvent.rowIndex));
         if(this.$.MusicView.querySongItem(inEvent.rowIndex).isSelected)
         {
             this.addSongToPlaylist(inSongInfo);
@@ -355,7 +388,6 @@ enyo.kind({
     toggleSearchSongSelection: function(inSender, inEvent, inSongInfo)
     {
         this.$.SearchView.selectSongItem(inEvent.rowIndex, !inSongInfo.isSelected);
-        this.log(this.$.SearchView.querySongItem(inEvent.rowIndex));
         if(this.$.SearchView.querySongItem(inEvent.rowIndex).isSelected)
         {
             this.addSongToPlaylist(inSongInfo);
@@ -366,7 +398,6 @@ enyo.kind({
     },
     showPlaylistMenu: function(inSender, inEvent, inSongInfo)
     {
-        this.log();
         this.$.NowPlayingMenu.openAtEvent(inEvent);
         this.$.NowPlayingMenu.setSong(inSongInfo);
     },
@@ -388,14 +419,11 @@ enyo.kind({
     },
     playPlaylist: function(inSender, inEvent, inID)
     {
-        this.log(inSender, inEvent, inID);
         this.playNextPlaylist = true;
         this.$.api.call("getPlaylist", { id: inID });
     },
     receivedRandomSongs: function(inSender, inSongs)
     {
-        //this.log(inSongs);
-        this.log();
         this.$.MusicView.resetViews();
         this.$.MusicView.setMusic(inSongs.randomSongs.song);
         this.selectMusicView();
@@ -426,7 +454,6 @@ enyo.kind({
     */
     receivedJukeboxPlaylist: function(inSender, inPlaylist)
     {
-        this.log(inPlaylist);
         if(inPlaylist.entry && inPlaylist.entry.album)
             enyo.application.jukeboxList = [ inPlaylist.entry ];
         else
@@ -438,7 +465,6 @@ enyo.kind({
     },
     receivedJukeboxStatus: function(inSender, inStatus)
     {
-        //this.log(inStatus);
         /* {"currentIndex":0,"gain":0.5,"playing":true,"position":0} */
         if(enyo.application.jukeboxStatus)
         {
@@ -469,9 +495,7 @@ enyo.kind({
         if(inEvent.rowIndex != enyo.application.dropIndex)
         {
             var oldindex = enyo.application.dropIndex;
-            //this.log("Dragging something over Playlist row " + inEvent.rowIndex + " last row was " + enyo.application.dropIndex);
             enyo.application.dropIndex = inEvent.rowIndex;
-            //this.log("new dropIndex: " + enyo.application.dropIndex);
             /*if(inEvent.rowIndex == undefined)
                 this.$.PlaylistView.render();
             else {
@@ -539,16 +563,13 @@ enyo.kind({
     addSongToPlaylist: function(song, noRefresh)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.log();
         playlist.push(song);
         if(!noRefresh)
             enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
-        this.log(enyo.application.jukeboxMode);
         if(!enyo.application.jukeboxMode)
             prefs.set("playlist", enyo.application.playlist);
         else
         {
-            this.log("jukeboxControl adding ", song.id);
             this.$.api.call("jukeboxControl", { action: "add", id: song.id });
         }
     },
@@ -567,10 +588,8 @@ enyo.kind({
     removeSongFromPlaylist: function(song, noRefresh)
     {
         var x;
-        //this.log(song.id, this.findItemInPlaylist(song.id));
         if( (x = this.findItemInPlaylist(song.id)) !== false)
         {
-            //this.log("Removing item ", x, "from playlist");
             if(enyo.application.jukeboxMode)
             {
                 this.$.api.call("jukeboxControl", { action: "remove", index: x });
@@ -590,7 +609,6 @@ enyo.kind({
     },
     shufflePlaylist: function(inSender, inEvent)
     {
-        this.log();
         if(inEvent)
             inEvent.stopPropagation();
         if(enyo.application.jukeboxMode)
@@ -600,14 +618,14 @@ enyo.kind({
         } else {
             enyo.application.playlist.index = 0;
             enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
-            this.$.MediaPlayer.setSong(enyo.application.playlist[0]);
+            if(this.$.MediaPlayer.playing())
+                this.$.MediaPlayer.setSong(enyo.application.playlist[0]);
             this.$.PlaylistView.render();
         }
     },
     savePlaylist: function(inSender, inEvent)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.log();
         var arr = new Array();
         for(var x = 0; x < playlist.length; x++)
         {
@@ -648,15 +666,12 @@ enyo.kind({
     },
     cycleRightTab: function(inSender, inEvent)
     {
-        this.log(inSender, inEvent);
-        this.log(this.ignoreCycle, inEvent.defaultPrevented);
         if(!this.ignoreCycle && !inEvent.defaultPrevented)
         {
             var curr = this.$.RightPane.getViewIndex();
             //var newind = (curr >= 2) ? 0 : curr+1;
             var newind = 1 - curr;
             this.$.RightTabs.setValue(newind);
-            //this.log(curr, newind);
             this.$.RightPane.selectViewByIndex(newind);
         }
         this.ignoreCycle = false;
@@ -683,19 +698,16 @@ enyo.kind({
     },
     receivedFolders: function(inSender, inFolders)
     {
-        //this.log(inFolders);
         this.$.HomeView.setFolders(inFolders["musicFolders"]);
     },
     receivedLicense: function(inSender, inLicense)
     {
-        this.log(inLicense);
         this.$.HomeView.setLicenseData(inLicense);
         this.$.HomeView.$.ServerSpinner.hide();
         this.$.api.call("getMusicFolders");
     },
     receivedPlaylists: function(inSender, inLists)
     {
-        this.log(inLists);
         var list = inLists && inLists.playlists && inLists.playlists.playlist;
         this.$.PlaylistsView.clearPlaylists();
         if(list && list.id)
@@ -704,7 +716,6 @@ enyo.kind({
         this.$.PlaylistsView.clearPlaylists();            
         for(var x in list)
         {
-            this.log(list[x].id);
             if(list[x].id)
                 this.$.PlaylistsView.addPlaylist(list[x]);
         }
@@ -726,7 +737,6 @@ enyo.kind({
         
         enyo.application.setDragTracking = enyo.bind(this, function(on, inEvent)
             {
-                this.log(on);
                 if(on)
                 {
                     this.$.avatar.setSrc(inEvent.dragInfo.art);
@@ -753,7 +763,6 @@ enyo.kind({
         enyo.application.downloads = new Array();
     },
     avatarTrack: function(inEvent) {
-        //this.log();
         this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
     },
 
@@ -865,7 +874,6 @@ enyo.kind({
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
-        //this.log(inAlbumList);
         this.$.HomeView.$.ServerSpinner.hide();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
@@ -873,10 +881,8 @@ enyo.kind({
     receivedIndexes: function(inSender, inIndexes, inRequest)
     {
         // inRequest.params.musicFolderId = the music folder we asked for to begin with
-        //this.log(inIndexes, inRequest);
         if(!enyo.application.folders)
             enyo.application.folders = new Array();
-        this.log(inIndexes.indexes.index);
         enyo.application.folders[inRequest.params.musicFolderId] = inIndexes.indexes.index;
         this.$.HomeView.receivedIndexes(inRequest.params.musicFolderId);
     },
@@ -888,7 +894,6 @@ enyo.kind({
     },
     receivedDirectory: function(inSender, inDirectory, inRequest)
     {
-        //this.log(inDirectory, inRequest);
         var x = inDirectory.directory.child;
         if(x.artist) // a single was received.. sigh
             x = [ x ];
@@ -897,7 +902,6 @@ enyo.kind({
     },
     receivedPlaylist: function(inSender, inPlaylist)
     {
-        this.log(inPlaylist, this.playNextPlaylist);
         var stupid = { directory: { child: inPlaylist } }; // the subsonic api is dumb sometimes
         if(!this.playNextPlaylist)
         {
@@ -935,7 +939,6 @@ enyo.kind({
     },
     loadAlbum: function(inSender, inEvent, inId)
     {
-        this.log(inId);
         this.$.api.call("getMusicDirectory", { id: inId });
         // TODO: we're going to need to create new views in the MusicView internal pane, so that it can nest selections deeply.. sigh.
         this.selectMusicView(); // TODO: should this be conditional, if we're not already in that view?
@@ -943,13 +946,10 @@ enyo.kind({
     },
     loadIndex: function(inSender, inEvent, inId)
     {
-        this.log();
         this.$.api.call("getIndexes", { musicFolderId: inId });
     },
     loadSong: function(inSender, inEvent, inSongData)
     {
-        //this.log(inSongData);
-        this.log(inEvent);
         if(!inSongData) return; // this is what happens when we tap an area with no song in it
         if(inSongData.isDir)
         {
@@ -971,7 +971,6 @@ enyo.kind({
     },
     resumePlaylist: function(inSender, inEvent)
     {
-        this.log();
         if(enyo.application.jukeboxMode)
         {
             this.$.api.call("jukeboxControl", { action: "start" });
@@ -987,7 +986,6 @@ enyo.kind({
     startPlaylist: function(inSender, inEvent)
     {
         //enyo.application.playlist.index = 0;
-        this.log();
         if(enyo.application.jukeboxMode)
         {
             this.$.api.call("jukeboxControl", { action: "start" });
@@ -1006,7 +1004,6 @@ enyo.kind({
         var currindex = playlist.index;
         var p = playlist[currindex];
         
-        this.log("playNext", currId, currindex, p);
         if(p && p.id != currId && currId !== undefined)
         {
             currindex = this.findItemInPlaylist(currId);
@@ -1015,7 +1012,6 @@ enyo.kind({
             playlist.index = 0;
         else
             playlist.index = parseInt(currindex) + 1;
-        this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
         else
@@ -1028,7 +1024,6 @@ enyo.kind({
         var currindex = playlist.index;
         var p = playlist[currindex];
         
-        this.log("playPrev", currId, currindex, p);
         if(p && p.id != currId && currId !== undefined)
         {
             currindex = this.findItemInPlaylist(currId);
@@ -1037,7 +1032,6 @@ enyo.kind({
             playlist.index = 0;
         else
             playlist.index = parseInt(currindex) - 1;
-        this.log("moving to ", playlist.index, playlist[enyo.application.playlist.index]);
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
         else
@@ -1048,7 +1042,6 @@ enyo.kind({
         if(inSong && inSong.id && !enyo.application.jukeboxMode)
         {
             enyo.application.playlist.index = this.findItemInPlaylist(inSong.id);
-            this.log("song changed, now playing playlist #" + enyo.application.playlist.index);
         }
         this.$.PlaylistView.render();
     },
@@ -1057,7 +1050,6 @@ enyo.kind({
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         for(x in playlist)
         {
-            //this.log(x, playlist[x].id);
             if(x && playlist[x].id == itemID)
             {
                 return x;
@@ -1067,28 +1059,23 @@ enyo.kind({
     },
     selectMusicView: function()
     {
-        this.log();
         this.$.LeftPane.selectViewByName("MusicView");
     },
     selectSearchView: function()
     {
-        this.log();
         this.$.LeftPane.selectViewByName("SearchView");
     },
     selectPlaylistsView: function()
     {
-        this.log();
         this.$.LeftPane.selectViewByName("PlaylistsView");
     },
     selectHomeView: function()
     {
-        this.log();
         this.$.LeftPane.selectViewByName("HomeView");
     },
     selectPlayerView: function()
     {
         //this.$.RightView.show();
-        this.log();
         this.$.slider.selectViewByName("RightView");
         this.$.RightPane.selectViewByName("MediaPlayerView");
         this.$.RightTabs.setValue(1);
@@ -1096,21 +1083,17 @@ enyo.kind({
     },
     leftTabChange: function(inSender)
     {
-        this.log("Selected Tab " + inSender.getValue());
         this.$.LeftPane.selectViewByIndex(inSender.getValue());
     },
     rightTabChange: function(inSender)
     {
-        this.log("right Selected Tab " + inSender.getValue());
         this.$.RightPane.selectViewByIndex(inSender.getValue());
     },
-    leftViewSelected: function(inSender, inNewView, inPrevView)
+    leftViewSelected: function(inSender, inNewView, inPrevView) // TODO: this is referred to by something not a view.. in valid?
     {
-        this.log("selected view ", inNewView.index);
     },
     leftPaneSelected: function(inSender, inNewView, inPrevView)
     {
-        this.log("selected pane view", inNewView, inPrevView);
         switch(inNewView.name)
         {
             case "MusicView":
@@ -1118,10 +1101,11 @@ enyo.kind({
                 this.ForceTabSet = true;
                 break;
         }
-        this.log("new view index", inNewView.index);
         inNewView.index = inSender.getViewIndex();
         if(inNewView.index != undefined)
             this.$.TabBar.setValue(inNewView.index);
+        inNewView.enableControls();
+        inPrevView.disableControls();
     },
     badLicense: function(inSender, inError)
     {

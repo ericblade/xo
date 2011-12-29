@@ -99,10 +99,20 @@ enyo.kind({
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
             [
-                { content: "Loading content from server..." }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
+                { content: "Nothing loaded yet" }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
             ]
         },
     ],
+    enableControls: function()
+    {
+        var view = this.$.ViewPane.getView();
+        if(view.songs && view.songs.length > 0)
+            this.doEnableSelectButtons();
+    },
+    disableControls: function()
+    {
+        this.doDisableSelectButtons();
+    },
     viewSelected: function(inSender, inNewView, inOldView)
     {
         this.log();

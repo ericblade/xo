@@ -30,7 +30,10 @@ prefs = {
 
 function isLargeScreen()
 {
-    return window.screen.availWidth > 480;
+    //console.log("********************************************* screen width " + window.screen.availWidth);
+    //console.log(window.innerWidth);
+    //return window.screen.availWidth > 480;
+    return window.innerWidth > 480;
 }
 
 function secondsToTime(secs)

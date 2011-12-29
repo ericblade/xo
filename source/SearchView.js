@@ -37,6 +37,12 @@ enyo.kind({
         "music": "",
         "artistList": "",
     },
+    enableControls: function() {
+        
+    },
+    disableControls: function() {
+        
+    },
     clickArtist: function(inSender, inEvent) {
         var x = inEvent.rowIndex;
         this.doArtistClicked(inEvent, this.artistList[x].id);

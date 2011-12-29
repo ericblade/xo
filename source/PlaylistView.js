@@ -26,7 +26,8 @@ enyo.kind({
     components: [
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
             [
-                isLargeScreen() ? { content: "Drag songs from the Music list and drop them in the list. Tap here to change view, Hold to toggle Tabs. Hold on an individual item for options. Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" } : { },
+                isLargeScreen() ? { content: "Drag songs from Music list and drop them into this list.", className: "enyo-item-ternary" } : {},
+                { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" },
                 { name: "Scroller", kind: isLargeScreen() ? "FadeScroller" : "Scroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
                         { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
@@ -150,10 +151,13 @@ enyo.kind({
     },
     songHeld: function(inSender, inEvent)
     {
-        this.log();
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.doItemMenu(inEvent, playlist[inEvent.rowIndex]);
-        inEvent.stopPropagation();
+        this.log(inSender, inEvent.rowIndex);
+        if(typeof inEvent.rowIndex !== 'undefined')
+        {
+            this.doItemMenu(inEvent, playlist[inEvent.rowIndex]);
+            inEvent.stopPropagation();
+        }
     },
     scrollUp: function(inSender, inEvent)
     {

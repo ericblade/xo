@@ -21,6 +21,11 @@
     border-top: double blue;
 }
 
+.enyo-tool-button {
+    padding-left: 0px;
+    padding-right: 0px; 
+}
+
 .playhighlight {
     font-weight: bold; 
 }
