@@ -1,3 +1,7 @@
+// TODO: when tap selecting song, if not already playing, add and start playing
+// TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add)
+// TODO: tablets default to Play Now, phones to Add / Play ?
+
 // TODO: need to do some checking on the Timer in MediaPlayerView and make sure that it's only running when we really need it to be.
 // TODO: docs say "jukeboxControl" "set" doesn't stop the current play .. so if that's correct, then we're stopping it when we receive the new playlist?
 

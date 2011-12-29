@@ -1,4 +1,16 @@
 enyo.kind({
+    name: "MyScroller",
+    kind: isLargeScreen() ? "FadeScroller" : "Scroller",
+    scrollToItem: function(index, maxItems)
+    {
+        var bounds = this.getBoundaries();
+        var size = { x: bounds.bottom, y: bounds.left };
+        var avgsize = { x: size.x / maxItems, y: size.y / maxItems };
+        this.scrollIntoView(avgsize.x * index, avgsize.y * index);
+    }
+}),
+
+enyo.kind({
     name: "subsonic.PlaylistView",
     kind: "VFlexBox",
     events: {
@@ -28,7 +40,8 @@ enyo.kind({
             [
                 isLargeScreen() ? { content: "Drag songs from Music list and drop them into this list.", className: "enyo-item-ternary" } : {},
                 { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" },
-                { name: "Scroller", kind: isLargeScreen() ? "FadeScroller" : "Scroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
+                //{ kind: "Button", caption: "Test", onclick: "test" },
+                { name: "Scroller", kind: /*isLargeScreen() ? "FadeScroller" : "Scroller"*/ "MyScroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
                         { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
@@ -49,6 +62,13 @@ enyo.kind({
             ]
         },
     ],
+    scrollToCurrentSong: function(inSender, inEvent)
+    {
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.$.Scroller.scrollToItem(playlist.index, playlist.length);
+        if(inEvent)
+            inEvent.stopPropagation();
+    },
     dragOver: function(inSender, inEvent)
     {
         if(enyo.application.dragging)
@@ -87,6 +107,7 @@ enyo.kind({
     enableControls: function()
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.scrollToCurrentSong();
         if(playlist.index > 0)
             this.doEnablePrev();
         else
