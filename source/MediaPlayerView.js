@@ -400,7 +400,6 @@ enyo.kind({
     {
         //this.log(this.showing);
         //this.log();
-        this.log("windowType", enyo.windowParams.windowType);
         var state;
         var node;
         //var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
