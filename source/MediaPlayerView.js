@@ -21,6 +21,8 @@ enyo.kind({
         "onEnablePrev": "",
         "onEnablePlay": "",
         "onEnableNext": "",
+        "onPlaying": "",
+        "onNotPlaying": "",
     },
     style: "padding-left: 3px; padding-right: 3px; ",
         videoLaunched: function(inSender, x, y, z)
@@ -324,6 +326,7 @@ enyo.kind({
             enyo.application.nowplaying = this.song;
         if(this.song)
         {
+            this.doPlaying();
             this.log("using player", player);
             this.$.SongInfoBox.show();
             if(!this.song.coverArt)
@@ -356,6 +359,7 @@ enyo.kind({
             this.justToggled = false;
 
         } else {
+            this.doNotPlaying();
             this.$.SongInfoBox.hide();
             if(player)
                 player.setSrc("");
@@ -375,6 +379,7 @@ enyo.kind({
                 playlist.index = 0;
             this.log("starting song ", playlist.index);
             this.setSong(playlist[playlist.index]);
+            return true;
         }
         var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.$.MusicPlayer;
         if(enyo.application.jukeboxMode)
@@ -446,7 +451,11 @@ enyo.kind({
             this.song.startTime = 0;
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
-        this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
+        try {
+            this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
+        } catch(err) {
+            // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
+        }
         //this.$.PlayerStatus.setContent("status" + " " + node.buffered.length + " " + node.buffered.start(0) + " " + node.buffered.end(0) + " " + node.ended);
         //this.log(node.buffered);
         if(!this.song)

@@ -150,6 +150,7 @@ enyo.kind({
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1,
+                                                    onPlaying: "playing", onNotPlaying: "notPlaying",
                                                     onEnablePrev: "enablePrev", onDisablePrev: "disablePrev", onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
                                                     onEnableNext: "enableNext", onDisableNext: "disableNext",
                                                     onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
@@ -273,8 +274,22 @@ enyo.kind({
     playOrPause: function(inSender, inEvent)
     {
         this.$.PlayButton.paused = !this.$.PlayButton.paused;
-        this.$.PlayButton.setIcon(this.$.PlayButton.paused ? "images/play.png" : "images/pause.png");
+        this.setPlayButton();
         this.$.MediaPlayer.playPauseClicked(inSender, inEvent);
+    },
+    setPlayButton: function()
+    {
+        this.$.PlayButton.setIcon(this.$.PlayButton.paused ? "images/play.png" : "images/pause.png");
+    },
+    playing: function(inSender)
+    {
+        this.$.PlayButton.paused = false;
+        this.setPlayButton();
+    },
+    notPlaying: function(inSender)
+    {
+        this.$.PlayButton.paused = true;
+        this.setPlayButton();        
     },
     selectAll: function()
     {
@@ -995,7 +1010,7 @@ enyo.kind({
         if(enyo.application.jukeboxMode && inEvent && inEvent.rowIndex !== undefined)
             this.$.api.call("jukeboxControl", { action: "skip", index: inEvent.rowIndex });
         else
-            enyo.nextTick(this, this.$.MediaPlayer.setSong, inSongData);
+            enyo.nextTick(this, function() { this.$.MediaPlayer.setSong(inSongData); });
         if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
         {
             enyo.nextTick(this, this.selectPlayerView);
@@ -1078,11 +1093,15 @@ enyo.kind({
     },
     songChanged: function(inSender, inSong) // reset a highlight...
     {
+        this.log("song changed from", enyo.application.playlist.index);
         if(inSong && inSong.id && !enyo.application.jukeboxMode)
         {
             enyo.application.playlist.index = this.findItemInPlaylist(inSong.id);
         }
-        this.$.PlaylistView.render();
+        this.log("to ", enyo.application.playlist.index);
+        //this.$.PlaylistView.renderRow(enyo.application.playlist.index);
+        //this.$.PlaylistView.render();
+        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
     },
     findItemInPlaylist: function(itemID)
     {
