@@ -96,19 +96,10 @@ enyo.kind({
             }
         }
     },
-    rendered: function()
-    {
-        this.inherited(arguments);
-        if(enyo.application.rightPaneView != this && typeof enyo.application.rightPaneView !== 'undefined')
-            this.disableControls();
-        else
-            this.enableControls();
-        this.log("rightPaneView=", enyo.application.rightPaneView);
-    },
     enableControls: function()
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.scrollToCurrentSong();
+        enyo.nextTick(this, this.scrollToCurrentSong);
         if(playlist.index > 0)
             this.doEnablePrev();
         else
@@ -205,7 +196,6 @@ enyo.kind({
         this.doSongClicked(inEvent, playlist[inEvent.rowIndex]);
         inEvent.stopPropagation();
         inEvent.preventDefault();
-        this.log();
         return -1;
     },
     getListItem: function(inSender, inRow)
@@ -268,7 +258,9 @@ enyo.kind({
             enyo.application.playlist = [ ];
             this.$.PlaylistRepeater.render();
         }
-        inEvent.stopPropagation();
+        if(inEvent)
+            inEvent.stopPropagation();
+        this.enableControls();
     },
     scrollUp: function(inSender, inEvent)
     {

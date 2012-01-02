@@ -1,3 +1,5 @@
+// TODO: Clear playlist needs to also reset the player controls
+// TODO: Reaching end of playlist needs to reset "Pause" to "Play"
 // TODO: Multiple server configs
 // TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle
 // TODO: when tap selecting song, if not already playing, add and start playing
@@ -147,7 +149,10 @@ enyo.kind({
                                             onSavePlaylist: "openSavePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
-                                                { name: "MediaPlayer", flex: 1, onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
+                                                { name: "MediaPlayer", flex: 1,
+                                                    onEnablePrev: "enablePrev", onDisablePrev: "disablePrev", onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
+                                                    onEnableNext: "enableNext", onDisableNext: "disableNext",
+                                                    onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
                                             ]
                                         },
                                         //{ name: "LyricsView", flex: 1, kind: "LyricsView", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" }
@@ -164,12 +169,12 @@ enyo.kind({
             { name: "SelectAllButton", caption: "+ All", onclick: "selectAll", showing: false, },
             { name: "UnselectAllButton", caption: "- All", onclick: "unselectAll", showing: false, },
             { kind: "Spacer" },
-            { name: "PrevButton", caption: "<<", onclick: "playPrev", },
-            { name: "PlayButton", caption: ">", onclick: "playOrPause" },
-            { name: "NextButton", caption: ">>", onclick: "playNext", },
+            { name: "PrevButton", /*caption: "<<",*/ icon: "images/prev.png", onclick: "playPrev", },
+            { name: "PlayButton", /*caption: ">",*/ icon: "images/play.png", onclick: "playOrPause" },
+            { name: "NextButton", /*caption: ">>",*/ icon: "images/next.png", onclick: "playNext", },
             { kind: "Spacer" },
             { name: "ClearButton", caption: "Clear", onclick: "clearPlaylist" },
-            { name: "ShuffleButton", caption: "Shuffle", onclick: "shufflePlaylist" },
+            { name: "ShuffleButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
             { name: "SaveButton", caption: "Save", onclick: "openSavePlaylist" },
             { name: "JukeboxToggle", kind: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
@@ -204,6 +209,10 @@ enyo.kind({
     {
         this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
         
+    },
+    ready: function() {
+        this.inherited(arguments);
+        this.$.PlaylistView.enableControls();
     },
     enablePrev: function() { this.$.PrevButton.show(); },
     disablePrev: function() { this.$.PrevButton.hide(); },
@@ -263,6 +272,8 @@ enyo.kind({
     },
     playOrPause: function(inSender, inEvent)
     {
+        this.$.PlayButton.paused = !this.$.PlayButton.paused;
+        this.$.PlayButton.setIcon(this.$.PlayButton.paused ? "images/play.png" : "images/pause.png");
         this.$.MediaPlayer.playPauseClicked(inSender, inEvent);
     },
     selectAll: function()
@@ -753,7 +764,11 @@ enyo.kind({
         prefs.def("playlist", []);
         
         enyo.application.playlist = prefs.get("playlist");
-        enyo.application.playlist.index = parseInt(enyo.application.playlist.index);
+        this.log("got index ", enyo.application.playlist.index, " from config");
+        if(typeof enyo.application.playlist.index === 'undefined')
+            enyo.application.playlist.index = 0;
+        else
+            enyo.application.playlist.index = parseInt(enyo.application.playlist.index);
         enyo.application.jukeboxList = new Array();
         
         enyo.application.setDragTracking = enyo.bind(this, function(on, inEvent)
@@ -980,9 +995,12 @@ enyo.kind({
         if(enyo.application.jukeboxMode && inEvent && inEvent.rowIndex !== undefined)
             this.$.api.call("jukeboxControl", { action: "skip", index: inEvent.rowIndex });
         else
-            this.$.MediaPlayer.setSong(inSongData);
+            enyo.nextTick(this, this.$.MediaPlayer.setSong, inSongData);
         if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
-            this.selectPlayerView();
+        {
+            enyo.nextTick(this, this.selectPlayerView);
+            //this.selectPlayerView();
+        }
         if(inEvent)
         {
             inEvent.stopPropagation();
@@ -1097,9 +1115,12 @@ enyo.kind({
     selectPlayerView: function()
     {
         //this.$.RightView.show();
-        this.$.slider.selectViewByName("RightView");
+        enyo.nextTick(this, function() { this.$.slider.selectViewByName("RightView"); });
         this.$.RightPane.selectViewByName("MediaPlayerView");
         this.$.RightTabs.setValue(1);
+        /*this.$.slider.selectViewByName("RightView");
+        this.$.RightPane.selectViewByName("MediaPlayerView");
+        this.$.RightTabs.setValue(1);*/
         setTimeout(enyo.bind(this, this.$.MediaPlayer.hideTips), 5000);
     },
     leftTabChange: function(inSender)

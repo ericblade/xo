@@ -15,6 +15,12 @@ enyo.kind({
         "onJukeboxStatus": "",
         "onPlayPauseJukebox": "",
         "onSetJukeboxPosition": "",
+        "onDisablePrev": "",
+        "onDisablePlay": "",
+        "onDisableNext": "",
+        "onEnablePrev": "",
+        "onEnablePlay": "",
+        "onEnableNext": "",
     },
     style: "padding-left: 3px; padding-right: 3px; ",
         videoLaunched: function(inSender, x, y, z)
@@ -284,6 +290,7 @@ enyo.kind({
     songChanged: function()
     {
         this.log(this.justToggled);
+        this.updatePlayerControls();
         if(!enyo.application.jukeboxMode && !this.justToggled) // don't create a new player if we're just going back to controlling the already playing one from jukebox mode
         {
             this.setupPlayer();
@@ -485,6 +492,27 @@ enyo.kind({
         this.$.ProgressSlider.setBarPosition( prog );
         //if(!this.$.MusicPlayer.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
+        
+    },
+    updatePlayerControls: function()
+    {
+        var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        if(playlist.index > 0)
+            this.doEnablePrev();
+        else
+            this.doDisablePrev();
+        if(playlist.length > 0)
+        {
+            this.doEnablePlay();
+        }
+        else
+        {
+            this.doDisablePlay();
+        }
+        if(playlist.index < playlist.length-1)
+            this.doEnableNext();
+        else
+            this.doDisableNext();        
         
     }
 });
