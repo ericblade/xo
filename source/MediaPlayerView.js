@@ -291,14 +291,11 @@ enyo.kind({
     },
     songChanged: function()
     {
-        this.log(this.justToggled);
         this.updatePlayerControls();
         if(!enyo.application.jukeboxMode && !this.justToggled) // don't create a new player if we're just going back to controlling the already playing one from jukebox mode
         {
             this.setupPlayer();
         }
-        //console.log("songChanged", this.song.isVideo);
-        console.log(this.song);
         var player = this.song && (this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer);
         var node = player && player.audio;        
         if(!enyo.application.jukeboxMode && !this.justToggled)
@@ -312,13 +309,7 @@ enyo.kind({
             var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
             url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
             this.log("*** Playing Video URL ", url);
-            //this.$.MusicPlayer.hide();
-            //this.$.VideoPlayer.show();
-            //this.$.AppLauncher.call( { target: url } );
-            //this.$.AppLauncher.call( { id: "com.palm.app.videoplayer", params: { target: url } });
-            //enyo.windows.addBannerMessage("Launching TouchPlayer...", '{}', "", "")
             enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
-            //this.$.VideoLauncher.call( { source: url });
             this.$.VideoService.request( { itemId: this.song.id });
             return;
         }

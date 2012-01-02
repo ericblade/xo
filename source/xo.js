@@ -499,6 +499,7 @@ enyo.kind({
         if(!enyo.application.jukeboxList)
             enyo.application.jukeboxList = new Array();
         enyo.application.jukeboxList.index = inPlaylist.currentIndex;
+        enyo.application.jukeboxList.lastIndex = inPlaylist.currentIndex; // we're re-rendering the entire list, anyway, so just set it
         this.$.PlaylistView.render();
     },
     receivedJukeboxStatus: function(inSender, inStatus)
@@ -517,8 +518,11 @@ enyo.kind({
         }
         if(enyo.application.jukeboxList.index != inStatus.currentIndex)
         {
-            enyo.application.jukeboxList.index = inStatus.currentIndex
-            this.$.PlaylistView.render();
+            enyo.application.jukeboxList.lastIndex = enyo.application.jukeboxList.index;
+            enyo.application.jukeboxList.index = inStatus.currentIndex;
+            //this.$.PlaylistView.render();
+            this.$.PlaylistView.renderRow(enyo.application.jukeboxList.lastIndex);
+            this.$.PlaylistView.renderRow(enyo.application.jukeboxList.index);
         }
         this.$.MediaPlayer.updateJukebox(inStatus);
         enyo.application.jukeboxStatus = inStatus;
@@ -659,6 +663,7 @@ enyo.kind({
             enyo.nextTick(this.$.api, this.$.api.call, "jukeboxControl", { action: "get" }); /* hope for no race conditions .. sigh */
         } else {
             enyo.application.playlist.index = 0;
+            enyo.application.playlist.lastIndex = 0; // rerendering list, so just set it
             enyo.application.playlist.sort(function() { return 0.5 - Math.random()});
             if(this.$.MediaPlayer.playing())
                 this.$.MediaPlayer.setSong(enyo.application.playlist[0]);
@@ -1013,7 +1018,7 @@ enyo.kind({
             enyo.nextTick(this, function() { this.$.MediaPlayer.setSong(inSongData); });
         if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
         {
-            enyo.nextTick(this, this.selectPlayerView);
+            //enyo.nextTick(this, this.selectPlayerView);
             //this.selectPlayerView();
         }
         if(inEvent)
@@ -1065,7 +1070,13 @@ enyo.kind({
         if(!currindex)
             playlist.index = 0;
         else
+        {
+            if(enyo.application.jukeboxMode)
+                enyo.application.jukeboxList.lastIndex = playlist.index;
+            else
+                enyo.application.playlist.lastIndex = playlist.index;
             playlist.index = parseInt(currindex) + 1;
+        }
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
         else
@@ -1085,7 +1096,14 @@ enyo.kind({
         if(!currindex)
             playlist.index = 0;
         else
+        {
+            if(enyo.application.jukeboxMode)
+                enyo.application.jukeboxList.lastIndex = playlist.index;
+            else
+                enyo.application.playlist.lastIndex = playlist.index;
+            
             playlist.index = parseInt(currindex) - 1;
+        }
         if(enyo.application.jukeboxMode)
             this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
         else
@@ -1093,15 +1111,26 @@ enyo.kind({
     },
     songChanged: function(inSender, inSong) // reset a highlight...
     {
-        this.log("song changed from", enyo.application.playlist.index);
-        if(inSong && inSong.id && !enyo.application.jukeboxMode)
+        if(!enyo.application.jukeboxMode)
         {
-            enyo.application.playlist.index = this.findItemInPlaylist(inSong.id);
+            if(inSong && inSong.id && !enyo.application.jukeboxMode)
+            {
+                enyo.application.playlist.index = this.findItemInPlaylist(inSong.id);
+            }
+            this.log(enyo.application.playlist.lastIndex, enyo.application.playlist.index);
+            this.$.PlaylistView.renderRow(enyo.application.playlist.lastIndex);
+            this.$.PlaylistView.renderRow(enyo.application.playlist.index);
+        } else {
+            if(inSong && inSong.id)
+            {
+                enyo.application.jukeboxList.index = this.findItemInPlaylist(inSong.id);
+            }
+            this.log(enyo.application.jukeboxList.lastIndex, enyo.application.jukeboxList.index);
+            this.$.PlaylistView.renderRow(enyo.application.jukeboxList.lastIndex);
+            this.$.PlaylistView.renderRow(enyo.application.jukeboxList.index);
         }
-        this.log("to ", enyo.application.playlist.index);
-        //this.$.PlaylistView.renderRow(enyo.application.playlist.index);
         //this.$.PlaylistView.render();
-        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        //enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
     },
     findItemInPlaylist: function(itemID)
     {

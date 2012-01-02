@@ -62,6 +62,11 @@ enyo.kind({
             ]
         },
     ],
+    rendered: function()
+    {
+        this.inherited(arguments);
+        this.enableControls();
+    },
     scrollToCurrentSong: function(inSender, inEvent)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
@@ -189,10 +194,20 @@ enyo.kind({
     songClicked: function(inSender, inEvent)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.renderRow(enyo.application.playlist.index);
-        playlist.index = inEvent.rowIndex;
-        this.renderRow(inEvent.rowIndex);
-        //this.render();
+        var oldIndex;
+        oldIndex = enyo.application.jukeboxMode ? enyo.application.jukeboxList.index : enyo.application.playlist.index;
+        if(enyo.application.jukeboxMode)
+        {
+            enyo.application.jukeboxList.index = inEvent.rowIndex;
+            enyo.application.jukeboxList.lastIndex = oldIndex;
+        }
+        else
+        {
+            enyo.application.playlist.index = inEvent.rowIndex;
+            enyo.application.playlist.lastIndex = oldIndex;
+        }
+        //this.renderRow(oldIndex);
+        //this.renderRow(inEvent.rowIndex);
         this.doSongClicked(inEvent, playlist[inEvent.rowIndex]);
         inEvent.stopPropagation();
         inEvent.preventDefault();
@@ -201,6 +216,8 @@ enyo.kind({
     getListItem: function(inSender, inRow)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
+        this.log("playlist index", playlist.index);
+        this.log("rendering ", inRow);
         if(playlist && playlist[inRow])
         {            
             this.$.Song.addRemoveClass("playhighlight", inRow == playlist.index);
