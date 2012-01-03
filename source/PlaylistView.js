@@ -104,7 +104,8 @@ enyo.kind({
     enableControls: function()
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        enyo.nextTick(this, this.scrollToCurrentSong);
+        //enyo.nextTick(this, this.scrollToCurrentSong);
+        this.scrollToCurrentSong();
         if(playlist.index > 0)
             this.doEnablePrev();
         else
@@ -216,12 +217,10 @@ enyo.kind({
     getListItem: function(inSender, inRow)
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
-        this.log("playlist index", playlist.index);
-        this.log("rendering ", inRow);
         if(playlist && playlist[inRow])
         {            
-            this.$.Song.addRemoveClass("playhighlight", inRow == playlist.index);
             this.$.Song.addRemoveClass("dragoverhighlight", enyo.application.dragging && inRow == this.dragTarget);
+            this.$.Song.addRemoveClass("playhighlight", inRow == playlist.index);
             var p = playlist[inRow];
             var si = this.$.Song;
             

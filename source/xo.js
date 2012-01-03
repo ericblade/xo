@@ -1,7 +1,8 @@
-// TODO: Clear playlist needs to also reset the player controls
-// TODO: Reaching end of playlist needs to reset "Pause" to "Play"
+// TODO: need to make the Next/Prev buttons make sure the playlist view scrolls .. adding a call to scrollToCurrentSong doesn't seem to do it, and/or isn't reliable.. weird
+// NOTE: it looks like the above does work, but it just requires that it be out of view by more than one maybe two elements... ugh. need to check our calculations somehow
 // TODO: Multiple server configs
-// TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle
+// TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
+// TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle  (maybe not)
 // TODO: when tap selecting song, if not already playing, add and start playing
 // TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add, "Just Select")
 // TODO: tablets default to Play Now, phones to Add / Play ?
@@ -1018,7 +1019,7 @@ enyo.kind({
             enyo.nextTick(this, function() { this.$.MediaPlayer.setSong(inSongData); });
         if(!inSongData.isVideo && (inEvent && !inEvent.defaultPrevented) ) // if we get here with a prevented default, don't select the player ...
         {
-            //enyo.nextTick(this, this.selectPlayerView);
+            enyo.nextTick(this, this.selectPlayerView);
             //this.selectPlayerView();
         }
         if(inEvent)
@@ -1131,6 +1132,7 @@ enyo.kind({
         }
         //this.$.PlaylistView.render();
         //enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        this.$.PlaylistView.scrollToCurrentSong();        
     },
     findItemInPlaylist: function(itemID)
     {
