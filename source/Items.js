@@ -211,7 +211,9 @@ enyo.kind({
     dragStart: function(inSender, inEvent)
     {
         if(!this.draggable || !isLargeScreen())
-            return;
+        {
+            return false;
+        }
         if(inEvent.horizontal)
         {
             var song = this.owner.querySongItem(inEvent.rowIndex);
@@ -223,12 +225,19 @@ enyo.kind({
             enyo.application.setDragTracking(true, inEvent);
             this.parent.addRemoveClass("draghighlight", enyo.application.dragging);
             inEvent.stopPropagation();
+            return true;
         }
+        return false;
     },
     dragged: function(inSender, inEvent)
     {
-        enyo.application.dragTrack(inSender, inEvent);
-        inEvent.stopPropagation();
+        if(enyo.application.dragging)
+        {
+            enyo.application.dragTrack(inSender, inEvent);
+            inEvent.stopPropagation();
+            return true;
+        }
+        return false;
     },
     dragFinish: function(inSender, inEvent)
     {
