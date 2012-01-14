@@ -143,10 +143,11 @@ enyo.kind({
                                 [
                                     { name: "FolderItem", flex: 1, kind: "DividerDrawer", open: false, content: "Folder", components:
                                         [
+                                            { content: "Test" },
                                             { name: "IndexRepeater", kind: "IndexRepeater", },
                                         ]
                                     },
-                                    { kind: "ToolButton", caption: "Shuffle", /*icon: "images/shuffle32.png",*/ onclick: "getRandomList" },
+                                    { kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffledark.png", onclick: "getRandomList" },
                                     //{ kind: "IconButton", icon: "images/shuffle32.png", onclick: "getRandomList" },
                                 ]
                             },

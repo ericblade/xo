@@ -7,7 +7,7 @@ enyo.kind({
     ],
     call: function()
     {        
-        var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)";        
+        var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
         this.$.TouchPlayer.call( { source: url } );
     },
@@ -19,7 +19,7 @@ enyo.kind({
     touchPlayerFailed: function(inSender, inResponse)
     {
         this.log(inResponse);
-        var url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)";
+        var url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
         this.log("*** Playing Video URL ", url);        
         this.$.WebLauncher.call( { target: url });
         this.receive(); // null response == failure

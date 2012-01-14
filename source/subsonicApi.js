@@ -104,7 +104,7 @@ enyo.kind({
         params.u = userid;
         params.p = password;
         params.v = "1.6.0";
-        params.c = "XO(webOS)(development)";
+        params.c = "XO-webOS";
         if(!params.f)
             params.f = "json";
         if(!req.getUrl() || req.getUrl() == "")

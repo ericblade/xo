@@ -348,8 +348,8 @@ enyo.kind({
         }
         if(this.song && this.song.isVideo)
         {
-            var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
-            url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO(webOS)(development)";
+            var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO-webOS";
+            url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.6.0" + "&c=XO-webOS";
             this.log("*** Playing Video URL ", url);
             enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
             this.$.VideoService.request( { itemId: this.song.id });
@@ -373,10 +373,10 @@ enyo.kind({
                 this.$.AlbumArt.setSrc("images/noart.png");
             else
             {
-                var arturl = "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)";
+                var arturl = "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS";
                 if(this.$.AlbumArt.src != arturl)
                 {
-                    this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+                    this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS");
                 }
             }
             this.$.ArtistNameLabel.setContent(this.song.artist);
@@ -391,8 +391,8 @@ enyo.kind({
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
-                player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
-                this.log("music playing: ", "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
+                player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                this.log("music playing: ", "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 this.$.ProgressSlider.setBarPosition(0);
                 this.$.ProgressSlider.setAltBarPosition(0);
             }

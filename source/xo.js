@@ -1,3 +1,4 @@
+// back icon: http://www.app-bits.com/ (attribution required)
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
 // TODO: close dashboard at app exit (until the app is seperated)
 // TODO: Multiple server configs
@@ -191,17 +192,17 @@ enyo.kind({
             ]
         },
         { name: "BottomToolbar", kind: "Toolbar", components: [
-            { caption: "Back", kind: "ToolButton", onclick: "doBack", showing: isLargeScreen() },
-            { name: "SelectAllButton", kind: "ToolButton", caption: "+ All", onclick: "selectAll", showing: false, },
-            { name: "UnselectAllButton", kind: "ToolButton", caption: "- All", onclick: "unselectAll", showing: false, },
+            { /*caption: "Back",*/ icon: "images/back.png", kind: "ToolButton", onclick: "doBack", showing: isLargeScreen() },
+            { name: "SelectAllButton", kind: "ToolButton", /*caption: "+ All",*/ icon: "images/playlistadd.png", onclick: "selectAll", showing: false, },
+            { name: "UnselectAllButton", kind: "ToolButton", /*caption: "- All",*/ icon: "images/playlistremove.png", onclick: "unselectAll", showing: false, },
             { kind: "Spacer" },
             { name: "PrevButton", /*caption: "<<",*/ kind: "ToolButton", icon: "images/prev.png", onclick: "playPrev", },
             { name: "PlayButton", /*caption: ">",*/ kind: "ToolButton", icon: "images/play.png", onclick: "playOrPause" },
             { name: "NextButton", /*caption: ">>",*/ kind: "ToolButton", icon: "images/next.png", onclick: "playNext", },
             { kind: "Spacer" },
-            { name: "ClearButton",  kind: "ToolButton", caption: "Clear", onclick: "clearPlaylist", showing: false, },
+            { name: "ClearButton",  kind: "ToolButton", /*caption: "Clear",*/ icon: "images/playlistclear.png", onclick: "clearPlaylist", showing: false, },
             { name: "ShuffleButton", kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
-            { name: "SaveButton", kind: "ToolButton", caption: "Save", onclick: "openSavePlaylist", showing: false },
+            { name: "SaveButton", kind: "ToolButton", /*caption: "Save",*/ icon: "images/playlistsave.png", onclick: "openSavePlaylist", showing: false },
             { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
               onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
@@ -235,32 +236,36 @@ enyo.kind({
     ],
     gesturestartHandler: function(inSender, event) {
         //this.log("***** gesturestart: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
-        event.preventDefault();
-        event.stopPropagation();
+        //event.preventDefault();
+        //event.stopPropagation();
     },
     gesturechangeHandler: function(inSender, event) {
         //this.log("***** gesturechange: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
-        if(event.scale > 1.5)
+        if(event.scale > 1.5 && !enyo.application.isFullScreen)
         {
             enyo.setFullScreen(true);
+            enyo.application.isFullScreen = true;
             //this.$.BottomToolbar.applyStyle("opacity", "0.5");
             this.$.BottomToolbar.applyStyle("background", "black");
-            enyo.windows.setWindowProperties(window, { blockScreenTimeout: true }); 
+            enyo.windows.setWindowProperties(window, { blockScreenTimeout: true });
+            //event.preventDefault();
+            event.stopPropagation();
         }
-        if(event.scale < 0.75)
+        if(event.scale < 0.75 && enyo.application.isFullScreen)
         {
             enyo.setFullScreen(false);
+            enyo.application.isFullScreen = false;
             //this.$.BottomToolbar.applyStyle("opacity", "1.0");
             this.$.BottomToolbar.applyStyle("background", "");
-            enyo.windows.setWindowProperties(window, { blockScreenTimeout: false }); 
+            enyo.windows.setWindowProperties(window, { blockScreenTimeout: false });
+            //event.preventDefault();
+            event.stopPropagation();
         }
-        event.preventDefault();
-        event.stopPropagation();
     },
     gestureendHandler: function(inSender, event) {
         //this.log("***** gestureend: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
-        event.preventDefault();
-        event.stopPropagation();
+        //event.preventDefault();
+        //event.stopPropagation();
     },    
     windowParamsChanged: function(inSender, inEvent)
     {
@@ -893,9 +898,12 @@ enyo.kind({
 
         enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); // TODO: option to allow setting blockScreenTimeout?
         prefs.def("righttabsshowing", true);        
-        prefs.def("serverip","www.ericbla.de:88");
-        prefs.def("username","slow");
-        prefs.def("password","slow");
+        //prefs.def("serverip","www.ericbla.de:88");
+        prefs.def("serverip", "http://www.subsonic.org/demo");
+        //prefs.def("username","slow");
+        prefs.def("username", "guest4");
+        //prefs.def("password","slow");
+        prefs.def("password", "guest");
         prefs.def("playlist", []);
         
         enyo.application.playlist = prefs.get("playlist");
@@ -1331,7 +1339,7 @@ enyo.kind({
         // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
         this.log(id, filename);
         this.$.fileDownload.call( {
-            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)",
+            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
             mime: "audio/mpeg3",
             targetDir: "/media/internal/xo/",
             //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,
