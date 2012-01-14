@@ -8,9 +8,11 @@ enyo.kind({
         fallbackSrc: "",
         width: "",
         height: "",
+        loadedclass: "albumimageloaded",
+        defaultclass: "albumimage",
     },
     components: [
-        { name: "MainImage", kind: enyo.Image, src: this.src, height: this.height, width: this.width, className: "albumimage", onload: "mainLoaded" },
+        { name: "MainImage", kind: enyo.Image, src: this.src, height: this.height, width: this.width, className: this.defaultclass, onload: "mainLoaded" },
     ],
     create: function()
     {
@@ -23,21 +25,21 @@ enyo.kind({
     mainLoaded: function(inSender, inEvent)
     {
         this.$.MainImage.show();
-        this.$.MainImage.setClassName("albumimageloaded");
+        this.$.MainImage.setClassName(this.loadedclass);
     },
     swapImages: function()
     {
         this.log();
         this.setFallbackSrc(this.$.MainImage.src);
         //this.$.MainImage.hide();
-        this.$.MainImage.setClassName("albumimage");
+        this.$.MainImage.setClassName(this.defaultclass);
     },
     srcChanged: function()
     {
         if(this.$.MainImage.src != this.src)
         {
             this.$.MainImage.setSrc(this.src);
-            this.$.MainImage.setClassName("albumimagenoanim");
+            this.$.MainImage.setClassName(this.defaultclass);
         }
     },
     fallbackSrcChanged: function()
@@ -143,7 +145,7 @@ enyo.kind({
         //{ kind: "ProgressButton", flex: 1, layoutKind: "HFlexLayout", pack: "center", position: 50, ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
         { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
-                { name: "AlbumArt", kind: "ImageFallback", height: "48px", width: "48px", fallbackSrc: "images/noart48.png" },
+                { name: "AlbumArt", kind: "ImageFallback", defaultclass: "albumimagenoanim", loadedclass: "albumimagenoanim", height: "48px", width: "48px", fallbackSrc: "images/noart48.png" },
                 { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", pack: "center", components:
                     [
                         { kind: "HFlexBox", components:

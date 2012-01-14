@@ -23,8 +23,8 @@ enyo.kind({
         "onDeletePlaylist":"",
     },
     components: [
-        //{ kind: "FadeScroller", flex: 1, components:
-        //    [
+        { kind: "Scroller", flex: 1, components:
+            [
                 { kind: "VirtualRepeater", flex: 1, onSetupRow: "getPlaylistItem", components:
                     [
                         { name: "PlaylistItem", kind: "SwipeableItem", swipeable: false, onclick: "clickItem", layoutKind: "HFlexLayout", onConfirm: "deletePlaylist", components:
@@ -35,8 +35,8 @@ enyo.kind({
                         },
                     ]
                 },
-        //    ]
-        //},
+            ]
+        },
         { kind: "Toolbar", components:
             [
                 { caption: "Refresh", onclick: "doRefreshPlaylists" },

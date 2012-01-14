@@ -69,6 +69,18 @@ enyo.kind({
         "onReceivedUser":"",
         "onJukeboxPlaylist":"",
         "onJukeboxStatus":"",
+        "onError": "",
+        "onServerActivity": "",
+    },
+    checkError: function(inResp)
+    {
+        this.doServerActivity(false);
+        if(inResp["subsonic-response"].error)
+        {
+            this.doError(inResp["subsonic-response"].error)
+            return true;
+        }
+        return false;
     },
     serverChanged: function()
     {
@@ -107,125 +119,155 @@ enyo.kind({
         }
         
         req.call(params);
+        this.doServerActivity(true);
     },
     createdShare: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     updatedShare: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     deletedShare: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     setRating: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     changedPassword: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     gotUser: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        if(inResponse && inResponse["subsonic-response"])
-            this.doReceivedUser(inResponse["subsonic-response"].user);
+        if(!this.checkError(inResponse))
+            if(inResponse && inResponse["subsonic-response"])
+                this.doReceivedUser(inResponse["subsonic-response"].user);
     },
     createdUser: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     deletedUser: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     gotChatMessages: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     addedChatMessage: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     albumListReceived: function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
         this.log();
-        this.doAlbumListReceived(inResponse["subsonic-response"]);
+        if(!this.checkError(inResponse))
+            this.doAlbumListReceived(inResponse["subsonic-response"]);
     },
     gotRandomSongs: function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
         this.log();
-        this.doRandomSongsReceived(inResponse["subsonic-response"]);
+        if(!this.checkError(inResponse))
+            this.doRandomSongsReceived(inResponse["subsonic-response"]);
     },
     gotLyrics: function(inSender, inResponse, inRequest) {
 // no lyrics: {"subsonic-response":{"lyrics":"","status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}        
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     controlledJukebox: function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
-        var x = inResponse["subsonic-response"];
-        if(x.jukeboxPlaylist)
-            this.doJukeboxPlaylist(x.jukeboxPlaylist);
-        else
-            this.doJukeboxStatus(x.jukeboxStatus);
+        if(!this.checkError(inResponse))
+        {
+            var x = inResponse["subsonic-response"];
+            if(x.jukeboxPlaylist)
+                this.doJukeboxPlaylist(x.jukeboxPlaylist);
+            else
+                this.doJukeboxStatus(x.jukeboxStatus);
+        }
     },
     gotPodcasts: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     gotShares: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     gotPlaylists: function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
         //{"subsonic-response":{"playlists":{"playlist":{"id":"72616e646f6d20706c61796c6973742e6d3375","name":"random playlist"}},"status":"ok","version":"1.7.0","xmlns":"http://subsonic.org/restapi"}}
-        this.doReceivedPlaylists(inResponse["subsonic-response"]);
+        if(!this.checkError(inResponse))
+            this.doReceivedPlaylists(inResponse["subsonic-response"]);
     },
     gotPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        this.doReceivedPlaylist(inResponse["subsonic-response"].playlist.entry || inResponse["subsonic-response"].playlist);
+        if(!this.checkError(inResponse))
+            this.doReceivedPlaylist(inResponse["subsonic-response"].playlist.entry || inResponse["subsonic-response"].playlist);
     },
     createdPlaylist: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     deletedPlaylist: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        this.doDeletedPlaylist();
+        if(!this.checkError(inResponse))
+            this.doDeletedPlaylist();
     },
     downloaded: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     streamed: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     gotCoverArt: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     scrobbled: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     pingSuccess: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     licenseSuccess: function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
-        if(!inResponse["subsonic-response"]) return;
-        if(inResponse["subsonic-response"].error)
-        {
-            this.doLicenseError(inResponse["subsonic-response"].error);
-        } else {
+        if(!this.checkError(inResponse))
+        {            
+            this.log(inResponse, inRequest);
             this.doLicenseReceived(inResponse["subsonic-response"]);
         }
     },
     gotMusicFolders: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);
-        this.doReceivedFolders(inResponse["subsonic-response"]);
+        if(!this.checkError(inResponse))
+            this.doReceivedFolders(inResponse["subsonic-response"]);
     },
     gotNowPlaying:  function(inSender, inResponse, inRequest) {
-        this.log(inResponse, inRequest);
+        if(!this.checkError(inResponse))
+            this.log(inResponse, inRequest);
     },
     indexReceived:  function(inSender, inResponse, inRequest) {
         //this.log(inResponse, inRequest);
-        this.doReceivedIndexes(inResponse["subsonic-response"], inRequest);
+        if(!this.checkError(inResponse))
+            this.doReceivedIndexes(inResponse["subsonic-response"], inRequest);
     },
     directoryReceived:  function(inSender, inResponse, inRequest) {
         //this.log(inResponse["subsonic-response"]);
-        this.doDirectoryReceived(inResponse["subsonic-response"], inRequest);
+        if(!this.checkError(inResponse))
+            this.doDirectoryReceived(inResponse["subsonic-response"], inRequest);
     },
     gotSearch: function(inSender, inResponse, inRequest) {
         this.log(inResponse, inRequest);        
-        this.doSearchResults(inResponse["subsonic-response"]["searchResult2"]);
+        if(!this.checkError(inResponse))
+            this.doSearchResults(inResponse["subsonic-response"]["searchResult2"]);
     },
 })

@@ -1,5 +1,6 @@
-// TODO: need to make the Next/Prev buttons make sure the playlist view scrolls .. adding a call to scrollToCurrentSong doesn't seem to do it, and/or isn't reliable.. weird
-// NOTE: it looks like the above does work, but it just requires that it be out of view by more than one maybe two elements... ugh. need to check our calculations somehow
+// TODO: hitting "Play Now" with no songs in the song list plays the song, but there's no controls
+// TODO: avoid adding playlist controls on phones when playlist is not directly focused
+// IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
 // TODO: Multiple server configs
 // TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
 // TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle  (maybe not)
@@ -21,11 +22,10 @@
 
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
-// TODO: Jukebox mode .. with volume buttons on device directly controlling the jukebox volume
+// TODO: volume buttons on device directly controlling the jukebox volume
 // TODO: stop play at App Exit . . unless going to dashboard mode?
 // TODO: drag-drop to player (add to playlist, or play now?)
 // TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
-// TODO: when highlighting song in playlist that is active in player, attempt to scroll it into view?
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
 // TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
 // TODO: (option to?) disable sleep while player screen is up
@@ -33,9 +33,6 @@
 // TODO: had to add a timeout in the Transition code to deal with transitioning failure when auto-flipping from Search to Music tab.. investigate why the transition fails.
 // TODO: "gapless" playback?
 
-// INVESTIGATE: time on B.Y.O.B. on Mezmerize by SOAD is showing as 36:34 .. mp3 corrupt?
-
-// TODO: getting a blank list from server results in error: Uncaught TypeError: Cannot read property 'child' of undefined, source/Views.js:404
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
 // TODO: preference to disable shake-to-shuffle
 
@@ -82,30 +79,27 @@ enyo.kind({
     kind: "VFlexBox", //enyo.Pane,
     transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [        
-        { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/", method: "download", onSuccess: "downloadStatus", subscribe: true },
-        { kind: "ApplicationEvents", onBack: "doBack", onLoad: "onLoad", onApplicationRelaunched: "onRelaunch" },
+        { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/",
+          method: "download", onSuccess: "downloadStatus", subscribe: true },
+        { kind: "ApplicationEvents", onUnload: "onUnload", onBack: "doBack", onLoad: "onLoad", onWindowRotated: "onWindowRotated", onApplicationRelaunched: "onRelaunch" },
         { name: "api", kind: "subsonic.api",
-            onLicenseReceived: "receivedLicense",
-            onLicenseError: "badLicense",
-            onAlbumListReceived: "receivedAlbumList",
-            onDirectoryReceived: "receivedDirectory",
-            onReceivedPlaylists: "receivedPlaylists",
-            onReceivedPlaylist: "receivedPlaylist",
-            onSearchResults: "receivedSearchResults",
-            onReceivedFolders: "receivedFolders",
-            onReceivedIndexes: "receivedIndexes",
-            onRandomSongsReceived: "receivedRandomSongs",
-            onDeletedPlaylist: "deletedPlaylist",
-            onReceivedUser: "receivedUserInfo",
-            onJukeboxPlaylist: "receivedJukeboxPlaylist",
-            onJukeboxStatus: "receivedJukeboxStatus",
+          onLicenseReceived: "receivedLicense",       onLicenseError: "badLicense",
+          onAlbumListReceived: "receivedAlbumList",   onDirectoryReceived: "receivedDirectory",
+          onReceivedPlaylists: "receivedPlaylists",   onReceivedPlaylist: "receivedPlaylist",
+          onSearchResults: "receivedSearchResults",   onReceivedFolders: "receivedFolders",
+          onReceivedIndexes: "receivedIndexes",       onRandomSongsReceived: "receivedRandomSongs",
+          onDeletedPlaylist: "deletedPlaylist",       onReceivedUser: "receivedUserInfo",
+          onJukeboxPlaylist: "receivedJukeboxPlaylist", onJukeboxStatus: "receivedJukeboxStatus",
+          onServerActivity: "serverActivity",
+          onError: "serverError",
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
                 { name: "LogView", kind: "LogView", },
                 { name: "slider", kind: "SlidingPane", onSelectView: "sliderSelected", components:
                     [
-                        { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true, onSelectView: "leftViewSelected", components:
+                        { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true,
+                          onSelectView: "leftViewSelected", components:
                             [
                                 { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
                                     [
@@ -115,21 +109,39 @@ enyo.kind({
                                         { caption: "Playlists", },
                                     ]
                                 },
-                                { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+                                { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected",
+                                  transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+                                  components:
                                     [
-                                        { name: "HomeView", kind: "subsonic.HomeView", onServerDialog: "openServerDialog", onFolderClick: "loadIndex", onMusicView: "loadMusicView", onRandomList: "getRandomList" },
-                                        { name: "MusicView", kind: "subsonic.NewMusicView", onEnableSelectButtons: "enableSelectButtons", onDisableSelectButtons: "disableSelectButtons", onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection", onSongHeld: "showSongMenu", },
-                                        { name: "SearchView", kind: "subsonic.SearchView", onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum", onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection", onSongHeld: "showSongMenu", },
-                                        { name: "PlaylistsView", kind: "subsonic.PlaylistsView", onRefreshPlaylists: "refreshPlaylists", onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist", onDeletePlaylist: "deletePlaylist" },
+                                        { name: "HomeView", kind: "subsonic.HomeView",
+                                          onServerDialog: "openServerDialog", onFolderClick: "loadIndex",
+                                          onMusicView: "loadMusicView", onRandomList: "getRandomList" },
+                                        { name: "MusicView", kind: "subsonic.NewMusicView",
+                                          onEnableSelectButtons: "enableSelectButtons",
+                                          onDisableSelectButtons: "disableSelectButtons",
+                                          onAlbumClicked: "loadAlbum", onSongClicked: "toggleSongSelection",
+                                          onSongHeld: "showSongMenu", },
+                                        { name: "SearchView", kind: "subsonic.SearchView",
+                                          onSearch: "performSearch", onAlbumClicked: "loadSearchedAlbum",
+                                          onArtistClicked: "loadSearchedAlbum", onSongClicked: "toggleSearchSongSelection",
+                                          onSongHeld: "showSongMenu", },
+                                        { name: "PlaylistsView", kind: "subsonic.PlaylistsView",
+                                          onRefreshPlaylists: "refreshPlaylists",
+                                          onOpenPlaylist: "openPlaylist", onPlayPlaylist: "playPlaylist",
+                                          onDeletePlaylist: "deletePlaylist" },
                                     ]
                                 },
                             ]
                         },
                         //{name: "avatar", kind: "Image", className: "app-avatar", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
-                        { name: "avatar", kind: "ImageFallback", className: "app-avatar", height: "64px", width: "64px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png", showing: false, },
-                        { name: "RightView", kind: "SlidingView", /*dismissible: true,*/ edgeDragging: true, components:
+                        { name: "avatar", kind: "ImageFallback", className: "app-avatar",
+                          height: "64px", width: "64px", fallbackSrc: "http://img91.imageshack.us/img91/3550/nocoverni0.png",
+                          showing: false, },
+                        { name: "RightView", kind: "SlidingView", /*dismissible: true,*/
+                          edgeDragging: true, components:
                             [
-                                { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange", showing: prefs.get("righttabsshowing"), components:
+                                { name: "RightTabs", kind: "TabGroup", onChange: "rightTabChange",
+                                  showing: prefs.get("righttabsshowing"), components:
                                     [
                                         { caption: "Now Playing" },
                                         { caption: "Player" },
@@ -140,21 +152,35 @@ enyo.kind({
                                 { name: "RightPane", kind: "Pane", flex: 1, onSelectView: "rightPaneSelected", components:
                                     [
                                         { name: "PlaylistView", flex: 1, kind: "subsonic.PlaylistView",
-                                            onEnablePrev: "enablePrev", onDisablePrev: "disablePrev", onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
-                                            onEnableNext: "enableNext", onDisableNext: "disableNext", onEnableSave: "enableSave", onDisableSave: "disableSave",
-                                            onEnableClear: "enableClear", onDisableClear: "disableClear", onEnableShuffle: "enableShuffle", onDisableShuffle: "disableShuffle",
+                                            onEnablePrev: "enablePrev", onDisablePrev: "disablePrev",
+                                            onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
+                                            onEnableNext: "enableNext", onDisableNext: "disableNext",
+                                            onEnableSave: "enableSave", onDisableSave: "disableSave",
+                                            onEnableClear: "enableClear", onDisableClear: "disableClear",
+                                            onEnableShuffle: "enableShuffle", onDisableShuffle: "disableShuffle",
                                             onClearJukebox: "clearJukeboxPlaylist",
-                                            onSongRemove: "menuRemoveSongFromPlaylist", onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong",
-                                            onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist", ondragover: "dragOverPlaylist",
-                                            ondrop: "dropOnPlaylist", onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab", onShuffle: "shufflePlaylist",
-                                            onSavePlaylist: "openSavePlaylist" },
+                                            onSongRemove: "menuRemoveSongFromPlaylist",
+                                            onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong",
+                                            onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist",
+                                            ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist",
+                                            onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab",
+                                            onShuffle: "shufflePlaylist", onSavePlaylist: "openSavePlaylist" },
                                         { name: "MediaPlayerView", flex: 1, kind: "VFlexBox", components:
                                             [
                                                 { name: "MediaPlayer", flex: 1,
                                                     onPlaying: "playing", onNotPlaying: "notPlaying",
-                                                    onEnablePrev: "enablePrev", onDisablePrev: "disablePrev", onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
+                                                    onEnablePrev: "enablePrev", onDisablePrev: "disablePrev",
+                                                    onEnablePlay: "enablePlay", onDisablePlay: "disablePlay",
                                                     onEnableNext: "enableNext", onDisableNext: "disableNext",
-                                                    onSetJukeboxPosition: "setJukeboxPosition", onPlayPauseJukebox: "playPauseJukebox", onJukeboxStatus: "getJukeboxStatus", onSongChanged: "songChanged", onNextSong: "playNext", onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs", onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted", onVideoError: "videoError", onShare: "shareMedia", style: "background: black; ", kind: "subsonic.MediaPlayerView", onJukeboxMode: "jukeboxToggled" },
+                                                    onSetJukeboxPosition: "setJukeboxPosition",
+                                                    onPlayPauseJukebox: "playPauseJukebox",
+                                                    onJukeboxStatus: "getJukeboxStatus",
+                                                    onSongChanged: "songChanged", onNextSong: "playNext",
+                                                    onPrevSong: "playPrev", onHideTabs: "hideShowRightTabs",
+                                                    onCycleTab: "cycleRightTab", onVideoPlay: "videoStarted",
+                                                    onVideoError: "videoError", onShare: "shareMedia",
+                                                    style: "background: black; ", kind: "subsonic.MediaPlayerView",
+                                                    onJukeboxMode: "jukeboxToggled" },
                                             ]
                                         },
                                         //{ name: "LyricsView", flex: 1, kind: "LyricsView", onmousehold: "hideShowRightTabs", onclick: "cycleRightTab" }
@@ -167,18 +193,19 @@ enyo.kind({
             ]
         },
         { kind: "Toolbar", components: [
-            { caption: "Back", onclick: "doBack", showing: isLargeScreen() },
-            { name: "SelectAllButton", caption: "+ All", onclick: "selectAll", showing: false, },
-            { name: "UnselectAllButton", caption: "- All", onclick: "unselectAll", showing: false, },
+            { caption: "Back", kind: "ToolButton", onclick: "doBack", showing: isLargeScreen() },
+            { name: "SelectAllButton", kind: "ToolButton", caption: "+ All", onclick: "selectAll", showing: false, },
+            { name: "UnselectAllButton", kind: "ToolButton", caption: "- All", onclick: "unselectAll", showing: false, },
             { kind: "Spacer" },
-            { name: "PrevButton", /*caption: "<<",*/ icon: "images/prev.png", onclick: "playPrev", },
-            { name: "PlayButton", /*caption: ">",*/ icon: "images/play.png", onclick: "playOrPause" },
-            { name: "NextButton", /*caption: ">>",*/ icon: "images/next.png", onclick: "playNext", },
+            { name: "PrevButton", /*caption: "<<",*/ kind: "ToolButton", icon: "images/prev.png", onclick: "playPrev", },
+            { name: "PlayButton", /*caption: ">",*/ kind: "ToolButton", icon: "images/play.png", onclick: "playOrPause" },
+            { name: "NextButton", /*caption: ">>",*/ kind: "ToolButton", icon: "images/next.png", onclick: "playNext", },
             { kind: "Spacer" },
-            { name: "ClearButton", caption: "Clear", onclick: "clearPlaylist" },
-            { name: "ShuffleButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
-            { name: "SaveButton", caption: "Save", onclick: "openSavePlaylist" },
-            { name: "JukeboxToggle", kind: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+            { name: "ClearButton",  kind: "ToolButton", caption: "Clear", onclick: "clearPlaylist" },
+            { name: "ShuffleButton", kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
+            { name: "SaveButton", kind: "ToolButton", caption: "Save", onclick: "openSavePlaylist" },
+            { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
+              onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
         { kind: "VFlexBox", components:
             [
@@ -187,7 +214,8 @@ enyo.kind({
                 },
             ]
         },
-        { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong", onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong"},
+        { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong",
+          onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong" },
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
         { name: "SavePlaylistPopup", kind: "Dialog", components:
@@ -211,6 +239,15 @@ enyo.kind({
     {
         this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
         
+    },
+    onUnload: function(x, y, z)
+    {
+        this.log(x, y, z);
+        this.$.MediaPlayer.setSong(undefined);
+    },
+    onWindowRotated: function(x, y, z)
+    {
+        this.$.MediaPlayer.reflow();
     },
     ready: function() {
         this.inherited(arguments);
@@ -384,6 +421,12 @@ enyo.kind({
     {
         this.$.ErrorDialog.open();
         this.$.ErrorDialog.setMessage("Video Player Error: " + y.errorText + " - Do you have TouchPlayer installed?");
+    },
+    serverError: function(inSender, x, y, z)
+    {
+        this.$.ErrorDialog.open();
+        this.log(x, y, z);
+        this.$.ErrorDialog.setMessage("Server error: " + x.code + " " + x.message);
     },
     deletePlaylist: function(inSender, inId)
     {
@@ -716,6 +759,7 @@ enyo.kind({
         this.$.RightTabs.setShowing(on);
         prefs.set("righttabsshowing", on);
         this.ignoreCycle = true;
+        this.$.MediaPlayer.reflow();        
     },
     cycleRightTab: function(inSender, inEvent)
     {
@@ -756,8 +800,14 @@ enyo.kind({
     receivedLicense: function(inSender, inLicense)
     {
         this.$.HomeView.setLicenseData(inLicense);
-        this.$.HomeView.$.ServerSpinner.hide();
         this.$.api.call("getMusicFolders");
+    },
+    serverActivity: function(inSender, bOn)
+    {
+        if(bOn)
+            this.$.HomeView.$.ServerSpinner.show();
+        else
+            this.$.HomeView.$.ServerSpinner.hide();
     },
     receivedPlaylists: function(inSender, inLists)
     {
@@ -776,6 +826,7 @@ enyo.kind({
     },
     create: function()
     {
+        enyo.application.mainApp = this;
         this.inherited(arguments);
 
         prefs.def("righttabsshowing", true);        
@@ -822,7 +873,6 @@ enyo.kind({
     avatarTrack: function(inEvent) {
         this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
     },
-
     pingServer: function()
     {
         this.$.api.call("ping");

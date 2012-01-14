@@ -261,6 +261,8 @@ enyo.kind({
                 this.$.PlayerSpinner.hide();
                 this.log(inEvent, x, y);
                 break;
+            default:
+                this.$.PlayerStatus.setContent("");
         }
     },
     checkTimer: function() {
@@ -288,6 +290,46 @@ enyo.kind({
     {
         this.log();
         this.clearTimer();
+    },
+    reflow: function()
+    {
+        var newheight;
+        if(!isLargeScreen())
+        {
+            if(enyo.application.mainApp.$.RightTabs.showing)
+            {
+                newheight = isWideScreen() ? "150px" : "200px";
+            } else {
+                newheight = isWideScreen() ? "200px" : "240px";
+            }
+            if(isWideScreen())
+            {
+                this.$.AlbumArt.applyStyle("position", "absolute");
+                this.$.AlbumArt.applyStyle("left", "5px");
+                this.$.AlbumArt.applyStyle("top", "5px");
+                this.$.AlbumNameLabel.applyStyle("position", "absolute");
+                this.$.AlbumNameLabel.applyStyle("right", "0px");
+                this.$.SongNameLabel.applyStyle("position", "absolute");
+                this.$.SongNameLabel.applyStyle("right", "0px");
+                this.$.SongNameLabel.applyStyle("top", "24px");
+                this.$.ArtistNameLabel.applyStyle("position", "absolute");
+                this.$.ArtistNameLabel.applyStyle("right", "0px");
+                this.$.ArtistNameLabel.applyStyle("top", "48px");
+            } else {
+                this.$.AlbumArt.applyStyle("position", "");
+                this.$.AlbumArt.applyStyle("left", "");
+                this.$.AlbumArt.applyStyle("top", "");
+                this.$.AlbumNameLabel.applyStyle("position", "");
+                this.$.AlbumNameLabel.applyStyle("right", "");
+                this.$.SongNameLabel.applyStyle("position", "");
+                this.$.SongNameLabel.applyStyle("right", "");
+                this.$.SongNameLabel.applyStyle("top", "");
+                this.$.ArtistNameLabel.applyStyle("position", "");
+                this.$.ArtistNameLabel.applyStyle("right", "");
+                this.$.ArtistNameLabel.applyStyle("top", "");
+            }
+            this.$.AlbumArt.setHeight(newheight);
+        }
     },
     songChanged: function()
     {
@@ -326,7 +368,9 @@ enyo.kind({
             {
                 var arturl = "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)";
                 if(this.$.AlbumArt.src != arturl)
+                {
                     this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)");
+                }
             }
             this.$.ArtistNameLabel.setContent(this.song.artist);
             this.$.ArtistNameLabel.addRemoveClass("enyo-item-secondary", !isLargeScreen() && this.song.artist.length > 15);
@@ -341,6 +385,7 @@ enyo.kind({
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
                 player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
+                this.log("music playing: ", "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO(webOS)(development)");
                 this.$.ProgressSlider.setBarPosition(0);
                 this.$.ProgressSlider.setAltBarPosition(0);
             }
@@ -443,7 +488,9 @@ enyo.kind({
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         try {
-            this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
+            this.$.ProgressSlider.setAltBarPosition(parseInt( (node.buffered.end(0) / node.duration) * 100));
+            this.$.PlayerStatus.setContent("");
+            //this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
         } catch(err) {
             // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
         }
@@ -451,7 +498,7 @@ enyo.kind({
         //this.log(node.buffered);
         if(!this.song)
             return;
-        if(node.readyState != 4)
+        if(node.readyState < 3)
         {
             this.$.SliderBox.hide();
             if(!node.paused && !this.$.PlayerSpinner.showing)

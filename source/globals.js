@@ -36,6 +36,11 @@ function isLargeScreen()
     return window.innerWidth > 480;
 }
 
+function isWideScreen()
+{
+    return window.innerWidth > window.innerHeight;
+}
+
 function secondsToTime(secs)
 {
     var hours = Math.floor(secs / (60 * 60));

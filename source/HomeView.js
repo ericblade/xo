@@ -108,7 +108,7 @@ enyo.kind({
     },
     components:
         [
-            { kind: "FadeScroller", flex: 1, accelerated: true, components:
+            { kind: isLargeScreen() ? "FadeScroller" : "Scroller", flex: 1, accelerated: true, components:
                 [
                     !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
                     { name: "serverItem", kind: "Item", onclick: "doServerDialog", layoutKind: "VFlexLayout", components:

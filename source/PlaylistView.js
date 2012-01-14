@@ -6,7 +6,7 @@ enyo.kind({
         var bounds = this.getBoundaries();
         var size = { x: bounds.bottom, y: bounds.left };
         var avgsize = { x: size.x / maxItems, y: size.y / maxItems };
-        this.scrollIntoView(avgsize.x * index, avgsize.y * index);
+        this.scrollTo(avgsize.x * index, avgsize.y * index);
     }
 }),
 
