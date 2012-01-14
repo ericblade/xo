@@ -113,9 +113,13 @@ enyo.kind({
         if(playlist.length > 0)
         {
             this.doEnablePlay();
-            this.doEnableClear();
-            if(enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
-                this.doEnableSave();
+            this.log("*** ENABLE CONTROLS ****", enyo.application.mainApp.$.slider.getViewName(), enyo.application.mainApp.$.RightPane.getViewName());
+            if(isLargeScreen() || (enyo.application.mainApp.$.slider.getViewName() == "RightView" && enyo.application.mainApp.$.RightPane.getViewName() == "PlaylistView"))
+            {
+                this.doEnableClear();
+                if(enyo.application.subsonicUser && enyo.application.subsonicUser.playlistRole)
+                    this.doEnableSave();
+            }
         }
         else
         {

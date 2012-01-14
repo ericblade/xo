@@ -1,4 +1,3 @@
-// TODO: hitting "Play Now" with no songs in the song list plays the song, but there's no controls
 // TODO: avoid adding playlist controls on phones when playlist is not directly focused
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
 // TODO: Multiple server configs
@@ -201,9 +200,9 @@ enyo.kind({
             { name: "PlayButton", /*caption: ">",*/ kind: "ToolButton", icon: "images/play.png", onclick: "playOrPause" },
             { name: "NextButton", /*caption: ">>",*/ kind: "ToolButton", icon: "images/next.png", onclick: "playNext", },
             { kind: "Spacer" },
-            { name: "ClearButton",  kind: "ToolButton", caption: "Clear", onclick: "clearPlaylist" },
+            { name: "ClearButton",  kind: "ToolButton", caption: "Clear", onclick: "clearPlaylist", showing: false, },
             { name: "ShuffleButton", kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
-            { name: "SaveButton", kind: "ToolButton", caption: "Save", onclick: "openSavePlaylist" },
+            { name: "SaveButton", kind: "ToolButton", caption: "Save", onclick: "openSavePlaylist", showing: false },
             { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
               onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
         ]},
@@ -256,7 +255,13 @@ enyo.kind({
     enablePrev: function() { this.$.PrevButton.show(); },
     disablePrev: function() { this.$.PrevButton.hide(); },
     enablePlay: function() { this.$.PlayButton.show(); },
-    disablePlay: function() { this.$.PlayButton.hide(); },
+    disablePlay: function() {
+        if(this.$.MediaPlayer.playing())
+        {
+            this.enablePlay();
+        }
+        this.$.PlayButton.hide();
+    },
     enableNext: function() { this.$.NextButton.show(); },
     disableNext: function() { this.$.NextButton.hide(); },
     enableClear: function() { this.$.ClearButton.show(); },
@@ -322,6 +327,7 @@ enyo.kind({
     playing: function(inSender)
     {
         this.$.PlayButton.paused = false;
+        this.enablePlay();
         this.setPlayButton();
     },
     notPlaying: function(inSender)
