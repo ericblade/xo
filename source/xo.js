@@ -1,6 +1,5 @@
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
-// IDEA: full-screen on zoom gesture, disable on pinch?
-// IDEA: disable sleep?
+// TODO: close dashboard at app exit (until the app is seperated)
 // TODO: Multiple server configs
 // TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
 // TODO: when tap selecting song, if not already playing, add and start playing
@@ -191,7 +190,7 @@ enyo.kind({
                 },
             ]
         },
-        { kind: "Toolbar", components: [
+        { name: "BottomToolbar", kind: "Toolbar", components: [
             { caption: "Back", kind: "ToolButton", onclick: "doBack", showing: isLargeScreen() },
             { name: "SelectAllButton", kind: "ToolButton", caption: "+ All", onclick: "selectAll", showing: false, },
             { name: "UnselectAllButton", kind: "ToolButton", caption: "- All", onclick: "unselectAll", showing: false, },
@@ -234,6 +233,35 @@ enyo.kind({
             ]
         },
     ],
+    gesturestartHandler: function(inSender, event) {
+        //this.log("***** gesturestart: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
+        event.preventDefault();
+        event.stopPropagation();
+    },
+    gesturechangeHandler: function(inSender, event) {
+        //this.log("***** gesturechange: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
+        if(event.scale > 1.5)
+        {
+            enyo.setFullScreen(true);
+            //this.$.BottomToolbar.applyStyle("opacity", "0.5");
+            this.$.BottomToolbar.applyStyle("background", "black");
+            enyo.windows.setWindowProperties(window, { blockScreenTimeout: true }); 
+        }
+        if(event.scale < 0.75)
+        {
+            enyo.setFullScreen(false);
+            //this.$.BottomToolbar.applyStyle("opacity", "1.0");
+            this.$.BottomToolbar.applyStyle("background", "");
+            enyo.windows.setWindowProperties(window, { blockScreenTimeout: false }); 
+        }
+        event.preventDefault();
+        event.stopPropagation();
+    },
+    gestureendHandler: function(inSender, event) {
+        //this.log("***** gestureend: event.scale: " + event.scale + ", event.centerX: " + event.centerX + ", event.centerY: " + event.centerY);
+        event.preventDefault();
+        event.stopPropagation();
+    },    
     windowParamsChanged: function(inSender, inEvent)
     {
         this.log(enyo.windowParams.cmdType);
@@ -448,6 +476,7 @@ enyo.kind({
         this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
         this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
         this.$.JukeboxToggle.setShowing(isLargeScreen() && inUser.jukeboxRole);
+        this.$.JukeboxMenuItem.setDisabled(!inUser.jukeboxRole);
     },
     videoError: function(inSender, x, y, z)
     {

@@ -110,11 +110,13 @@ enyo.kind({
         if(!req.getUrl() || req.getUrl() == "")
         {
             var server = prefs.get("serverip");
-            if(server.substr(0, 6) == "http://")
-                server = server.substr(6, server.length);
-            if(server.substr(0, 7) == "https://")
+            this.log("7char", server.substr(0, 7), "8char", server.substr(0, 8));
+            if(server.substr(0, 7) == "http://")
                 server = server.substr(7, server.length);
-            req.setUrl("http://" + prefs.get("serverip") + "/rest/" + req.file);
+            if(server.substr(0, 8) == "https://")
+                server = server.substr(8, server.length);
+            this.log("server", server);
+            req.setUrl("http://" + server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
         }
         

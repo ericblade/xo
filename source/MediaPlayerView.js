@@ -59,7 +59,7 @@ enyo.kind({
                                 //{ name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
                                 { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://img91.imageshack.us/img91/3550/nocoverni0.png"*/ },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
-                                { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs.", className: "enyo-item-ternary", style: "color: white;" },
+                                { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs. Zoom/Pinch to Fullscreen/Restore", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
                             ]
                         },
