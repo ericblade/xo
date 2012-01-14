@@ -112,9 +112,13 @@ enyo.kind({
             var server = prefs.get("serverip");
             this.log("7char", server.substr(0, 7), "8char", server.substr(0, 8));
             if(server.substr(0, 7) == "http://")
+            {
                 server = server.substr(7, server.length);
-            if(server.substr(0, 8) == "https://")
+                prefs.set("serverip", server);
+            } else if(server.substr(0, 8) == "https://") {
                 server = server.substr(8, server.length);
+                prefs.set("serverip", server);
+            }
             this.log("server", server);
             req.setUrl("http://" + server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
