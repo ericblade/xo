@@ -488,8 +488,8 @@ enyo.kind({
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         try {
-            this.$.ProgressSlider.setAltBarPosition(parseInt( (node.buffered.end(0) / node.duration) * 100));
             this.$.PlayerStatus.setContent("");
+            this.$.ProgressSlider.setAltBarPosition(parseInt( (node.buffered.end(0) / node.duration) * 100));
             //this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
         } catch(err) {
             // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
@@ -498,19 +498,25 @@ enyo.kind({
         //this.log(node.buffered);
         if(!this.song)
             return;
-        if(node.readyState < 3)
+        if(node.readyState < 2)
         {
             this.$.SliderBox.hide();
-            if(!node.paused && !this.$.PlayerSpinner.showing)
+            if(!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3)
             {
                 this.$.PlayerSpinner.show();
             }
         }
         else
         {
-            this.$.SliderBox.show();
-            if(this.$.PlayerSpinner.showing)
-                this.$.PlayerSpinner.hide();
+            if(!this.$.SliderBox.showing)
+                this.$.SliderBox.show();
+            if(!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3)
+            {
+                this.$.PlayerSpinner.show();
+            } else {
+                if(this.$.PlayerSpinner.showing)
+                    this.$.PlayerSpinner.hide();
+            }
         }
         var prog = (node.currentTime / this.song.duration) * 100;
         prefs.set("savedtime", node.currentTime);
