@@ -113,7 +113,6 @@ enyo.kind({
         if(playlist.length > 0)
         {
             this.doEnablePlay();
-            this.log("*** ENABLE CONTROLS ****", enyo.application.mainApp.$.slider.getViewName(), enyo.application.mainApp.$.RightPane.getViewName());
             if(isLargeScreen() || (enyo.application.mainApp.$.slider.getViewName() == "RightView" && enyo.application.mainApp.$.RightPane.getViewName() == "PlaylistView"))
             {
                 this.doEnableClear();

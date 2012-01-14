@@ -359,6 +359,13 @@ enyo.kind({
             enyo.application.nowplaying = this.song;
         if(this.song)
         {
+            if(!enyo.application.active)
+            {
+                enyo.windows.addBannerMessage(this.song.artist + "-" + this.song.title, '{ }' );
+            }
+            if(enyo.application.dash)
+                enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: true });
+            //enyo.application.dash.updateTrackInfoDisplay( { strTrackTitle: this.song.title, strTrackArtist: this.song.artist });
             this.doPlaying();
             this.log("using player", player);
             this.$.SongInfoBox.show();
@@ -430,9 +437,17 @@ enyo.kind({
                     player.node.play();
             } else {
                 if(!this.$.MusicPlayer.audio.paused)
+                {
                     this.$.MusicPlayer.audio.pause();
+                    if(enyo.application.dash)
+                        enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: false });
+                }
                 else
+                {
+                    if(enyo.application.dash)
+                        enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: true });        
                     this.$.MusicPlayer.audio.play();
+                }
             }
         }
         this.checkTimer();

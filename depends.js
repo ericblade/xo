@@ -1,5 +1,7 @@
 enyo.depends(
         "source/xolauncher.js",
+        "source/dashboard.js",
+        "source/dashboard.css",
         "source/globals.js",
         "source/base64.js",
 	"source/morf.js",

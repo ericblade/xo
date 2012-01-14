@@ -1,11 +1,10 @@
-// TODO: avoid adding playlist controls on phones when playlist is not directly focused
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
+// IDEA: full-screen on zoom gesture, disable on pinch?
+// IDEA: disable sleep?
 // TODO: Multiple server configs
 // TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
-// TODO: split bottom toolbar (sigh), copy play/prev/next for phones not for tablets, add drag handle  (maybe not)
 // TODO: when tap selecting song, if not already playing, add and start playing
 // TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add, "Just Select")
-// TODO: tablets default to Play Now, phones to Add / Play ?
 
 // TODO: need to do some checking on the Timer in MediaPlayerView and make sure that it's only running when we really need it to be.
 // TODO: docs say "jukeboxControl" "set" doesn't stop the current play .. so if that's correct, then we're stopping it when we receive the new playlist?
@@ -22,7 +21,6 @@
 // TODO: stop the Interval that is set in the MusicPlayer when application is not foreground, resume when it is.  Also stop it when that pane is switched to a different view.
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
 // TODO: volume buttons on device directly controlling the jukebox volume
-// TODO: stop play at App Exit . . unless going to dashboard mode?
 // TODO: drag-drop to player (add to playlist, or play now?)
 // TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
@@ -33,11 +31,9 @@
 // TODO: "gapless" playback?
 
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
-// TODO: preference to disable shake-to-shuffle
 
 // TODO: Have search also send a search query to Amazon, linking for purchasing? hmmm...
 // TODO: Saving of current index in playlist does not appear to be working
-// TODO: Why is it when I hit "Play" in Now Playing, it refreshes the entire list?
 // TODO: font sizing on artist/song title should be based on the lengths of both, not of each
 
 function stripHtml(html)
@@ -80,7 +76,11 @@ enyo.kind({
     components: [        
         { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/",
           method: "download", onSuccess: "downloadStatus", subscribe: true },
-        { kind: "ApplicationEvents", onUnload: "onUnload", onBack: "doBack", onLoad: "onLoad", onWindowRotated: "onWindowRotated", onApplicationRelaunched: "onRelaunch" },
+        { kind: "ApplicationEvents", onUnload: "onUnload", onBack: "doBack", onLoad: "onLoad",
+          onWindowRotated: "onWindowRotated", onApplicationRelaunched: "onRelaunch",
+          onWindowActivated: "windowActivated", onWindowDeactivated: "windowDeactivated",
+          onWindowParamsChange: "windowParamsChanged"
+        },
         { name: "api", kind: "subsonic.api",
           onLicenseReceived: "receivedLicense",       onLicenseError: "badLicense",
           onAlbumListReceived: "receivedAlbumList",   onDirectoryReceived: "receivedDirectory",
@@ -232,8 +232,24 @@ enyo.kind({
             [
                 { name: "JukeboxMenuItem", caption: "Jukebox OFF", onclick: "menuToggleJukebox" }
             ]
-        }
+        },
     ],
+    windowParamsChanged: function(inSender, inEvent)
+    {
+        this.log(enyo.windowParams.cmdType);
+        switch(enyo.windowParams.cmdType)
+        {
+            case "playpause":
+                this.$.MediaPlayer.playPauseClicked(inSender, inEvent);
+                break;
+            case "prev":
+                this.playPrev();
+                break;
+            case "next":
+                this.playNext();
+                break;
+        }
+    },
     onLoad: function(x, y, z)
     {
         this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
@@ -243,6 +259,16 @@ enyo.kind({
     {
         this.log(x, y, z);
         this.$.MediaPlayer.setSong(undefined);
+    },
+    windowActivated: function(inSender)
+    {
+        this.log();
+        enyo.application.active = true;
+    },
+    windowDeactivated: function(inSender)
+    {
+        this.log();
+        enyo.application.active = false;
     },
     onWindowRotated: function(x, y, z)
     {
@@ -833,8 +859,10 @@ enyo.kind({
     create: function()
     {
         enyo.application.mainApp = this;
+        enyo.application.active = true;
         this.inherited(arguments);
 
+        enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); // TODO: option to allow setting blockScreenTimeout?
         prefs.def("righttabsshowing", true);        
         prefs.def("serverip","www.ericbla.de:88");
         prefs.def("username","slow");
@@ -875,6 +903,9 @@ enyo.kind({
         //document.addEventListener('shakestart', enyo.bind(this, this.shakeNotify));
         //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
+        
+        if(isLargeScreen()) // TODO: dashboard doesn't currently work on phones
+            enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {
         this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
