@@ -1,4 +1,9 @@
 // back icon: http://www.app-bits.com/ (attribution required)
+// TODO: add all from search tab?
+// TODO: player stops at song change if dashboard gets closed?
+// TODO: Download statuses are completely fucked up
+// TODO: send the command to change the dashboard play button from the main function, not from in the player
+// TODO: test the dashboard in Jukebox mode
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
 // TODO: close dashboard at app exit (until the app is seperated)
 // TODO: Multiple server configs
@@ -12,7 +17,7 @@
 // TODO: have Random button open up a popup that gives options for what to pull?
 // TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
 // TODO: TouchPad in portrait mode has a shitton of extra space we can use
-// TODO: need to have Clear playlist re-render the music view
+// TODO: need to have Clear playlist re-render the music view (as well as removing songs from the playlist)
 // TODO: Album hold menu
 // TODO: Probably should not allow any further taps to load more directories when we're waiting on a directory to load already ...
 
@@ -247,7 +252,10 @@ enyo.kind({
             enyo.application.isFullScreen = true;
             //this.$.BottomToolbar.applyStyle("opacity", "0.5");
             this.$.BottomToolbar.applyStyle("background", "black");
-            enyo.windows.setWindowProperties(window, { blockScreenTimeout: true });
+            
+            if(window.PalmSystem)
+                enyo.windows.setWindowProperties(window, { blockScreenTimeout: true });
+                
             //event.preventDefault();
             event.stopPropagation();
         }
@@ -257,7 +265,8 @@ enyo.kind({
             enyo.application.isFullScreen = false;
             //this.$.BottomToolbar.applyStyle("opacity", "1.0");
             this.$.BottomToolbar.applyStyle("background", "");
-            enyo.windows.setWindowProperties(window, { blockScreenTimeout: false });
+            if(window.PalmSystem)
+                enyo.windows.setWindowProperties(window, { blockScreenTimeout: false });
             //event.preventDefault();
             event.stopPropagation();
         }
@@ -292,6 +301,8 @@ enyo.kind({
     {
         this.log(x, y, z);
         this.$.MediaPlayer.setSong(undefined);
+        if(enyo.application.dash)
+            enyo.application.dash.window.close();
     },
     windowActivated: function(inSender)
     {
@@ -896,7 +907,8 @@ enyo.kind({
         enyo.application.active = true;
         this.inherited(arguments);
 
-        enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); // TODO: option to allow setting blockScreenTimeout?
+        if(window.PalmSystem)
+            enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); 
         prefs.def("righttabsshowing", true);        
         //prefs.def("serverip","www.ericbla.de:88");
         prefs.def("serverip", "http://www.subsonic.org/demo");
@@ -1083,6 +1095,7 @@ enyo.kind({
     },
     receivedPlaylist: function(inSender, inPlaylist)
     {
+        if(inPlaylist.album) inPlaylist = [ inPlaylist ];        
         var stupid = { directory: { child: inPlaylist } }; // the subsonic api is dumb sometimes
         if(!this.playNextPlaylist)
         {
@@ -1178,8 +1191,9 @@ enyo.kind({
         if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
             enyo.application.playlist.index = 0;
         this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
-        if(!enyo.application.playlist[enyo.application.playlist.index].isVideo)
-            this.selectPlayerView();
+        // TODO: if we ever do get internal video playback, uncomment this
+        //if(!enyo.application.playlist[enyo.application.playlist.index].isVideo)
+        //    this.selectPlayerView();
     },
     playNext: function(inSender, inEvent)
     {

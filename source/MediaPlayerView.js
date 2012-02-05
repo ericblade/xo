@@ -363,9 +363,8 @@ enyo.kind({
             {
                 enyo.windows.addBannerMessage(this.song.artist + "-" + this.song.title, '{ }' );
             }
-            if(enyo.application.dash)
+            if(enyo.application.dash && enyo.application.dash.name == "xodash" && window.PalmSystem)
                 enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: true });
-            //enyo.application.dash.updateTrackInfoDisplay( { strTrackTitle: this.song.title, strTrackArtist: this.song.artist });
             this.doPlaying();
             this.log("using player", player);
             this.$.SongInfoBox.show();
@@ -439,12 +438,12 @@ enyo.kind({
                 if(!this.$.MusicPlayer.audio.paused)
                 {
                     this.$.MusicPlayer.audio.pause();
-                    if(enyo.application.dash)
+                    if(enyo.application.dash && enyo.application.dash.name == "xodash" && window.PalmSystem)
                         enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: false });
                 }
                 else
                 {
-                    if(enyo.application.dash)
+                    if(enyo.application.dash && enyo.application.dash.name == "xodash" && window.PalmSystem)
                         enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: true });        
                     this.$.MusicPlayer.audio.play();
                 }

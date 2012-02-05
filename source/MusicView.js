@@ -273,7 +273,7 @@ enyo.kind({
     {
         for(x in enyo.application.playlist)
         {
-            if(x && enyo.application.playlist[x].id == itemID)
+            if(x && enyo.application.playlist[x] && enyo.application.playlist[x].id == itemID)
             {
                 return x;
             }

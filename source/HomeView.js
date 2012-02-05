@@ -108,6 +108,7 @@ enyo.kind({
     },
     components:
         [
+            { name: "appLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },            
             { kind: isLargeScreen() ? "FadeScroller" : "Scroller", flex: 1, accelerated: true, components:
                 [
                     !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
@@ -130,6 +131,10 @@ enyo.kind({
                             },
                         ]
                     },
+                    /*{ kind: "Item", content: "What is XO?", onclick: "clickwhat" },
+                    { kind: "Item", content: "Help", onclick: "clickhelp" },
+                    { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
+                    { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },*/
                     { kind: "Divider", caption: "Albums" },
                     { kind: "Item", content: "Recently added", onclick: "clickRecentlyAdded", },
                     { kind: "Item", content: "Random", onclick: "clickRandom" },
@@ -137,17 +142,17 @@ enyo.kind({
                     { kind: "Item", content: "Recently Played", onclick: "clickRecentlyPlayed" },
                     { kind: "Item", content: "Most Played", onclick: "clickMostPlayed", },
                     { kind: "Divider", caption: "Folders" },
-                    { name: "FolderRepeater", style: "padding-left: 20px; padding-right: 20px;", kind: "VirtualRepeater", onclick: "folderClicked", onSetupRow: "getFolderRow", components:
+                    { name: "FolderRepeater", style: "padding-left: 20px; padding-right: 20px;", kind: "VirtualRepeater", layoutKind: "HFlexLayout", onclick: "folderClicked", onSetupRow: "getFolderRow", components:
                         [
                             { kind: "HFlexBox", components:
                                 [
                                     { name: "FolderItem", flex: 1, kind: "DividerDrawer", open: false, content: "Folder", components:
                                         [
-                                            { content: "Test" },
                                             { name: "IndexRepeater", kind: "IndexRepeater", },
                                         ]
                                     },
-                                    { kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffledark.png", onclick: "getRandomList" },
+                                    //{ kind: "ToolButton", style: "max-height: 55px;", /*caption: "Shuffle",*/ icon: "images/shuffledark.png", onclick: "getRandomList" },
+                                    { kind: "enyo.Image", style: "padding-left: 5px; position: relative; top: 7px;", src: "images/shuffledark.png", onclick: "getRandomList" },
                                     //{ kind: "IconButton", icon: "images/shuffle32.png", onclick: "getRandomList" },
                                 ]
                             },
@@ -157,6 +162,23 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
+    clickreview: function() {
+        var url = "http://developer.palm.com/appredirect/?packageid=com.ericblade.googlevoiceapp";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickemail: function() {
+        var url = "mailto:blade.eric@gmail.com?subject=XO-Demo-email";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickwhat: function()
+    {
+        var url = "http://www.ericbla.de/gvoice-webos/xo/";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickhelp: function() {
+        var url = "http://ericbla.de/gvoice-webos/xo/help/";
+        this.$.WebLauncher.call( { target: url });        
+    },
     enableControls: function()
     {
         
@@ -194,9 +216,12 @@ enyo.kind({
     },
     folderClicked: function(inSender, inEvent)
     {
-        this.log(inSender);
-        inSender.open = !inSender.open;
-        this.doFolderClick(inEvent, this.folderList[inEvent.rowIndex].id);
+        this.log(inSender, inSender.open);
+        if(!this.folderList[inEvent.rowIndex].loaded)
+        {
+            this.doFolderClick(inEvent, this.folderList[inEvent.rowIndex].id);
+            this.folderList[inEvent.rowIndex].loaded = true;
+        }
         inEvent.stopPropagation();
         inEvent.preventDefault();
         return -1;
