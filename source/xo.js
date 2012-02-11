@@ -992,16 +992,17 @@ enyo.kind({
     },
     delayedStartup: function()
     {
+        this.log("appinfo", enyo.fetchAppId());
+        if(enyo.fetchAppId() == "com.ericblade.xodemo")
+        {
+            prefs.set("serverip", "http://www.subsonic.org/demo");
+            //prefs.def("username","slow");
+            prefs.set("username", "guest4");
+            //prefs.def("password","slow");
+            prefs.set("password", "guest");
+        }
         if(!this.startupcomplete)
         {
-            if(enyo.fetchAppInfo() == "com.ericblade.xodemo")
-            {
-                prefs.set("serverip", "http://www.subsonic.org/demo");
-                //prefs.def("username","slow");
-                prefs.set("username", "guest4");
-                //prefs.def("password","slow");
-                prefs.set("password", "guest");
-            }
             this.changedServer();
             this.startupcomplete = true;
         }
@@ -1017,7 +1018,7 @@ enyo.kind({
         var appver = appInfo ? appInfo["version"] : "0.0.0";
         var osver = enyo.fetchDeviceInfo() ? enyo.fetchDeviceInfo()["platformVersion"] : "unknown";
                
-        this.log("starting up " + enyo.fetchAppInfo() + " " + appver + " on " + /*this.$.Platform.platform*/ + " " + osver);
+        this.log("starting up " + enyo.fetchAppId() + " " + appver + " on " + /*this.$.Platform.platform*/ + " " + osver);
         var firstrun = prefs.get("firstrun");
         if(firstrun != appver)
         {
@@ -1028,7 +1029,7 @@ enyo.kind({
                 this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
             }
         }
-        if(enyo.fetchAppInfo() == "com.ericblade.xodemo" || firstrun != appver)
+        if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
     },
     openIntroPopup: function(inSender, inEvent)
@@ -1047,7 +1048,7 @@ enyo.kind({
     },
     openServerDialog: function()
     {
-        if(enyo.fetchAppInfo() == "com.ericblade.xodemo")
+        if(enyo.fetchAppId() == "com.ericblade.xodemo")
             this.$.demoServerDialog.open();
         else
             this.$.serverDialog.open();

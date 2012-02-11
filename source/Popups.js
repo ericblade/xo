@@ -10,7 +10,7 @@ enyo.kind({
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
     clickreview: function() {
-        var url = "http://developer.palm.com/appredirect/?packageid=com.ericblade.xo";
+        var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
         this.$.WebLauncher.call( { target: url });
     },
     clickemail: function() {
@@ -36,12 +36,19 @@ enyo.kind({
         "onServerChanged" : "",
     },
     components: [
+        { name: "WebLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },                    
         { kind: "Group", caption: "Server Settings", components:
             [
-                { content: "You are using the DEMO version of XO, and cannot change servers.  Please be on the lookout for the full version of XO in the HP App Catalog in late January or early February 2012." },
+                { content: "You are using the DEMO version of XO, and cannot change servers.  You can get the FULL version of XO by pressing the button below!" },
+                { kind: "Button", caption: "Get XO!", onclick: "purchaseClick" },
             ]
         }
     ],
+    purchaseClick: function(inSender, inEvent)
+    {
+        var url = "http://developer.palm.com/appredirect/?packageid=com.ericblade.xo";
+        this.$.WebLauncher.call( { target: url });
+    },
     changedServer: function(inSender, inEvent)
     {
         prefs.set("serverip", this.$.ServerInput.getValue());
