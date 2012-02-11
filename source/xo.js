@@ -1,4 +1,4 @@
-// back icon: http://www.app-bits.com/ (attribution required)
+// TODO: Save Playlist button doesn't light up after retrieving credentials, only after making a change to the playlist
 // TODO: add all from search tab?
 // TODO: player stops at song change if dashboard gets closed?
 // TODO: Download statuses are completely fucked up
@@ -97,6 +97,12 @@ enyo.kind({
           onServerActivity: "serverActivity",
           onError: "serverError",
         },
+        { name: "AppManService", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },
+        { name: "AppMenu", kind: "AppMenu", lazy: false, components:
+            [
+                { caption: "Help/About", onclick: "openIntroPopup" },
+            ]
+        },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
                 { name: "LogView", kind: "LogView", },
@@ -105,6 +111,8 @@ enyo.kind({
                         { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true,
                           onSelectView: "leftViewSelected", components:
                             [
+                                { name: "IntroPopup", kind: "IntroPopup", autoClose: false, dismissWithClick: false, scrim: true },
+
                                 { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
                                     [
                                         { caption: "Home", },
@@ -988,6 +996,37 @@ enyo.kind({
             this.changedServer();
             this.startupcomplete = true;
         }
+        enyo.nextTick(this, this.checkWhatsNew);
+    },
+    checkWhatsNew: function()
+    {
+        try {
+            var appInfo = JSON.parse(enyo.fetchAppInfo());
+        } catch(err) {
+            var appInfo = enyo.fetchAppInfo();
+        }
+        var appver = appInfo ? appInfo["version"] : "0.0.0";
+        var osver = enyo.fetchDeviceInfo() ? enyo.fetchDeviceInfo()["platformVersion"] : "unknown";
+               
+        this.log("starting up XO " + appver + " on " + /*this.$.Platform.platform*/ + " " + osver);
+        var firstrun = prefs.get("firstrun");
+        if(firstrun != appver)
+        {
+            prefs.set("firstrun", appver);
+            if(window.PalmSystem)
+            {
+                enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
+                this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
+            }
+        }
+        if(enyo.fetchAppInfo() == "com.ericblade.xodemo" || firstrun != appver)
+            setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
+    },
+    openIntroPopup: function(inSender, inEvent)
+    {
+        this.$.IntroPopup.openAtCenter();
+        inEvent.preventDefault();
+        return true;
     },
     rendered: function()
     {
@@ -1277,7 +1316,7 @@ enyo.kind({
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         for(x in playlist)
         {
-            if(x && playlist[x].id == itemID)
+            if(x && playlist.hasOwnProperty(x) && playlist[x] && playlist[x].id == itemID)
             {
                 return x;
             }

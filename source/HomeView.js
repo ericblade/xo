@@ -108,7 +108,6 @@ enyo.kind({
     },
     components:
         [
-            { name: "appLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },            
             { kind: isLargeScreen() ? "FadeScroller" : "Scroller", flex: 1, accelerated: true, components:
                 [
                     !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
@@ -131,10 +130,6 @@ enyo.kind({
                             },
                         ]
                     },
-                    /*{ kind: "Item", content: "What is XO?", onclick: "clickwhat" },
-                    { kind: "Item", content: "Help", onclick: "clickhelp" },
-                    { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
-                    { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },*/
                     { kind: "Divider", caption: "Albums" },
                     { kind: "Item", content: "Recently added", onclick: "clickRecentlyAdded", },
                     { kind: "Item", content: "Random", onclick: "clickRandom" },
@@ -162,23 +157,6 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
-    clickreview: function() {
-        var url = "http://developer.palm.com/appredirect/?packageid=com.ericblade.googlevoiceapp";
-        this.$.WebLauncher.call( { target: url });
-    },
-    clickemail: function() {
-        var url = "mailto:blade.eric@gmail.com?subject=XO-Demo-email";
-        this.$.WebLauncher.call( { target: url });
-    },
-    clickwhat: function()
-    {
-        var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        this.$.WebLauncher.call( { target: url });
-    },
-    clickhelp: function() {
-        var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        this.$.WebLauncher.call( { target: url });        
-    },
     enableControls: function()
     {
         

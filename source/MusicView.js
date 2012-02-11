@@ -99,7 +99,7 @@ enyo.kind({
     components: [
         { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
             [
-                { content: "Nothing loaded yet" }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
+                { content: "Select something in Home, Search, or Playlists first." }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
             ]
         },
     ],
@@ -133,7 +133,8 @@ enyo.kind({
         if(!this.myViews)
             this.myViews = new Array();
         this.myViews.push(newview = this.$.ViewPane.createComponent({ kind: "MusicListView", "onSongHeld": "songHeld", "onAlbumHeld":"albumHeld", "onSongClicked":"songClicked", "onAlbumClicked":"albumClicked" }, { owner: this }));
-        newview.$.ViewLabel.setContent("View " + this.myViews.length + (folderId ? (" folder " + folderId) : ""));
+        //newview.$.ViewLabel.setContent("View " + this.myViews.length + (folderId ? (" folder " + folderId) : ""));
+        newview.$.ViewLabel.setContent("");
         this.log("create new view completed in " + (Date.now() - stamp) + " ms");
         // TODO: Figure out a way to display this toolbar if there are any songs in the list .. or just display it all the time? argh. we want to be able to Select All on a Random.
         if(this.myViews.length > 1)

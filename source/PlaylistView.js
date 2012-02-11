@@ -1,6 +1,6 @@
 enyo.kind({
     name: "MyScroller",
-    kind: isLargeScreen() ? "FadeScroller" : "Scroller",
+    kind: "TransformScroller",
     scrollToItem: function(index, maxItems)
     {
         var bounds = this.getBoundaries();
@@ -39,7 +39,7 @@ enyo.kind({
         { kind: "VFlexBox", flex: 1, onclick: "cycleTab", components:
             [
                 isLargeScreen() ? { content: "Drag songs from Music list and drop them into this list.", className: "enyo-item-ternary" } : {},
-                { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary", ondragover: "scrollUp" },
+                { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary",  },
                 //{ kind: "Button", caption: "Test", onclick: "test" },
                 { name: "Scroller", kind: /*isLargeScreen() ? "FadeScroller" : "Scroller"*/ "MyScroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
@@ -105,7 +105,6 @@ enyo.kind({
     {
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         //enyo.nextTick(this, this.scrollToCurrentSong);
-        this.scrollToCurrentSong();
         if(playlist.index > 0)
             this.doEnablePrev();
         else
@@ -180,16 +179,6 @@ enyo.kind({
             this.doItemMenu(inEvent, playlist[inEvent.rowIndex]);
             inEvent.stopPropagation();
         }
-    },
-    scrollUp: function(inSender, inEvent)
-    {
-        this.$.Scroller.scrollTo(this.$.Scroller.scrollTop - 10, this.$.Scroller.scrollLeft);
-        this.log("should be scrolling upwards");
-    },
-    scrollDown: function(inSender, inEvent)
-    {
-        this.$.Scroller.scrollTo(this.$.Scroller.scrollTop + 10, this.$.Scroller.scrollLeft);
-        this.log("should be scrolling downwards");
     },
     scrollToBottom: function()
     {
@@ -275,18 +264,11 @@ enyo.kind({
         else
         {
             enyo.application.playlist = [ ];
-            this.$.PlaylistRepeater.render();
         }
-        if(inEvent)
-            inEvent.stopPropagation();
+        this.$.PlaylistRepeater.render();
         this.enableControls();
     },
-    scrollUp: function(inSender, inEvent)
-    {
-        
-    },
-    scrollDown: function(inSender, inEvent)
-    {
-        
+    songChange: function() {
+        this.scrollToCurrentSong();
     }
 });

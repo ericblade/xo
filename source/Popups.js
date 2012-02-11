@@ -1,4 +1,34 @@
 enyo.kind({
+    name: "IntroPopup",
+    kind: "Popup",
+    components: [
+        { name: "WebLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },                    
+        { kind: "Item", content: "What is XO?", onclick: "clickwhat" },
+        { kind: "Item", content: "Help", onclick: "clickhelp" },
+        { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
+        { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
+        { kind: "Item", content: "Continue :-)", onclick: "close" },
+    ],
+    clickreview: function() {
+        var url = "http://developer.palm.com/appredirect/?packageid=com.ericblade.xo";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickemail: function() {
+        var url = "mailto:blade.eric@gmail.com?subject=XO-email";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickwhat: function()
+    {
+        var url = "http://www.ericbla.de/gvoice-webos/xo/";
+        this.$.WebLauncher.call( { target: url });
+    },
+    clickhelp: function() {
+        var url = "http://ericbla.de/gvoice-webos/xo/help/";
+        this.$.WebLauncher.call( { target: url });        
+    },    
+});
+
+enyo.kind({
     name: "subsonic.ServerDialog",
     kind: "Dialog",
     flyInFrom: "bottom",
