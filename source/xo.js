@@ -224,6 +224,7 @@ enyo.kind({
                 { name: "serverDialog", kind: "subsonic.ServerDialog",
                     onServerChanged: "changedServer",
                 },
+                { name: "demoServerDialog", kind: "subsonic.DemoServerDialog" },
             ]
         },
         { name: "SongMenu", kind: "SongMenu", onPlaySong: "menuPlaySong",
@@ -993,6 +994,14 @@ enyo.kind({
     {
         if(!this.startupcomplete)
         {
+            if(enyo.fetchAppInfo() == "com.ericblade.xodemo")
+            {
+                prefs.set("serverip", "http://www.subsonic.org/demo");
+                //prefs.def("username","slow");
+                prefs.set("username", "guest4");
+                //prefs.def("password","slow");
+                prefs.set("password", "guest");
+            }
             this.changedServer();
             this.startupcomplete = true;
         }
@@ -1008,7 +1017,7 @@ enyo.kind({
         var appver = appInfo ? appInfo["version"] : "0.0.0";
         var osver = enyo.fetchDeviceInfo() ? enyo.fetchDeviceInfo()["platformVersion"] : "unknown";
                
-        this.log("starting up XO " + appver + " on " + /*this.$.Platform.platform*/ + " " + osver);
+        this.log("starting up " + enyo.fetchAppInfo() + " " + appver + " on " + /*this.$.Platform.platform*/ + " " + osver);
         var firstrun = prefs.get("firstrun");
         if(firstrun != appver)
         {
@@ -1038,7 +1047,10 @@ enyo.kind({
     },
     openServerDialog: function()
     {
-        this.$.serverDialog.open();
+        if(enyo.fetchAppInfo() == "com.ericblade.xodemo")
+            this.$.demoServerDialog.open();
+        else
+            this.$.serverDialog.open();
     },
     doBack: function(inSender, inEvent)
     {

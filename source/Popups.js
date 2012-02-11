@@ -29,6 +29,35 @@ enyo.kind({
 });
 
 enyo.kind({
+    name: "subsonic.DemoServerDialog",
+    kind: "Dialog",
+    flyInFrom: "bottom",
+    events: {
+        "onServerChanged" : "",
+    },
+    components: [
+        { kind: "Group", caption: "Server Settings", components:
+            [
+                { content: "You are using the DEMO version of XO, and cannot change servers.  Please be on the lookout for the full version of XO in the HP App Catalog in late January or early February 2012." },
+            ]
+        }
+    ],
+    changedServer: function(inSender, inEvent)
+    {
+        prefs.set("serverip", this.$.ServerInput.getValue());
+        this.doServerChanged();
+    },
+    changedUsername: function(inSender, inEvent)
+    {
+        prefs.set("username", this.$.UserInput.getValue());
+    },
+    changedPassword: function(inSender, inEvent)
+    {
+        prefs.set("password", this.$.PassInput.getValue());
+    }
+});
+
+enyo.kind({
     name: "subsonic.ServerDialog",
     kind: "Dialog",
     flyInFrom: "bottom",
