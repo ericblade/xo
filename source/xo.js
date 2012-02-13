@@ -1032,10 +1032,17 @@ enyo.kind({
             {
                 enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
                 this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
+            } else if(window.blackberry) {
+                this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
             }
         }
         if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
+    },
+    blackberrybrowser: function(page)
+    {
+        var args = new blackberry.invoke.BrowserArguments(page);
+        blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
     },
     openIntroPopup: function(inSender, inEvent)
     {
@@ -1047,7 +1054,6 @@ enyo.kind({
     {
         this.inherited(arguments);
         this.$.MainPane.selectViewByName("slider");
-        //this.$.slider.selectViewByName("RightView");
         
         //enyo.nextTick(this, this.delayedStartup);
         enyo.asyncMethod(this, "delayedStartup");
