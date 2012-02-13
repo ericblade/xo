@@ -10,22 +10,49 @@ enyo.kind({
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
     clickreview: function() {
-        var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
-        this.$.WebLauncher.call( { target: url });
+        if(window.PalmSystem)
+        {
+            var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
+            this.$.WebLauncher.call( { target: url });
+        }
+        else
+        {
+            var url = "what the hell is the blackberry review url?";
+            this.blackberrybrowser(url);
+        }
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
-        this.$.WebLauncher.call( { target: url });
+        if(window.PalmSystem) {
+            this.$.WebLauncher.call( { target: url });
+        } else {
+            this.blackberrybrowser(url);
+        }
     },
     clickwhat: function()
     {
         var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        this.$.WebLauncher.call( { target: url });
+        if(window.PalmSystem) {
+            this.$.WebLauncher.call( { target: url });
+        } else {
+            this.blackberrybrowser(url);
+        }
     },
     clickhelp: function() {
         var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        this.$.WebLauncher.call( { target: url });        
-    },    
+        if(window.PalmSystem) {
+            this.$.WebLauncher.call( { target: url });
+        } else {
+            this.blackberrybrowser(url);
+        }
+    },
+    blackberrybrowser: function(page)
+    {
+        this.log(page);
+        var args = new blackberry.invoke.BrowserArguments(page);
+        blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
+    },
+    
 });
 
 enyo.kind({
