@@ -23,9 +23,8 @@ A Subsonic streaming media server interface
   <feature id="blackberry.ui.dialog"/>
   <access uri="http://ericbla.de" subdomains="true">
      <feature id="blackberry.invoke" />
-    <feature id="blackberry.invoke.BrowserArguments"/>  </access>
+    <feature id="blackberry.invoke.BrowserArguments"/>  
+  </access>
   <access uri="*" subdomains="true">
-     <feature id="blackberry.invoke" />
-    <feature id="blackberry.invoke.BrowserArguments"/>  </access>
   </access>
 </widget>
