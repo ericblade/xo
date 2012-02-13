@@ -9,10 +9,10 @@ enyo.kind({
     {        
         var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
-        if(window.PalmSystem)
-            this.$.TouchPlayer.call( { source: url } );
-        else
+        if(typeof blackberry != "undefined")
             this.touchPlayerFailed();
+        else if(window.PalmSystem)
+            this.$.TouchPlayer.call( { source: url } );
     },
     touchPlayerLaunched: function(inSender, inResponse)
     {
