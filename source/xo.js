@@ -122,7 +122,7 @@ enyo.kind({
                                     ]
                                 },
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected",
-                                  transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+                                  transitionKind: isLargeScreen() && window.PalmSystem ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
                                   components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView",
