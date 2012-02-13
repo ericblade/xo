@@ -1032,12 +1032,8 @@ enyo.kind({
             {
                 enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
                 this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
-            } else {
-                try{
-                    this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
-                } catch(err) {
-                    
-                }
+            } else if(typeof blackberry != "undefined") {
+                this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
             }
         }
         if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
@@ -1061,7 +1057,7 @@ enyo.kind({
 		// If I am not a BlackBerry device, open link in current browser
 		window.location = encodedAddress; 
 	}
-    },    
+    },
     openIntroPopup: function(inSender, inEvent)
     {
         this.$.IntroPopup.openAtCenter();
