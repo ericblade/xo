@@ -77,7 +77,7 @@ enyo.kind({
 enyo.kind({
     name: "xo",
     kind: "VFlexBox", //enyo.Pane,
-    transitionKind: isLargeScreen() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+    transitionKind: isLargeScreen() && window.PalmSystem ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [        
         { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/",
           method: "download", onSuccess: "downloadStatus", subscribe: true },
