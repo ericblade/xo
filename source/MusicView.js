@@ -61,6 +61,7 @@ enyo.kind({
     },
     songClicked: function(inSender, inEvent)
     {
+        console.log("songClicked");
         this.log();
         enyo.asyncMethod(this, enyo.bind(this, function(inEvent, id) { this.doSongClicked(inEvent, id); }), inEvent, this.songs[inEvent.rowIndex]);
     },
