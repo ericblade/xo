@@ -962,7 +962,7 @@ enyo.kind({
         //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
         
-        if(isLargeScreen()) // TODO: dashboard doesn't currently work on phones
+        if(isLargeScreen() && window.PalmSystem) // TODO: dashboard doesn't currently work on phones
             enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {
