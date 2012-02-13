@@ -21,15 +21,11 @@ A Subsonic streaming media server interface
   <content src="index.html"/>
 
   <feature id="blackberry.ui.dialog"/>
-  <access uri="http://www.google.com" subdomains="true">
-    <feature id="blackberry.app.event"/>
-    <feature id="blackberry.invoke"/>
-  </access>
-  <access uri="https://www.google.com" subdomains="true">
-  </access>
   <access uri="http://ericbla.de" subdomains="true">
      <feature id="blackberry.invoke" />
-  </access>
+    <feature id="blackberry.invoke.BrowserArguments"/>  </access>
   <access uri="*" subdomains="true">
+     <feature id="blackberry.invoke" />
+    <feature id="blackberry.invoke.BrowserArguments"/>  </access>
   </access>
 </widget>
