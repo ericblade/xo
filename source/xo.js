@@ -1046,6 +1046,7 @@ enyo.kind({
     {
         this.inherited(arguments);
         //this.$.MainPane.selectViewByName("slider");
+        this.$.slider.selectViewByName("RightView");
         
         //enyo.nextTick(this, this.delayedStartup);
         enyo.asyncMethod(this, "delayedStartup");
