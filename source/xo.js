@@ -105,6 +105,7 @@ enyo.kind({
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
+                { name: "LogView", kind: "LogView", }, 
                 { name: "slider", kind: "SlidingPane", onSelectView: "sliderSelected", components:
                     [
                         { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true,
@@ -1045,8 +1046,8 @@ enyo.kind({
     rendered: function()
     {
         this.inherited(arguments);
-        //this.$.MainPane.selectViewByName("slider");
-        this.$.slider.selectViewByName("RightView");
+        this.$.MainPane.selectViewByName("slider");
+        //this.$.slider.selectViewByName("RightView");
         
         //enyo.nextTick(this, this.delayedStartup);
         enyo.asyncMethod(this, "delayedStartup");
