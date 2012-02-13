@@ -9,7 +9,10 @@ enyo.kind({
     {        
         var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
-        this.$.TouchPlayer.call( { source: url } );
+        if(window.PalmSystem)
+            this.$.TouchPlayer.call( { source: url } );
+        else
+            this.touchPlayerFailed();
     },
     touchPlayerLaunched: function(inSender, inResponse)
     {
@@ -20,8 +23,13 @@ enyo.kind({
     {
         this.log(inResponse);
         var url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
-        this.log("*** Playing Video URL ", url);        
-        this.$.WebLauncher.call( { target: url });
+        this.log("*** Playing Video URL ", url);
+        if(window.PalmSystem) {
+            this.$.WebLauncher.call( { target: url });
+        }
+        else if(typeof blackberry != "undefined") {
+            this.blackberrybrowser(url);
+        }
         this.receive(); // null response == failure
     },
     webBrowserLaunched: function(inSender, inResponse)
@@ -33,5 +41,25 @@ enyo.kind({
     {
         this.log(inResponse);
         this.receive();
-    }
+    },
+    blackberrybrowser: function(address)
+    {
+        this.log(address);
+	var encodedAddress = "";
+	// URL Encode all instances of ':' in the address
+	encodedAddress = address.replace(/:/g, "%3A");
+	// Leave the first instance of ':' in its normal form
+	encodedAddress = encodedAddress.replace(/%3A/, ":");
+	// Escape all instances of '&' in the address
+	encodedAddress = encodedAddress.replace(/&/g, "\&");
+	
+	if (typeof blackberry !== 'undefined') {
+			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
+			blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
+	} else {
+		// If I am not a BlackBerry device, open link in current browser
+		window.location = encodedAddress; 
+	}
+    },
+    
 });
