@@ -46,11 +46,24 @@ enyo.kind({
             this.blackberrybrowser(url);
         }
     },
-    blackberrybrowser: function(page)
+    blackberrybrowser: function(address)
     {
-        this.log(page);
-        var args = new blackberry.invoke.BrowserArguments(page);
-        blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
+        this.log(address);
+	var encodedAddress = "";
+	// URL Encode all instances of ':' in the address
+	encodedAddress = address.replace(/:/g, "%3A");
+	// Leave the first instance of ':' in its normal form
+	encodedAddress = encodedAddress.replace(/%3A/, ":");
+	// Escape all instances of '&' in the address
+	encodedAddress = encodedAddress.replace(/&/g, "\&");
+	
+	if (typeof blackberry !== 'undefined') {
+			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
+			blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
+	} else {
+		// If I am not a BlackBerry device, open link in current browser
+		window.location = encodedAddress; 
+	}
     },
     
 });

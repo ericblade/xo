@@ -1033,12 +1033,35 @@ enyo.kind({
                 enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
                 this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
             } else {
+                try{
                     this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
+                } catch(err) {
+                    
+                }
             }
         }
         if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
     },
+    blackberrybrowser: function(address)
+    {
+        this.log(address);
+	var encodedAddress = "";
+	// URL Encode all instances of ':' in the address
+	encodedAddress = address.replace(/:/g, "%3A");
+	// Leave the first instance of ':' in its normal form
+	encodedAddress = encodedAddress.replace(/%3A/, ":");
+	// Escape all instances of '&' in the address
+	encodedAddress = encodedAddress.replace(/&/g, "\&");
+	
+	if (typeof blackberry !== 'undefined') {
+			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
+			blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
+	} else {
+		// If I am not a BlackBerry device, open link in current browser
+		window.location = encodedAddress; 
+	}
+    },    
     openIntroPopup: function(inSender, inEvent)
     {
         this.$.IntroPopup.openAtCenter();
