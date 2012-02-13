@@ -979,6 +979,11 @@ enyo.kind({
     getRandomList: function(inSender, inEvent, inFolderId)
     {
         this.$.api.call("getRandomSongs", { size: 50, musicFolderId: inFolderId });
+        if(inEvent.preventDefault)
+            inEvent.preventDefault();
+        if(inEvent.stopPropagation)
+            inEvent.stopPropagation();
+        return true;
     },
     changedServer: function()
     {
