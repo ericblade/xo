@@ -105,7 +105,7 @@ enyo.kind({
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
             [
-                { name: "LogView", kind: "LogView", },
+                { name: "LogView", kind: "LogView", }, 
                 { name: "slider", kind: "SlidingPane", onSelectView: "sliderSelected", components:
                     [
                         { name: "LeftView", width: "50%", kind: "SlidingView", edgeDragging: true,
