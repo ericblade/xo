@@ -915,6 +915,7 @@ enyo.kind({
         enyo.application.mainApp = this;
         enyo.application.active = true;
         this.inherited(arguments);
+        Platform.setup();
 
         if(window.PalmSystem)
             enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); 
@@ -1028,15 +1029,17 @@ enyo.kind({
         if(firstrun != appver)
         {
             prefs.set("firstrun", appver);
-            if(window.PalmSystem)
+            enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
+            Platform.browser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/")();
+            /*if(window.PalmSystem)
             {
                 enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
                 this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
             } else if(typeof blackberry != "undefined") {
                 this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
-            }
+            }*/
         }
-        if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
+        //if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
     },
     blackberrybrowser: function(address)

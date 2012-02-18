@@ -10,16 +10,18 @@ enyo.kind({
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
     clickreview: function() {
+        
         if(window.PalmSystem)
         {
             var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
-            this.$.WebLauncher.call( { target: url });
+            //this.$.WebLauncher.call( { target: url });
         }
         else
         {
             var url = "what the hell is the blackberry review url?";
-            this.blackberrybrowser(url);
+            //this.blackberrybrowser(url);
         }
+        Platform.browser(url, this)();
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
