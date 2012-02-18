@@ -19,16 +19,16 @@ enyo.kind({
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
-        Platform.browser(url);
+        Platform.browser(url, this)();
     },
     clickwhat: function()
     {
         var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        Platform.browser(url);
+        Platform.browser(url, this)();
     },
     clickhelp: function() {
         var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        Platform.browser(url);
+        Platform.browser(url, this)();
     },
 });
 

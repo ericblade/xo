@@ -79,7 +79,7 @@ enyo.kind({
          * launch the OS's web browser.  Having trouble thinking of a way to do
          * this in webOS, since we can't create a PalmSystem component here . .
          * or can we?
-         * call: Platform.browser()("http://www.google.com/", this);
+         * call: Platform.browser("http://www.google.com/", this)();
          */
         browser: function(url, thisObj)
         {
