@@ -9,19 +9,11 @@ enyo.kind({
         { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
-    clickreview: function() {
-        
-        if(window.PalmSystem)
-        {
-            var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
-            //this.$.WebLauncher.call( { target: url });
-        }
-        else
-        {
-            var url = "what the hell is the blackberry review url?";
-            //this.blackberrybrowser(url);
-        }
-        Platform.browser(url, this)();
+    clickreview: function(inSender, inEvent) {
+        Platform.browser(Platform.getReviewURL(), this)();
+        inEvent.preventDefault();
+        inEvent.stopPropagation();
+        return true;
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
