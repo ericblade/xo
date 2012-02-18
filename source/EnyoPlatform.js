@@ -5,6 +5,9 @@
  * This prefers direct access to APIs whenever possible - although you CAN run
  * webOS and WebWorks apps with PhoneGap, I'm trying to avoid going through any
  * extra layers here.
+ *
+ * If you are deploying to iOS, set a new parameter in your appinfo.json: iTunesAppId
+ * to your application id as found in the Apple Dev Portal.
  */
 enyo.kind({
     name: "Platform",
@@ -90,7 +93,7 @@ enyo.kind({
             else if(this.platform == "web")
             {
                 /* If web, just open a new tab/window */
-                return enyo.bind(thisObj, window.open, url, '_blank');
+                return enyo.bind(thisObj, function(x) { window.open(x, '_blank'); }, url);
             }
             else if(this.isBlackBerry())
             {
@@ -111,7 +114,7 @@ enyo.kind({
                 /* Fall back to something that could possibly work
                  * One could also make a case for just setting window.location
                  */
-                return enyo.bind(thisObj, window.open, url, '_blank');
+                return enyo.bind(thisObj, function(x) { window.open(x, '_blank'); }, url);
             }
         },
         /* A ridiculous function for parsing URLs into something that RIM's
@@ -134,6 +137,29 @@ enyo.kind({
                 // If I am not a BlackBerry device, open link in current browser
                 window.location = encodedAddress; 
             }            
+        },
+        getReviewURL: function()
+        {
+            var url = "";
+            switch(Platform.platform) {
+                case "webos":
+                    url = "http://developer.palm.com/appredirect/?packageid=" + enyo.fetchAppId();
+                    break;
+                case "android":
+                    url = "market://details?id=" + enyo.fetchAppId();
+                    break;
+                case "blackberry":  // intentional fallthrough
+                case "webworks":
+                    url = "";
+                    break;
+                case "iphone":
+                    var appInfo = enyo.fetchAppInfo();
+                    if(enyo.isString(appInfo))
+                        appInfo = JSON.parse(appInfo);
+                    url = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id="+appInfo.iTunesAppId;
+                    break;
+            }
+            return url;
         }
     }
 });

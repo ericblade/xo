@@ -9,65 +9,27 @@ enyo.kind({
         { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
-    clickreview: function() {
-        
-        if(window.PalmSystem)
-        {
-            var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
-            //this.$.WebLauncher.call( { target: url });
-        }
-        else
-        {
-            var url = "what the hell is the blackberry review url?";
-            //this.blackberrybrowser(url);
-        }
-        Platform.browser(url, this)();
+    clickreview: function(inSender, inEvent) {
+        var url = Platform.getReviewURL();
+        if(url != "")
+            Platform.browser(Platform.getReviewURL(), this)();
+        inEvent.preventDefault();
+        inEvent.stopPropagation();
+        return true;
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
     clickwhat: function()
     {
         var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
     clickhelp: function() {
         var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
-    blackberrybrowser: function(address)
-    {
-        this.log(address);
-	var encodedAddress = "";
-	// URL Encode all instances of ':' in the address
-	encodedAddress = address.replace(/:/g, "%3A");
-	// Leave the first instance of ':' in its normal form
-	encodedAddress = encodedAddress.replace(/%3A/, ":");
-	// Escape all instances of '&' in the address
-	encodedAddress = encodedAddress.replace(/&/g, "\&");
-	
-	if (typeof blackberry !== 'undefined') {
-			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
-			blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
-	} else {
-		// If I am not a BlackBerry device, open link in current browser
-		window.location = encodedAddress; 
-	}
-    },
-    
 });
 
 enyo.kind({
