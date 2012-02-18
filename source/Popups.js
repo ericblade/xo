@@ -10,7 +10,9 @@ enyo.kind({
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
     clickreview: function(inSender, inEvent) {
-        Platform.browser(Platform.getReviewURL(), this)();
+        var url = Platform.getReviewURL();
+        if(url != "")
+            Platform.browser(Platform.getReviewURL(), this)();
         inEvent.preventDefault();
         inEvent.stopPropagation();
         return true;
