@@ -77,8 +77,6 @@ enyo.kind({
          * this in webOS, since we can't create a PalmSystem component here . .
          * or can we?
          * call: Platform.browser()("http://www.google.com/", this);
-         * webOS needs the "this" parameter to be able to have a location to create the PalmService call
-         * .. unless someone else has a better idea?
          */
         browser: function(url, thisObj)
         {
@@ -92,7 +90,7 @@ enyo.kind({
             else if(this.platform == "web")
             {
                 /* If web, just open a new tab/window */
-                return window.open.bind(url, '_blank');
+                return enyo.bind(thisObj, window.open, url, '_blank');
             }
             else if(this.platform == "blackberry")
             {
@@ -101,19 +99,19 @@ enyo.kind({
                  * configured in your config.xml.
                  */
                 var args = new blackberry.invoke.BrowserArguments(this.blackBerryURLEncode(url));
-                return blackberry.invoke.invoke.bind(blackberry.invoke.APP_BROWSER, args);
+                return enyo.bind(thisObj, blackberry.invoke.invoke, blackberry.invoke.APP_BROWSER, args);
             }
             else if(typeof PhoneGap !== "undefined" && window.plugins && window.plugins.childBrowser)
             {
                 /* If you have the popular childBrowser plugin for PhoneGap */
-                return window.plugins.childBrowser.openExternal.bind(url);
+                return enyo.bind(thisObj, window.plugins.childBrowser.openExternal, url);
             }
             else
             {
                 /* Fall back to something that could possibly work
                  * One could also make a case for just setting window.location
                  */
-                return window.open.bind(url, '_blank');
+                return enyo.bind(thisObj, window.open, url, '_blank');
             }
         },
         /* A ridiculous function for parsing URLs into something that RIM's
