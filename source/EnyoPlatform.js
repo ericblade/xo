@@ -80,7 +80,7 @@ enyo.kind({
          */
         browser: function(url, thisObj)
         {
-            if(this.platform == "webos")
+            if(this.isWebOS())
             {
                 return enyo.bind(thisObj, (function(args) {
                     var x = thisObj.createComponent({ name: "AppManService", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open" });
@@ -92,7 +92,7 @@ enyo.kind({
                 /* If web, just open a new tab/window */
                 return enyo.bind(thisObj, window.open, url, '_blank');
             }
-            else if(this.platform == "blackberry")
+            else if(this.isBlackBerry())
             {
                 /* If BlackBerry, go through their ridiculous parsing rules */
                 /* Make sure you have the invoke and invoke.BrowserArguments
