@@ -19,36 +19,17 @@ enyo.kind({
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
     clickwhat: function()
     {
         var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
     clickhelp: function() {
         var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        if(window.PalmSystem) {
-            this.$.WebLauncher.call( { target: url });
-        } else {
-            this.blackberrybrowser(url);
-        }
+        Platform.browser(url);
     },
-    blackberrybrowser: function(page)
-    {
-        this.log(page);
-        var args = new blackberry.invoke.BrowserArguments(page);
-        blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
-    },
-    
 });
 
 enyo.kind({
