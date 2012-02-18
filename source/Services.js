@@ -10,9 +10,15 @@ enyo.kind({
         var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
         if(typeof blackberry != "undefined")
+        {
+            this.log("Playing video on Blackberry");
             this.touchPlayerFailed();
+        }
         else if(window.PalmSystem)
+        {
+            this.log("Playing video on Palm");
             this.$.TouchPlayer.call( { source: url } );
+        }
     },
     touchPlayerLaunched: function(inSender, inResponse)
     {
@@ -24,10 +30,14 @@ enyo.kind({
         this.log(inResponse);
         var url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
         this.log("*** Playing Video URL ", url);
-        if(window.PalmSystem) {
+        if(window.PalmSystem)
+        {
+            this.log("Launching browser on Palm", url);
             this.$.WebLauncher.call( { target: url });
         }
-        else if(typeof blackberry != "undefined") {
+        else if(typeof blackberry != "undefined")
+        {
+            this.log("Launching browser on Blackberry", url);
             this.blackberrybrowser(url);
         }
         this.receive(); // null response == failure
@@ -44,7 +54,6 @@ enyo.kind({
     },
     blackberrybrowser: function(address)
     {
-        this.log(address);
 	var encodedAddress = "";
 	// URL Encode all instances of ':' in the address
 	encodedAddress = address.replace(/:/g, "%3A");
@@ -52,6 +61,7 @@ enyo.kind({
 	encodedAddress = encodedAddress.replace(/%3A/, ":");
 	// Escape all instances of '&' in the address
 	encodedAddress = encodedAddress.replace(/&/g, "\&");
+        this.log(encodedAddress);
 	
 	if (typeof blackberry !== 'undefined') {
 			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
