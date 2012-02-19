@@ -1,3 +1,4 @@
+why aren't things syncing back to the main git?
 /* Enyo Platform encapsulation. Include this FIRST in your depends.js, and
  * call Platform.setup() at the very start of the "created" function in your
  * application's first instanced kind.
@@ -37,7 +38,7 @@ enyo.kind({
                  */
                 this.platformVersion = "unknown";
             }
-            else if(typeof PhoneGap !== "undefined")
+            else if(typeof PhoneGap !== "undefined" && !window.chrome)
             {
                 this.platform = device.platform.toLowerCase();
                 this.platformVersion = device.version;
@@ -78,7 +79,7 @@ enyo.kind({
         /* Platform-specific Audio functions */
         useHTMLAudio: function()
         {
-            return this.isWebOS() || this.isWebWorks();
+            return this.isWebOS() || this.isWebWorks() || !this.isMobile();
         },
         /* Platform Specific Web Browser -- returns a function that should
          * launch the OS's web browser.  Having trouble thinking of a way to do
@@ -173,7 +174,16 @@ enyo.kind({
     name: "PlatformSound",
     kind: "Sound",
     play: function() {
-        this.inherited(arguments);
+        if(!Platform.useHTMLAudio()) {
+            if(window.PhoneGap)
+                this.media.play();
+        } else {
+            if (!this.audio.paused) {
+                this.audio.currentTime = 0;
+            } else {
+                this.audio.play();
+            }
+        }
         this.Paused = false;
         if(!Platform.useHTMLAudio())
         {
@@ -184,15 +194,42 @@ enyo.kind({
             this.Timer = setInterval(enyo.bind(this, this.getMediaPos), 100);
         }
     },
-    getMediaPos: function() {
+    srcChanged: function() {
+        var path = enyo.path.rewrite(this.src);
+        if(!Platform.useHTMLAudio()) {
+            if(window.PhoneGap)
+                this.media = new Media(path, this.MediaSuccess, this.mediaFail, this.mediaStatus, this.mediaProgress);
+            else
+                enyo.log("*** Don't know how to play media without HTML5 or PhoneGap!", Platform.platform);
+        } else {
+            this.audio = new Audio();
+            this.audio.src = path;
+        }
+    },    
+    getMediaPos: function(x, y, z) {
         this.media.getCurrentPosition(this.posReceived);
     },
-    posReceived: function(x) {
-        enyo.log("posReceived", x);
+    posReceived: function(x, y, z) {
+        this.position = x;
     },
-    getCurrentPosition: function() {
-        enyo.log(this.media._position);
-        return Platform.useHTMLAudio() ? this.audio.currentTime : this.media._position;
+    mediaSuccess: function(x, y, z) {
+        enyo.log("mediaSuccess"+ x+ y+ z);
+    },
+    mediaFail: function(x, y, z) {
+        enyo.log("mediaFail"+ x+ y+ z);
+    },
+    mediaStatus: function(x, y, z) {
+        if(x == Media.MEDIA_Paused)
+            this.Paused = true;
+        else
+            this.Paused = false;
+        enyo.log("mediaStatus"+ x+ y+ z);
+    },
+    mediaProgress: function(x, y, z) {
+        enyo.log("mediaProgress"+ x+ y+ z);
+    },
+    getCurrentPosition: function() { 
+        return Platform.useHTMLAudio() ? this.audio.currentTime : this.position; /* PhoneGap's media._position doesn't seem to load? */
     },
     getDuration: function() {
         return !Platform.useHTMLAudio() ? this.media.getDuration() : this.audio.duration;
