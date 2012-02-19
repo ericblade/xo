@@ -1,6 +1,6 @@
 /* Enyo Platform encapsulation. Include this FIRST in your depends.js, and
  * call Platform.setup() at the very start of the "created" function in your
- * application's first instanced kind.
+ * application's first instanced kind. 
  *
  * This prefers direct access to APIs whenever possible - although you CAN run
  * webOS and WebWorks apps with PhoneGap, I'm trying to avoid going through any
