@@ -343,7 +343,7 @@ enyo.kind({
         var node = player && player.audio;        
         if(!enyo.application.jukeboxMode && !this.justToggled)
         {
-            this.Player.audio.pause();
+            this.Player.pause();
             if(this.$.VideoPlayer && this.$.VideoPlayer.node)
                 this.$.VideoPlayer.node.pause();
         }
