@@ -3,7 +3,7 @@
 	"version": "1.0.1",
 	"vendor": "Eric Blade",
 	"type": "web",
-	"main": "index.html",
+	"main": "index-webos.html",
 	"title": "XO",
 	"icon": "images/subsonic48.png",
         "dockMode": false,
