@@ -1,13 +1,17 @@
-/* Enyo Platform encapsulation. Include this FIRST in your depends.js, and
- * call Platform.setup() at the very start of the "created" function in your
- * application's first instanced kind. 
+/* Enyo Platform encapsulation. Include this FIRST in your depends.js.  The
+ * first call you make to a function inside it will cause it to perform it's
+ * detection (in the setup function).  If you are running in PhoneGap, and your
+ * app depends on accurate results in here, make sure that you are not running
+ * any code that depends on this module until after the "deviceready" PhoneGap
+ * event is fired.
  *
  * This prefers direct access to APIs whenever possible - although you CAN run
  * webOS and WebWorks apps with PhoneGap, I'm trying to avoid going through any
  * extra layers here.
  *
- * If you are deploying to iOS, set a new parameter in your appinfo.json: iTunesAppId
- * to your application id as found in the Apple Dev Portal.
+ * If you are deploying to iOS, set a new parameter in your appinfo.json called
+ * iTunesAppId to your application id as found in the Apple Dev Portal, for the
+ * getReviewURL function
  */
 enyo.kind({
     name: "Platform",
@@ -23,10 +27,21 @@ enyo.kind({
             if(window.device)
                 enyo.log("window.device.platform "+ window.device.platform);
             enyo.log("window.chrome "+ window.chrome);
+            
+            /* If you include PhoneGap, but you don't wait until the device var
+             * is initialized before calling this, we're going to ignore this
+             * until the device var is available
+             */
             if(window.PhoneGap && !window.device) {
                 enyo.log("EnyoPlatform: PhoneGap detected, device not (yet) available. Bailing until next call.");
                 return;
             }
+            /* Check for systems where we don't have PhoneGap in our
+             * requirements first, currently webOS and BlackBerry WebWorks
+             * Even if you use PhoneGap on BlackBerry, according to the PhoneGap
+             * documentation, it's platform determination code doesn't work
+             * properly for at least some models.
+             */
             if(typeof window.PalmSystem !== "undefined")
             {
                 var deviceInfo = enyo.fetchDeviceInfo();
@@ -51,6 +66,9 @@ enyo.kind({
             }
             else if(typeof PhoneGap !== "undefined")
             {
+                /* See the PhoneGap Device API documentation for possible
+                 * pitfalls.
+                 */
                 this.platform = device.platform.toLowerCase();
                 this.platformVersion = device.version;
             }
@@ -66,7 +84,9 @@ enyo.kind({
             enyo.log("Platform detected: " + this.platform + " version " + this.platformVersion);
             enyo.log(" ************************************** ");
         },
+        /* Should you find yourself in need of the raw platform name */
         getPlatformName: function() { this.platform || this.setup(); return this.platform; },
+        
         /* Platform boolean functions -- return truthy if specific platform */        
         isWebOS: function() { this.platform || this.setup(); return this.platform == "webos"; },
         isAndroid: function() { this.platform || this.setup(); return this.platform == "android"; },
@@ -74,9 +94,11 @@ enyo.kind({
         isWebWorks: function() { this.platform || this.setup(); return this.platform == "webworks"; },
         isiOS: function() { this.platform || this.setup(); return this.platform == "iphone"; },
         isMobile: function() { this.platform || this.setup(); return this.platform != "web"; },
+        
         /* General screen size functions -- tablet vs phone, landscape vs portrait */
         isLargeScreen: function() { this.platform || this.setup(); return window.innerWidth > 480; },
         isWideScreen: function() { this.platform || this.setup(); return window.innerWidth > window.innerHeight; },
+        
         /* Platform-supplied UI concerns */
         hasBack: function()
         {
@@ -88,19 +110,26 @@ enyo.kind({
             /* You may want to include Android here if you're using a target
              * API of less than 14 (Ice Cream Sandwich)
              */
+            /* Blackberry Tablet OS has a standard "swipe down from top bezel" gesture
+             * that they use .. should probably consider that here, but I'm not sure
+             * if their other platforms have any equivalent
+             */
             this.platform || this.setup(); 
             return this.platform == "webos"; 
         },
-        /* Platform-specific Audio functions */
+        
+        /* Platform-specific Audio utility. WebWorks on PlayBook and webOS have
+         * great support for HTML5 audio objects. Android's is terrible, so we
+         * choose to use the PhoneGap media API there, which is encapsulated in
+         * the PlatformSound kind
+         */
         useHTMLAudio: function()
         {
             this.platform || this.setup(); 
             return this.isWebOS() || this.isWebWorks() || !this.isMobile();
         },
         /* Platform Specific Web Browser -- returns a function that should
-         * launch the OS's web browser.  Having trouble thinking of a way to do
-         * this in webOS, since we can't create a PalmSystem component here . .
-         * or can we?
+         * launch the OS's web browser.  
          * call: Platform.browser("http://www.google.com/", this)();
          */
         browser: function(url, thisObj)
@@ -113,9 +142,12 @@ enyo.kind({
                     x.call({ target: url });
                 }));
             }
-            else if(this.platform == "web")
+            else if(this.platform == "web" || (this.platform == "android" && parseFloat(this.platformVersion >= 4.0)) )
             {
-                /* If web, just open a new tab/window */
+                /* If web, just open a new tab/window - this also works well in
+                 * Android 4.0 - suggest ChildBrowser PhoneGap plugin for other
+                 * versions of Android
+                 */
                 return enyo.bind(thisObj, function(x) { window.open(x, '_blank'); }, url);
             }
             else if(this.isBlackBerry())
@@ -188,10 +220,15 @@ enyo.kind({
     }
 });
 
+/* PlatformSound is an encapsulation for both the HTML5 audio support within
+ * webOS and WebWorks, and an extension of some of the abilities of the stock
+ * Enyo 1.0 Sound kind.
+ */
 enyo.kind({
     name: "PlatformSound",
     kind: "Sound",
     position: -1,
+    /* Play our sound. If our sound is already playing, restart it */
     play: function() {
         if(!Platform.useHTMLAudio()) {
             if(window.PhoneGap)
@@ -206,13 +243,17 @@ enyo.kind({
         this.Paused = false;
         if(!Platform.useHTMLAudio())
         {
-            /* The PhoneGap media API does not document it's "MediaStatus" callback, so at the moment
-             * i'm going to just run a timer to the getCurrentPosition call to make sure that
-             * the media object's _position is updated regularly.  Sick.
+            /* The PhoneGap media API does not document it's "MediaProgress"
+             * callback, nor does it seem to be supported universally, at least
+             * with PhoneGap 1.4.1, so, i'm going to just run a timer to the
+             * getCurrentPosition() asynch method, and record it regularly.
              */
             this.Timer = setInterval(enyo.bind(this, this.getMediaPos), 100);
         }
     },
+    /* Override the function from the base Enyo 1.0 kind, to add support for
+     * the PhoneGap Media callbacks that they provide now
+     */
     srcChanged: function() {
         var path = enyo.path.rewrite(this.src);
         if(!Platform.useHTMLAudio()) {
@@ -224,7 +265,8 @@ enyo.kind({
             this.audio = new Audio();
             this.audio.src = path;
         }
-    },    
+    },
+    /* Internal callback functions */
     getMediaPos: function(x, y, z) {
         this.media.getCurrentPosition(enyo.bind(this, this.posReceived));
     },
@@ -232,12 +274,20 @@ enyo.kind({
         this.position = x;
     },
     mediaSuccess: function(x, y, z) {
-        enyo.log("mediaSuccess"+ x+ y+ z);
+        enyo.log("mediaSuccess "+ x+ y+ z);
     },
     mediaFail: function(x, y, z) {
-        enyo.log("mediaFail"+ x+ y+ z);
+        enyo.log("mediaFail "+ x+ y+ z);
     },
     mediaStatus: function(x, y, z) {
+        /* Possible Media States, taken from PhoneGap 1.4.1 Android source:
+         *  Media.MEDIA_NONE = 0;
+         *  Media.MEDIA_STARTING = 1;
+         *  Media.MEDIA_RUNNING = 2;
+         *  Media.MEDIA_PAUSED = 3;
+         *  Media.MEDIA_STOPPED = 4;
+         * not really sure what to make of them, so I just note Paused for now.
+         */
         if(x == Media.MEDIA_Paused)
             this.Paused = true;
         else
@@ -245,19 +295,36 @@ enyo.kind({
         enyo.log("mediaStatus"+ x+ y+ z);
     },
     mediaProgress: function(x, y, z) {
-        enyo.log("mediaProgress"+ x+ y+ z);
+        /* This callback specified in the Media constructor doesn't seem to
+         * work on Android at the moment?  If you see it working somewhere, you
+         * could kill the setInterval in Play on that platform, and record the
+         * progress here instead.
+         */
+        enyo.log("mediaProgress "+ x+ y+ z);
     },
-    getCurrentPosition: function() { 
+    /* Return the current position of audio playback, HTML5 and PhoneGap both
+     * seem to like it as a float down to millisecond resolution
+     */
+    getCurrentPosition: function() {
+        /* I wasn't able to get PhoneGap's media._position to give me a valid
+         * location reliably, so we record it from the callback
+         */
         return Platform.useHTMLAudio() ? this.audio.currentTime : this.position; /* PhoneGap's media._position doesn't seem to load? */
     },
+    /* Returns the duration of the loaded media */
     getDuration: function() {
         return !Platform.useHTMLAudio() ? this.media.getDuration() : this.audio.duration;
     },
+    /* Pause playback - calling play should resume */
     pause: function() {
         this.Paused = true;
         clearInterval(this.Timer);
         !Platform.useHTMLAudio() ? this.media.pause() : this.audio.pause();
     },
+    /* Forces PhoneGap to release media handles in the OS, they recommend that
+     * you call this whenever you stop playback on Android.  Also destroys
+     * the component, so you can create a new one when you need more playback.
+     */
     release: function() {
         this.pause();
         if(!Platform.useHTMLAudio()) {
@@ -265,6 +332,10 @@ enyo.kind({
         }
         this.destroy();
     },
+    /* Reposition the media playback from the given location.  HTML5 apparently
+     * uses a float with seconds, whereas PhoneGap is looking for an int in
+     * milliseconds
+     */
     seekTo: function(loc) {
         if(!Platform.useHTMLAudio() ) {
             this.media.seekTo(loc * 1000);
@@ -272,6 +343,9 @@ enyo.kind({
             this.audio.currentTime = loc;
         }
     },
+    /* Stop playback.  Do not destroy anything.  Next call to play will restart
+     * playback from the beginning.
+     */
     stop: function() {
         clearInterval(this.Timer);
         if(!Platform.useHTMLAudio() ) {
