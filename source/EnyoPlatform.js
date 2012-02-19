@@ -75,6 +75,11 @@ enyo.kind({
              */
             return this.platform == "webos"; 
         },
+        /* Platform-specific Audio functions */
+        useHTMLAudio: function()
+        {
+            return this.isWebOS() || this.isWebWorks();
+        },
         /* Platform Specific Web Browser -- returns a function that should
          * launch the OS's web browser.  Having trouble thinking of a way to do
          * this in webOS, since we can't create a PalmSystem component here . .
@@ -160,6 +165,57 @@ enyo.kind({
                     break;
             }
             return url;
+        }
+    }
+});
+
+enyo.kind({
+    name: "PlatformSound",
+    kind: "Sound",
+    play: function() {
+        this.inherited(arguments);
+        this.Paused = false;
+        if(!Platform.useHTMLAudio())
+        {
+            /* The PhoneGap media API does not document it's "MediaStatus" callback, so at the moment
+             * i'm going to just run a timer to the getCurrentPosition call to make sure that
+             * the media object's _position is updated regularly.  Sick.
+             */
+            this.Timer = setInterval(media.getCurrentPosition, 100);
+        }
+    },
+    getCurrentPosition: function() {
+        return Platform.useHTMLAudio() ? this.audio.currentTime : this.media._position;
+    },
+    getDuration: function() {
+        return !Platform.useHTMLAudio() ? this.media.getDuration() : this.audio.duration;
+    },
+    pause: function() {
+        this.Paused = true;
+        clearInterval(this.Timer);
+        !Platform.useHTMLAudio() ? this.media.pause() : this.audio.pause();
+    },
+    release: function() {
+        this.pause();
+        if(!Platform.useHTMLAudio()) {
+            this.media.release();
+        }
+        this.destroy();
+    },
+    seekTo: function(loc) {
+        if(!Platform.useHTMLAudio() ) {
+            this.media.seekTo(loc * 1000);
+        } else {
+            this.audio.currentTime = loc;
+        }
+    },
+    stop: function() {
+        clearInterval(this.Timer);
+        if(!Platform.useHTMLAudio() ) {
+            this.media.stop();
+        } else {
+            this.audio.pause();
+            this.audio.currentTime = 0;
         }
     }
 });

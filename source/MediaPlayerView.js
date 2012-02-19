@@ -121,7 +121,7 @@ enyo.kind({
         this.doJukeboxMode();
         if(inState)
         {
-            var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+            var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
             var node = player && player.audio;
             this.localSong = this.song;
             // don't need to set this now that i've got it not pausing
@@ -138,16 +138,14 @@ enyo.kind({
     progressSliderChange: function(inSender, x)
     {
         this.log(x);
-        //this.log(this.$.MusicPlayer.audio.currentTime, this.$.ProgressSlider.getPosition(), (this.$.ProgressSlider.getPosition() / 100) * this.song.duration);
-        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
         var node = player && player.audio;
         var newTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
         
         if(enyo.application.jukeboxMode)
             this.doSetJukeboxPosition(newTime);
         else
-            node.currentTime = (this.$.ProgressSlider.getPosition() / 100) * this.song.duration;
-        //this.log(this.$.MusicPlayer.audio.currentTime);
+            this.Player.seekTo(newTime);
         return true;
     },
     clickShare: function(inSender, inEvent)
@@ -177,36 +175,39 @@ enyo.kind({
     setupPlayer: function()
     {
         var e = enyo.bind(this, this.playerEvent);
-        if(this.$.MusicPlayer)
+        if(this.Player)
         {
-            this.$.MusicPlayer.audio.pause();
-            this.$.MusicPlayer.destroy();
+            this.Player.release();
         }
-        this.createComponent({ name: "MusicPlayer", kind: "Sound", preload: true, audioClass: "media", }, {owner: this});
-        this.$.MusicPlayer.audio.addEventListener('loadstart', e);
-        //this.$.MusicPlayer.audio.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
-        this.$.MusicPlayer.audio.addEventListener('canplay', e);
-        this.$.MusicPlayer.audio.addEventListener('canplaythrough', e);
-        this.$.MusicPlayer.audio.addEventListener('durationchange', e);
-        this.$.MusicPlayer.audio.addEventListener('emptied', e);
-        this.$.MusicPlayer.audio.addEventListener('ended', e);
-        this.$.MusicPlayer.audio.addEventListener('error', e);
-        this.$.MusicPlayer.audio.addEventListener('loadeddata', e);
-        this.$.MusicPlayer.audio.addEventListener('loadedmetadata', e);
-        this.$.MusicPlayer.audio.addEventListener('pause', e);
-        this.$.MusicPlayer.audio.addEventListener('onpause', e);
-        this.$.MusicPlayer.audio.addEventListener('play', e);
-        this.$.MusicPlayer.audio.addEventListener('playing', e);
-        this.$.MusicPlayer.audio.addEventListener('progress', e);
-        this.$.MusicPlayer.audio.addEventListener('ratechange', e);
-        this.$.MusicPlayer.audio.addEventListener('readystatechange', e);
-        this.$.MusicPlayer.audio.addEventListener('seeked', e);
-        this.$.MusicPlayer.audio.addEventListener('seeking', e);
-        this.$.MusicPlayer.audio.addEventListener('stalled', e);
-        this.$.MusicPlayer.audio.addEventListener('suspend', e);
-        this.$.MusicPlayer.audio.addEventListener('timeupdate', e);
-        this.$.MusicPlayer.audio.addEventListener('volumechange', e);
-        this.$.MusicPlayer.audio.addEventListener('waiting', e);
+        this.Player = this.createComponent({ name: "MusicPlayer", kind: "PlatformSound", preload: true, audioClass: "media", }, {owner: this});
+        this.log("*** New audio component: ", this.Player);
+        if(this.Player.audio)
+        {
+            this.Player.audio.addEventListener('loadstart', e);
+            this.Player.audio.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
+            this.Player.audio.addEventListener('canplay', e);
+            this.Player.audio.addEventListener('canplaythrough', e);
+            this.Player.audio.addEventListener('durationchange', e);
+            this.Player.audio.addEventListener('emptied', e);
+            this.Player.audio.addEventListener('ended', e);
+            this.Player.audio.addEventListener('error', e);
+            this.Player.audio.addEventListener('loadeddata', e);
+            this.Player.audio.addEventListener('loadedmetadata', e);
+            this.Player.audio.addEventListener('pause', e);
+            this.Player.audio.addEventListener('onpause', e);
+            this.Player.audio.addEventListener('play', e);
+            this.Player.audio.addEventListener('playing', e);
+            this.Player.audio.addEventListener('progress', e);
+            this.Player.audio.addEventListener('ratechange', e);
+            this.Player.audio.addEventListener('readystatechange', e);
+            this.Player.audio.addEventListener('seeked', e);
+            this.Player.audio.addEventListener('seeking', e);
+            this.Player.audio.addEventListener('stalled', e);
+            this.Player.audio.addEventListener('suspend', e);
+            this.Player.audio.addEventListener('timeupdate', e);
+            this.Player.audio.addEventListener('volumechange', e);
+            this.Player.audio.addEventListener('waiting', e);
+        }
         
         if(this.$.VideoPlayer && this.$.VideoPlayer.node)
         {
@@ -277,7 +278,7 @@ enyo.kind({
         }
     },
     play: function() {
-        var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
         player.play();
         this.checkTimer();
     },
@@ -338,11 +339,11 @@ enyo.kind({
         {
             this.setupPlayer();
         }
-        var player = this.song && (this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer);
+        var player = this.song && (this.song.isVideo ? this.$.VideoPlayer : this.Player);
         var node = player && player.audio;        
         if(!enyo.application.jukeboxMode && !this.justToggled)
         {
-            this.$.MusicPlayer.audio.pause();
+            this.Player.audio.pause();
             if(this.$.VideoPlayer && this.$.VideoPlayer.node)
                 this.$.VideoPlayer.node.pause();
         }
@@ -423,21 +424,21 @@ enyo.kind({
             this.setSong(playlist[playlist.index]);
             return true;
         }
-        var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.$.MusicPlayer;
+        var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.Player;
         if(enyo.application.jukeboxMode)
         {
             this.doPlayPauseJukebox();
         } else {
             if(this.song.isVideo)
             {
-                if(!player.node.paused)
-                    player.node.pause();
+                if(!player.Paused)
+                    player.pause();
                 else
-                    player.node.play();
+                    player.play();
             } else {
-                if(!this.$.MusicPlayer.audio.paused)
+                if(!this.Player.Paused)
                 {
-                    this.$.MusicPlayer.audio.pause();
+                    this.Player.pause();
                     if(enyo.application.dash && enyo.application.dash.name == "xodash" && window.PalmSystem)
                         enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: false });
                 }
@@ -445,7 +446,7 @@ enyo.kind({
                 {
                     if(enyo.application.dash && enyo.application.dash.name == "xodash" && window.PalmSystem)
                         enyo.windows.setWindowParams(enyo.application.dash, { objTrackInfo: { strTrackTitle: this.song.title, strTrackArtist: this.song.artist }, boolAudioPlaying: true });        
-                    this.$.MusicPlayer.audio.play();
+                    this.Player.play();
                 }
             }
         }
@@ -455,7 +456,7 @@ enyo.kind({
     },
     playing: function()
     {
-        var node = this.$.MusicPlayer && this.$.MusicPlayer.audio.node;
+        var node = this.Player && !this.Player.hasNode();
         return !enyo.application.jukeboxMode && this.song && node && !node.ended;
     },
     checkStatus: function()
@@ -464,9 +465,9 @@ enyo.kind({
         //this.log();
         var state;
         var node;
-        //var player = this.song.isVideo ? this.$.VideoPlayer : this.$.MusicPlayer;
+        //var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
         //var node = this.song.isVideo ? player.node : player.audio;
-        var player = this.$.MusicPlayer;
+        var player = this.Player;
         var node = player && player.audio;
         if(!enyo.application.jukeboxMode && (!player || !node))
             return;
@@ -476,43 +477,45 @@ enyo.kind({
             this.doJukeboxStatus();
             return;
         }
-        switch(node.readyState)
-        {
-            case 0:
-                state = "NO DATA LOADED";
-                break;
-            case 1:
-                state = "HAVE METADATA";
-                break;
-            case 2:
-                state = "HAVE CURRENT DATA";
-                break;
-            case 3:
-                state = "HAVE FUTURE DATA";
-                break;
-            case 4:
-                state = "HAVE ENOUGH DATA";
-                break;
-        }
-        // we have to wait until readyState >= 1 to restore our current time in the song
-        if(node.readyState >= 1 && this.song.startTime)
-        {
-            node.currentTime = this.song.startTime;
-            this.song.startTime = 0;
+        if(node) {
+            switch(node.readyState)
+            {
+                case 0:
+                    state = "NO DATA LOADED";
+                    break;
+                case 1:
+                    state = "HAVE METADATA";
+                    break;
+                case 2:
+                    state = "HAVE CURRENT DATA";
+                    break;
+                case 3:
+                    state = "HAVE FUTURE DATA";
+                    break;
+                case 4:
+                    state = "HAVE ENOUGH DATA";
+                    break;
+            }
+            // we have to wait until readyState >= 1 to restore our current time in the song
+            if(node.readyState >= 1 && this.song.startTime)
+            {
+                node.currentTime = this.song.startTime;
+                this.song.startTime = 0;
+            }
+            try {
+                this.$.PlayerStatus.setContent("");
+                this.$.ProgressSlider.setAltBarPosition(parseInt( (node.buffered.end(0) / node.duration) * 100));
+                //this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
+            } catch(err) {
+                // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
+            }
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
-        try {
-            this.$.PlayerStatus.setContent("");
-            this.$.ProgressSlider.setAltBarPosition(parseInt( (node.buffered.end(0) / node.duration) * 100));
-            //this.$.PlayerStatus.setContent(/*"Seeking: " + node.seeking + " Paused: " + node.paused + " Ended: " + node.ended + */" N: " + node.networkState + " R: " + node.readyState + " P: " + parseInt( (node.buffered.end(0) / node.duration) * 100) );
-        } catch(err) {
-            // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
-        }
         //this.$.PlayerStatus.setContent("status" + " " + node.buffered.length + " " + node.buffered.start(0) + " " + node.buffered.end(0) + " " + node.ended);
         //this.log(node.buffered);
         if(!this.song)
             return;
-        if(node.readyState < 2)
+        if(node && node.readyState < 2)
         {
             this.$.SliderBox.hide();
             if(!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3)
@@ -532,14 +535,14 @@ enyo.kind({
                     this.$.PlayerSpinner.hide();
             }
         }
-        var prog = (node.currentTime / this.song.duration) * 100;
-        prefs.set("savedtime", node.currentTime);
-        //this.log("song progress = ", this.$.MusicPlayer.audio.currentTime, this.song.duration, prog);
+        var prog = (this.Player.getCurrentPosition() / this.song.duration) * 100;
+        prefs.set("savedtime", this.Player.getCurrentPosition());
+        //this.log("song progress = ", this.Player.audio.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
-        if(!this.$.MusicPlayer.audio.seeking)
+        if(!this.Player.audio || !this.Player.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
         // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
-        if( (node.ended !== undefined && node.ended) || (node.currentTime > (this.song.duration - 0.6)) ) // use node.ended if it's available, otherwise fall back to old code
+        if( (node && node.ended !== undefined && node.ended) || (node.currentTime > (Math.floor(this.song.duration)) ) ) // use node.ended if it's available, otherwise fall back to old code
         {
             this.doNextSong();
         }
@@ -557,7 +560,7 @@ enyo.kind({
             prog = 0;
         //this.log("song progress = ", inStatus.currentTime, this.song.duration, prog);
         this.$.ProgressSlider.setBarPosition( prog );
-        //if(!this.$.MusicPlayer.audio.seeking)
+        //if(!this.Player.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
         
     },
