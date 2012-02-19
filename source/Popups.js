@@ -2,30 +2,40 @@ enyo.kind({
     name: "IntroPopup",
     kind: "Popup",
     components: [
-        { name: "WebLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },                    
+        { name: "WebLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },
+        //{ kind: "Item", content: "XOlabel", name: "Label" },
         { kind: "Item", content: "What is XO?", onclick: "clickwhat" },
         { kind: "Item", content: "Help", onclick: "clickhelp" },
         { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
         { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
         { kind: "Item", content: "Continue :-)", onclick: "close" },
     ],
-    clickreview: function() {
-        var url = "http://developer.palm.com/appredirect/?packageid="+enyo.fetchAppId();
-        this.$.WebLauncher.call( { target: url });
+    rendered: function() {
+        this.inherited(arguments);
+        //this.$.Label.setContent("XO - platform: " + Platform.getPlatformName());
+    },
+    clickreview: function(inSender, inEvent) {
+        var url = Platform.getReviewURL();
+        enyo.log("Review URL:" + url);
+        if(url != "")
+            Platform.browser(Platform.getReviewURL(), this)();
+        inEvent.preventDefault();
+        inEvent.stopPropagation();
+        return true;
     },
     clickemail: function() {
         var url = "mailto:blade.eric@gmail.com?subject=XO-email";
-        this.$.WebLauncher.call( { target: url });
+        Platform.browser(url, this)();
     },
     clickwhat: function()
     {
         var url = "http://www.ericbla.de/gvoice-webos/xo/";
-        this.$.WebLauncher.call( { target: url });
+        Platform.browser(url, this)();
     },
     clickhelp: function() {
         var url = "http://ericbla.de/gvoice-webos/xo/help/";
-        this.$.WebLauncher.call( { target: url });        
-    },    
+        Platform.browser(url, this)();
+    },
 });
 
 enyo.kind({
@@ -78,14 +88,14 @@ enyo.kind({
                     [
                         { content: "Server Address", },
                         { kind: "Spacer", },
-                        { name: "ServerInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, value: "uidemo.com:88", onchange: "changedServer", value: prefs.get("serverip"), },
+                        { name: "ServerInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, onchange: "changedServer", value: prefs.get("serverip"), },
                     ]
                 },
                 { kind: "VFlexBox", components:
                     [
                         { content: "Username", },
                         { kind: "Spacer", },
-                        { name: "UserInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, value: "uiuser", onchange: "changedUsername", value: prefs.get("username"), },
+                        { name: "UserInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, onchange: "changedUsername", value: prefs.get("username"), },
                     ]
                 },
                 { kind: "VFlexBox", components:

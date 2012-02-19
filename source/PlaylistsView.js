@@ -81,7 +81,6 @@ enyo.kind({
     },
     getPlaylistItem: function(inSender, inRow)
     {
-        this.log(inRow);
         if(this.playlists == undefined)
         {
             this.log("loading playlists");

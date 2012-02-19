@@ -1,4 +1,5 @@
 enyo.depends(
+        "source/EnyoPlatform.js",
         "source/xolauncher.js",
         "source/dashboard.js",
         "source/dashboard.css",

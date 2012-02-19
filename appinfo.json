@@ -1,12 +1,11 @@
 {
 	"id": "com.ericblade.xo",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"vendor": "Eric Blade",
 	"type": "web",
 	"main": "index.html",
 	"title": "XO",
 	"icon": "images/subsonic48.png",
         "dockMode": false,
-        "noWindow": true,
 	"uiRevision":2
 }
