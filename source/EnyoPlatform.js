@@ -181,7 +181,7 @@ enyo.kind({
              * i'm going to just run a timer to the getCurrentPosition call to make sure that
              * the media object's _position is updated regularly.  Sick.
              */
-            this.Timer = setInterval(this.getMediaPos, 100);
+            this.Timer = setInterval(enyo.bind(this, this.getMediaPos), 100);
         }
     },
     getMediaPos: function() {
