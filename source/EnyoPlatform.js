@@ -227,7 +227,7 @@ enyo.kind({
     mediaProgress: function(x, y, z) {
         enyo.log("mediaProgress"+ x+ y+ z);
     },
-    getCurrentPosition: function() {
+    getCurrentPosition: function() { 
         return Platform.useHTMLAudio() ? this.audio.currentTime : this.position; /* PhoneGap's media._position doesn't seem to load? */
     },
     getDuration: function() {
