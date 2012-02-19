@@ -9,7 +9,7 @@
 <script type="text/javascript">
 	console.log(typeof PhoneGap);
 	console.log(typeof enyo);
-	if(typeof PhoneGap != "undefined") {
+	if(!window.chrome && typeof PhoneGap != "undefined") {
 		document.addEventListener("deviceready", onDeviceReady, false);
 	} else {
 		console.log("******************* PHONEGAP NOT AVAILABLE **************** ");
