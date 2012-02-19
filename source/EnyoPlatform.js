@@ -1,4 +1,3 @@
-why aren't things syncing back to the main git?
 /* Enyo Platform encapsulation. Include this FIRST in your depends.js, and
  * call Platform.setup() at the very start of the "created" function in your
  * application's first instanced kind.
