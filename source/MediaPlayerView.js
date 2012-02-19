@@ -515,10 +515,10 @@ enyo.kind({
         //this.log(node.buffered);
         if(!this.song)
             return;
-        if(node && node.readyState < 2)
+        if( (node && node.readyState < 2) || this.Player.getCurrentPosition() < 0)
         {
             this.$.SliderBox.hide();
-            if(!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3)
+            if(!node || (!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3))
             {
                 this.$.PlayerSpinner.show();
             }
@@ -527,7 +527,7 @@ enyo.kind({
         {
             if(!this.$.SliderBox.showing)
                 this.$.SliderBox.show();
-            if(!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3)
+            if((!node && this.Player.getCurrentPosition() < 0) || (!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3))
             {
                 this.$.PlayerSpinner.show();
             } else {
@@ -535,6 +535,7 @@ enyo.kind({
                     this.$.PlayerSpinner.hide();
             }
         }
+        this.log("Current Position", this.Player.getCurrentPosition());
         var prog = (this.Player.getCurrentPosition() / this.song.duration) * 100;
         prefs.set("savedtime", this.Player.getCurrentPosition());
         //this.log("song progress = ", this.Player.audio.currentTime, this.song.duration, prog);
