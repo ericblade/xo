@@ -93,7 +93,7 @@ enyo.kind({
     call: function(name, params)
     {
         if(name != "jukeboxControl" || params.action != "status")
-            this.log(name, params);
+            this.log(name + " " + params);
 
         var userid = prefs.get("username");
         var password = prefs.get("password");

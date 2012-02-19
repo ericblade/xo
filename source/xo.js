@@ -915,7 +915,7 @@ enyo.kind({
         enyo.application.mainApp = this;
         enyo.application.active = true;
         this.inherited(arguments);
-        Platform.setup();
+        //Platform.setup();
 
         if(window.PalmSystem)
             enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); 

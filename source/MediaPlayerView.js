@@ -462,14 +462,13 @@ enyo.kind({
     checkStatus: function()
     {
         //this.log(this.showing);
-        //this.log();
         var state;
         var node;
         //var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
         //var node = this.song.isVideo ? player.node : player.audio;
         var player = this.Player;
         var node = player && player.audio;
-        if(!enyo.application.jukeboxMode && (!player || !node))
+        if(!enyo.application.jukeboxMode && !player)
             return;
         if(enyo.application.jukeboxMode)
         {
@@ -527,7 +526,7 @@ enyo.kind({
         {
             if(!this.$.SliderBox.showing)
                 this.$.SliderBox.show();
-            if((!node && this.Player.getCurrentPosition() < 0) || (!node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3))
+            if((!node && this.Player.getCurrentPosition() < 0) || (node && !node.paused && !this.$.PlayerSpinner.showing && node.readyState < 3))
             {
                 this.$.PlayerSpinner.show();
             } else {
@@ -535,7 +534,7 @@ enyo.kind({
                     this.$.PlayerSpinner.hide();
             }
         }
-        this.log("Current Position", this.Player.getCurrentPosition());
+        enyo.log("Current Position " + this.Player.getCurrentPosition());
         var prog = (this.Player.getCurrentPosition() / this.song.duration) * 100;
         prefs.set("savedtime", this.Player.getCurrentPosition());
         //this.log("song progress = ", this.Player.audio.currentTime, this.song.duration, prog);
@@ -543,9 +542,10 @@ enyo.kind({
         if(!this.Player.audio || !this.Player.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
         // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
-        if( (node && node.ended !== undefined && node.ended) || (node.currentTime > (Math.floor(this.song.duration)) ) ) // use node.ended if it's available, otherwise fall back to old code
-        {
+        if(node && node.ended !== undefined && node.ended) {
             this.doNextSong();
+        } else if(Math.ceil(this.Player.getCurrentPosition()) >= Math.floor(this.song.duration)) {
+            setTimeout(enyo.bind(this, this.doNextSong), 500);
         }
     },
     updateJukebox: function(inStatus)

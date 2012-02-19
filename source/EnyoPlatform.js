@@ -15,6 +15,18 @@ enyo.kind({
     statics: {
         setup: function()
         {
+            enyo.log("********* Setting up Platform Variables *************");
+            enyo.log("window.PalmSystem "+ window.PalmSystem);
+            enyo.log("window.blackberry "+ window.blackberry);
+            enyo.log("window.PhoneGap "+ window.PhoneGap);
+            enyo.log("window.device "+ window.device);
+            if(window.device)
+                enyo.log("window.device.platform "+ window.device.platform);
+            enyo.log("window.chrome "+ window.chrome);
+            if(window.PhoneGap && !window.device) {
+                enyo.log("EnyoPlatform: PhoneGap detected, device not (yet) available. Bailing until next call.");
+                return;
+            }
             if(typeof window.PalmSystem !== "undefined")
             {
                 var deviceInfo = enyo.fetchDeviceInfo();
@@ -37,7 +49,7 @@ enyo.kind({
                  */
                 this.platformVersion = "unknown";
             }
-            else if(typeof PhoneGap !== "undefined" && !window.chrome)
+            else if(typeof PhoneGap !== "undefined")
             {
                 this.platform = device.platform.toLowerCase();
                 this.platformVersion = device.version;
@@ -52,20 +64,23 @@ enyo.kind({
                 this.platformVersion = "unknown";
             }
             enyo.log("Platform detected: " + this.platform + " version " + this.platformVersion);
+            enyo.log(" ************************************** ");
         },
+        getPlatformName: function() { this.platform || this.setup(); return this.platform; },
         /* Platform boolean functions -- return truthy if specific platform */        
-        isWebOS: function() { return this.platform == "webos"; },
-        isAndroid: function() { return this.platform == "android"; },
-        isBlackBerry: function() { return this.platform == "blackberry" || this.platform == "webworks" },
-        isWebWorks: function() { return this.platform == "webworks"; },
-        isiOS: function() { return this.platform == "iphone"; },
-        isMobile: function() { return this.platform != "web"; },
+        isWebOS: function() { this.platform || this.setup(); return this.platform == "webos"; },
+        isAndroid: function() { this.platform || this.setup(); return this.platform == "android"; },
+        isBlackBerry: function() { this.platform || this.setup(); return this.platform == "blackberry" || this.platform == "webworks" },
+        isWebWorks: function() { this.platform || this.setup(); return this.platform == "webworks"; },
+        isiOS: function() { this.platform || this.setup(); return this.platform == "iphone"; },
+        isMobile: function() { this.platform || this.setup(); return this.platform != "web"; },
         /* General screen size functions -- tablet vs phone, landscape vs portrait */
-        isLargeScreen: function() { return window.innerWidth > 480; },
-        isWideScreen: function() { return window.innerWidth > window.innerHeight; },
+        isLargeScreen: function() { this.platform || this.setup(); return window.innerWidth > 480; },
+        isWideScreen: function() { this.platform || this.setup(); return window.innerWidth > window.innerHeight; },
         /* Platform-supplied UI concerns */
         hasBack: function()
         {
+            this.platform || this.setup(); 
             return this.platform == "android" || (this.platform == "webos" && this.platformVersion < 3);
         },
         hasMenu: function()
@@ -73,11 +88,13 @@ enyo.kind({
             /* You may want to include Android here if you're using a target
              * API of less than 14 (Ice Cream Sandwich)
              */
+            this.platform || this.setup(); 
             return this.platform == "webos"; 
         },
         /* Platform-specific Audio functions */
         useHTMLAudio: function()
         {
+            this.platform || this.setup(); 
             return this.isWebOS() || this.isWebWorks() || !this.isMobile();
         },
         /* Platform Specific Web Browser -- returns a function that should
@@ -88,6 +105,7 @@ enyo.kind({
          */
         browser: function(url, thisObj)
         {
+            this.platform || this.setup(); 
             if(this.isWebOS())
             {
                 return enyo.bind(thisObj, (function(args) {
@@ -145,6 +163,7 @@ enyo.kind({
         },
         getReviewURL: function()
         {
+            this.platform || this.setup(); 
             var url = "";
             switch(Platform.platform) {
                 case "webos":
@@ -172,6 +191,7 @@ enyo.kind({
 enyo.kind({
     name: "PlatformSound",
     kind: "Sound",
+    position: -1,
     play: function() {
         if(!Platform.useHTMLAudio()) {
             if(window.PhoneGap)
@@ -206,7 +226,7 @@ enyo.kind({
         }
     },    
     getMediaPos: function(x, y, z) {
-        this.media.getCurrentPosition(this.posReceived);
+        this.media.getCurrentPosition(enyo.bind(this, this.posReceived));
     },
     posReceived: function(x, y, z) {
         this.position = x;
