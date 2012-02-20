@@ -515,7 +515,10 @@ enyo.kind({
             }
         } else {
             if(enyo.application.playlist[enyo.application.playlist.index].startTime)
+            {
                 this.Player.seekTo(enyo.application.playlist[enyo.application.playlist.index].startTime);
+                enyo.application.playlist[enyo.application.playlist.index].startTime = 0;
+            }
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         //this.$.PlayerStatus.setContent("status" + " " + node.buffered.length + " " + node.buffered.start(0) + " " + node.buffered.end(0) + " " + node.ended);
