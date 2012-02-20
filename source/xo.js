@@ -447,6 +447,11 @@ enyo.kind({
             {
                 songs[x].isSelected = false;
                 enyo.application.removeSongFromPlaylist(songs[x], true); // TODO: need to write a function that will add only if they aren't already there..
+                if(!enyo.application.jukeboxMode)
+                {
+                    prefs.set("playlist", enyo.application.playlist);
+                }        
+                
             }
         }
         this.$.MusicView.renderView();
@@ -790,8 +795,10 @@ enyo.kind({
                     enyo.application.playlist.index--;
                 }
                 if(!noRefresh)
+                {
                     this.$.PlaylistView.render();
-                prefs.set("playlist", enyo.application.playlist);
+                    prefs.set("playlist", enyo.application.playlist);
+                }
             }
         }
     },
