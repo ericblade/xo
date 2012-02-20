@@ -534,7 +534,7 @@ enyo.kind({
                     this.$.PlayerSpinner.hide();
             }
         }
-        enyo.log("Current Position " + this.Player.getCurrentPosition());
+        //enyo.log("Current Position " + this.Player.getCurrentPosition());
         var prog = (this.Player.getCurrentPosition() / this.song.duration) * 100;
         prefs.set("savedtime", this.Player.getCurrentPosition());
         //this.log("song progress = ", this.Player.audio.currentTime, this.song.duration, prog);

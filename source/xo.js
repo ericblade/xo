@@ -393,6 +393,7 @@ enyo.kind({
     },
     clearPlaylist: function() {
         this.$.PlaylistView.clearPlaylist();
+        this.$.MusicView.clearSelected();
         this.$.MusicView.renderView();
     },
     playOrPause: function(inSender, inEvent)
@@ -428,6 +429,12 @@ enyo.kind({
             }
         }
         //enyo.nextTick(this.$.MusicView, this.$.MusicView.renderView);
+        // addSongToPlaylist doesn't save if we're in noRender=true, assuming that we
+        // are doing batch adding, so we need to save the list here, not there.
+        if(!enyo.application.jukeboxMode)
+        {
+            prefs.set("playlist", enyo.application.playlist);
+        }        
         this.$.MusicView.renderView();
         this.$.PlaylistView.render();
     },
@@ -731,8 +738,8 @@ enyo.kind({
         if(inEvent.rowIndex == undefined) // we're inserting it last
             this.$.PlaylistView.scrollToBottom();
 
-        if(!enyo.application.jukeboxMode)
-            prefs.set("playlist", enyo.application.playlist);
+        //if(!enyo.application.jukeboxMode)
+        //    prefs.set("playlist", enyo.application.playlist);
     },
     addSongToPlaylist: function(song, noRefresh)
     {
@@ -743,7 +750,10 @@ enyo.kind({
         if(!noRefresh)
             enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
         if(!enyo.application.jukeboxMode)
-            prefs.set("playlist", enyo.application.playlist);
+        {
+            if(!noRefresh)
+                prefs.set("playlist", enyo.application.playlist);
+        }
         else
         {
             this.$.api.call("jukeboxControl", { action: "add", id: song.id });

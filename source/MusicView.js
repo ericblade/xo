@@ -188,6 +188,14 @@ enyo.kind({
         view.songs[index].isSelected = selected;
         this.refreshSong(index);
     },
+    clearSelected: function(index, selected)
+    {
+        var view = this.$.ViewPane.getView();
+        for(x in view.songs)
+        {
+            view.songs[x].isSelected = false;
+        }
+    },
     querySongItem: function(index)
     {
         var view = this.$.ViewPane.getView();
@@ -206,8 +214,10 @@ enyo.kind({
     renderView: function()
     {
         var view = this.$.ViewPane.getView();
-        view.$.SongList.render();
-        view.$.AlbumList.render();
+        if(view.$.SongList)
+            view.$.SongList.render();
+        if(view.$.AlbumList)
+            view.$.AlbumList.render();
     },
     resetViews: function()
     {
