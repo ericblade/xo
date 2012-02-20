@@ -174,7 +174,7 @@ enyo.kind({
                                             onClearJukebox: "clearJukeboxPlaylist",
                                             onSongRemove: "menuRemoveSongFromPlaylist",
                                             onItemMenu: "showPlaylistMenu", onSongClicked: "loadSong",
-                                            onStartPlaylist: "startPlaylist", ondragout: "dragOutPlaylist",
+                                            onStartPlaylist: "resumePlaylist", ondragout: "dragOutPlaylist",
                                             ondragover: "dragOverPlaylist", ondrop: "dropOnPlaylist",
                                             onmousehold: "hideShowRightTabs", onCycleTab: "cycleRightTab",
                                             onShuffle: "shufflePlaylist", onSavePlaylist: "openSavePlaylist" },
@@ -950,7 +950,7 @@ enyo.kind({
         
         enyo.application.playlist = prefs.get("playlist");
         enyo.application.playlist.index = prefs.get("playlistindex");
-        this.log("got index ", enyo.application.playlist.index, " from config");
+        this.log("got index ", enyo.application.playlist.index, " from config ", prefs.get("savedtime"));
         if(typeof enyo.application.playlist.index === 'undefined')
             enyo.application.playlist.index = 0;
         enyo.application.jukeboxList = new Array();
@@ -1244,6 +1244,7 @@ enyo.kind({
     },
     resumePlaylist: function(inSender, inEvent)
     {
+        this.log();
         if(enyo.application.jukeboxMode)
         {
             this.$.api.call("jukeboxControl", { action: "start" });
@@ -1252,14 +1253,16 @@ enyo.kind({
         if(!enyo.application.playlist.index || enyo.application.playlist.index > enyo.application.playlist.length)
         {
             this.setPlaylistIndex(0);
+        } else {
+            enyo.application.playlist[enyo.application.playlist.index].startTime = prefs.get("savedtime");
         }
-        enyo.application.playlist[enyo.application.playlist.index].startTime = prefs.get("savedtime");
         this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
         if(!enyo.application.playlist[enyo.application.playlist.index].isVideo)
             this.selectPlayerView();
     },
     startPlaylist: function(inSender, inEvent)
     {
+        this.log();
         //enyo.application.playlist.index = 0;
         if(enyo.application.jukeboxMode)
         {

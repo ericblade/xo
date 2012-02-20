@@ -423,6 +423,8 @@ enyo.kind({
         {
             if(isNaN(playlist.index) || playlist.index > playlist.length)
                 playlist.index = 0;
+            else
+                enyo.application.playlist[playlist.index].startTime = prefs.get("savedtime");
             this.log("starting song ", playlist.index);
             this.setSong(playlist[playlist.index]);
             return true;
@@ -499,10 +501,10 @@ enyo.kind({
                     break;
             }
             // we have to wait until readyState >= 1 to restore our current time in the song
-            if(node.readyState >= 1 && this.song.startTime)
+            if(node.readyState >= 1 && enyo.application.playlist[enyo.application.playlist.index].startTime)
             {
-                node.currentTime = this.song.startTime;
-                this.song.startTime = 0;
+                node.currentTime = enyo.application.playlist[enyo.application.playlist.index].startTime;
+                enyo.application.playlist[enyo.application.playlist.index].startTime = 0;
             }
             try {
                 this.$.PlayerStatus.setContent("");
@@ -511,6 +513,9 @@ enyo.kind({
             } catch(err) {
                 // we need a catch here because this throws a DOM ERROR 1 if it's called too early.. why? who the fuck knows..
             }
+        } else {
+            if(enyo.application.playlist[enyo.application.playlist.index].startTime)
+                this.Player.seekTo(enyo.application.playlist[enyo.application.playlist.index].startTime);
         }
         //this.$.PlayerStatus.setContent(node.seeking + " " + state + " " +  node.paused);
         //this.$.PlayerStatus.setContent("status" + " " + node.buffered.length + " " + node.buffered.start(0) + " " + node.buffered.end(0) + " " + node.ended);
