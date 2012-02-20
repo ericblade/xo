@@ -1,11 +1,9 @@
 // TODO: Save Playlist button doesn't light up after retrieving credentials, only after making a change to the playlist
 // TODO: add all from search tab?
-// TODO: player stops at song change if dashboard gets closed?
 // TODO: Download statuses are completely fucked up
 // TODO: send the command to change the dashboard play button from the main function, not from in the player
 // TODO: test the dashboard in Jukebox mode
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
-// TODO: close dashboard at app exit (until the app is seperated)
 // TODO: Multiple server configs
 // TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
 // TODO: when tap selecting song, if not already playing, add and start playing
@@ -17,7 +15,6 @@
 // TODO: have Random button open up a popup that gives options for what to pull?
 // TODO: need to relocate the player controls to the sides on phones when we go Landscape .. ugh.
 // TODO: TouchPad in portrait mode has a shitton of extra space we can use
-// TODO: need to have Clear playlist re-render the music view (as well as removing songs from the playlist)
 // TODO: Album hold menu
 // TODO: Probably should not allow any further taps to load more directories when we're waiting on a directory to load already ...
 
@@ -30,10 +27,8 @@
 // TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
 // TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
-// TODO: (option to?) disable sleep while player screen is up
 // TODO: Exhibition mode
 // TODO: had to add a timeout in the Transition code to deal with transitioning failure when auto-flipping from Search to Music tab.. investigate why the transition fails.
-// TODO: "gapless" playback?
 
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
 
@@ -46,6 +41,12 @@ function stripHtml(html)
    var tmp = document.createElement("DIV");
    tmp.innerHTML = html;
    return tmp.textContent||tmp.innerText;
+}
+
+function useCssTransitions() {
+   if(Platform.isBlackBerry() || (Platform.isWebOS() && !isLargeScreen()) )
+       return false;
+   return true;
 }
 
 enyo.kind({
@@ -77,7 +78,7 @@ enyo.kind({
 enyo.kind({
     name: "xo",
     kind: "VFlexBox", //enyo.Pane,
-    transitionKind: isLargeScreen() && window.PalmSystem ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+    transitionKind: useCssTransitions() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
     components: [        
         { name: "fileDownload", kind: "PalmService", service: "palm://com.palm.downloadmanager/",
           method: "download", onSuccess: "downloadStatus", subscribe: true },
@@ -122,7 +123,7 @@ enyo.kind({
                                     ]
                                 },
                                 { name: "LeftPane", flex: 1, kind: "Pane", onSelectView: "leftPaneSelected",
-                                  transitionKind: isLargeScreen() && window.PalmSystem ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
+                                  transitionKind: useCssTransitions() ? "TestTransition" : "enyo.transitions.LeftRightFlyin",
                                   components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView",
@@ -205,7 +206,7 @@ enyo.kind({
             ]
         },
         { name: "BottomToolbar", kind: "Toolbar", components: [
-            { /*caption: "Back",*/ icon: "images/back.png", kind: "ToolButton", onclick: "doBack", showing: isLargeScreen() },
+            { name: "BackButton", icon: "images/back.png", kind: "ToolButton", onclick: "doBack", showing: !Platform.hasBack() },
             { name: "SelectAllButton", kind: "ToolButton", /*caption: "+ All",*/ icon: "images/playlistadd.png", onclick: "selectAll", showing: false, },
             { name: "UnselectAllButton", kind: "ToolButton", /*caption: "- All",*/ icon: "images/playlistremove.png", onclick: "unselectAll", showing: false, },
             { kind: "Spacer" },
@@ -262,7 +263,7 @@ enyo.kind({
             //this.$.BottomToolbar.applyStyle("opacity", "0.5");
             this.$.BottomToolbar.applyStyle("background", "black");
             
-            if(window.PalmSystem)
+            if(Platform.isWebOS())
                 enyo.windows.setWindowProperties(window, { blockScreenTimeout: true });
                 
             //event.preventDefault();
@@ -274,7 +275,7 @@ enyo.kind({
             enyo.application.isFullScreen = false;
             //this.$.BottomToolbar.applyStyle("opacity", "1.0");
             this.$.BottomToolbar.applyStyle("background", "");
-            if(window.PalmSystem)
+            if(Platform.isWebOS())
                 enyo.windows.setWindowProperties(window, { blockScreenTimeout: false });
             //event.preventDefault();
             event.stopPropagation();
@@ -360,7 +361,7 @@ enyo.kind({
             this.$.LeftPane.getView().disableControls();
         } else {
             this.$.LeftPane.getView().enableControls();
-            if(!isLargeScreen()) // Tablets don't dismiss the right hand view
+            if(!Platform.isLargeScreen()) // tablets don't dismiss the right view, so leave their controls
             {
                 if(this.$.RightPane.getView() == this.$.MediaPlayerView) 
                     this.$.MediaPlayer.disableControls();
@@ -370,12 +371,12 @@ enyo.kind({
         }
     },
     enableJukebox: function() {
-        if(isLargeScreen())
+        if(Platform.isLargeScreen())
             this.$.JukeboxToggle.show();
         this.$.JukeboxMenuItem.setDisabled(false);
     },
     disableJukebox: function() {
-        if(isLargeScreen())
+        if(Platform.isLargeScreen())
             this.$.JukeboxToggle.hide();
         this.$.JukeboxMenuItem.setDisabled(true);
     },
@@ -392,6 +393,7 @@ enyo.kind({
     },
     clearPlaylist: function() {
         this.$.PlaylistView.clearPlaylist();
+        this.$.MusicView.renderView();
     },
     playOrPause: function(inSender, inEvent)
     {
@@ -500,7 +502,7 @@ enyo.kind({
         this.user = enyo.application.subsonicUser;
         this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
         this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
-        this.$.JukeboxToggle.setShowing(isLargeScreen() && inUser.jukeboxRole);
+        this.$.JukeboxToggle.setShowing(Platform.isLargeScreen() && inUser.jukeboxRole);
         this.$.JukeboxMenuItem.setDisabled(!inUser.jukeboxRole);
     },
     videoError: function(inSender, x, y, z)
@@ -917,7 +919,7 @@ enyo.kind({
         this.inherited(arguments);
         //Platform.setup();
 
-        if(window.PalmSystem)
+        if(Platform.isWebOS())
             enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); 
         prefs.def("righttabsshowing", true);        
         //prefs.def("serverip","www.ericbla.de:88");
@@ -963,7 +965,7 @@ enyo.kind({
         //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
         
-        if(isLargeScreen() && window.PalmSystem) // TODO: dashboard doesn't currently work on phones
+        if(Platform.isWebOS() && Platform.isLargeScreen()) // TODO: Dashboard doesn't work on phones
             enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {
@@ -1031,35 +1033,9 @@ enyo.kind({
             prefs.set("firstrun", appver);
             enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
             Platform.browser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/")();
-            /*if(window.PalmSystem)
-            {
-                enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
-                this.$.AppManService.call( { target: "http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/" } );
-            } else if(typeof blackberry != "undefined") {
-                this.blackberrybrowser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/");
-            }*/
         }
-        //if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
+        if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
-    },
-    blackberrybrowser: function(address)
-    {
-        this.log(address);
-	var encodedAddress = "";
-	// URL Encode all instances of ':' in the address
-	encodedAddress = address.replace(/:/g, "%3A");
-	// Leave the first instance of ':' in its normal form
-	encodedAddress = encodedAddress.replace(/%3A/, ":");
-	// Escape all instances of '&' in the address
-	encodedAddress = encodedAddress.replace(/&/g, "\&");
-	
-	if (typeof blackberry !== 'undefined') {
-			var args = new blackberry.invoke.BrowserArguments(encodedAddress);
-			blackberry.invoke.invoke(blackberry.invoke.APP_BROWSER, args);
-	} else {
-		// If I am not a BlackBerry device, open link in current browser
-		window.location = encodedAddress; 
-	}
     },
     openIntroPopup: function(inSender, inEvent)
     {

@@ -115,7 +115,7 @@ enyo.kind({
              * if their other platforms have any equivalent
              */
             this.platform || this.setup(); 
-            return this.platform == "webos"; 
+            return this.platform == "webos" || (this.platform == "android" && this.platformVersion < 4); 
         },
         
         /* Platform-specific Audio utility. WebWorks on PlayBook and webOS have

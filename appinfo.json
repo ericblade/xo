@@ -7,5 +7,6 @@
 	"title": "XO",
 	"icon": "images/subsonic48.png",
         "dockMode": false,
+	"noWindow": true,
 	"uiRevision":2
 }

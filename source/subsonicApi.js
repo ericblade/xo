@@ -75,6 +75,14 @@ enyo.kind({
     checkError: function(inResp)
     {
         this.doServerActivity(false);
+        if(!inResp) {
+            this.log("checkError called with no response?");
+            return true;
+        }
+        if(!inResp["subsonic-response"]) {
+            this.log("checkError called with no subsonic-response component?");
+            return true;
+        }
         if(inResp["subsonic-response"].error)
         {
             this.doError(inResp["subsonic-response"].error)
@@ -110,7 +118,6 @@ enyo.kind({
         if(!req.getUrl() || req.getUrl() == "")
         {
             var server = prefs.get("serverip");
-            this.log("7char", server.substr(0, 7), "8char", server.substr(0, 8));
             if(server.substr(0, 7) == "http://")
             {
                 server = server.substr(7, server.length);
@@ -119,7 +126,6 @@ enyo.kind({
                 server = server.substr(8, server.length);
                 prefs.set("serverip", server);
             }
-            this.log("server", server);
             req.setUrl("http://" + server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
         }
