@@ -102,16 +102,20 @@ enyo.kind({
                     [
                         { content: "Password", },
                         { kind: "Spacer", },
-                        { name: "PassInput", kind: "PasswordInput", value: "uipassword", onchange: "changedPassword", value: prefs.get("password"), },
+                        { name: "PassInput", kind: "PasswordInput", onchange: "changedPassword", value: prefs.get("password"), },
                     ]
                 },
+                { kind: "VFlexBox", components:
+                    [
+                        { kind: "Button", caption: "OK", className: "enyo-button-affirmative", onclick: "accepted" },
+                    ]
+                }
             ]
         }
     ],
     changedServer: function(inSender, inEvent)
     {
         prefs.set("serverip", this.$.ServerInput.getValue());
-        this.doServerChanged();
     },
     changedUsername: function(inSender, inEvent)
     {
@@ -120,6 +124,14 @@ enyo.kind({
     changedPassword: function(inSender, inEvent)
     {
         prefs.set("password", this.$.PassInput.getValue());
+    },
+    accepted: function(inSender, inEvent)
+    {
+        this.close();
+    },
+    close: function() {
+        this.inherited(arguments);
+        this.doServerChanged();
     }
 });
 

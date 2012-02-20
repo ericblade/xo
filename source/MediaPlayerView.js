@@ -262,6 +262,9 @@ enyo.kind({
                 this.$.PlayerSpinner.hide();
                 this.log(inEvent, x, y);
                 break;
+            case "ended":
+                this.log(inEvent, "*************************** SONG ENDED **********************");
+                break;
             default:
                 this.$.PlayerStatus.setContent("");
         }
@@ -541,11 +544,15 @@ enyo.kind({
         this.$.ProgressSlider.setBarPosition( prog );
         if(!this.Player.audio || !this.Player.audio.seeking)
             this.$.ProgressSlider.setPosition(prog);
-        // TODO: we need to check to see what our last time was, and if we're looping within 1sec of the end, then cut
+        var duration = this.Player.getDuration();
+        if(duration < 1)
+            duration = Math.floor(this.song.duration)-0.5;
         if(node && node.ended !== undefined && node.ended) {
+            this.log("Song Ended by Audio Node telling us this");
             this.doNextSong();
-        } else if(Math.ceil(this.Player.getCurrentPosition()) >= Math.floor(this.song.duration)) {
-            setTimeout(enyo.bind(this, this.doNextSong), 500);
+        } else if(!node && Math.ceil(this.Player.getCurrentPosition()) >= duration) {
+            this.log("Song Ended by reported Position > reported Duration");
+            this.doNextSong();
         }
     },
     updateJukebox: function(inStatus)
