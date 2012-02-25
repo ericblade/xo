@@ -164,6 +164,12 @@ enyo.kind({
                 /* If you have the popular childBrowser plugin for PhoneGap */
                 return enyo.bind(thisObj, window.plugins.childBrowser.openExternal, url);
             }
+            else if(this.platform == "android" && navigator.app && navigator.app.loadUrl)
+            {
+                /* If Android < 4.0 and PhoneGap ChildBrowser plugin is not available, then
+                 * Assume PhoneGap is loaded, otherwise we wouldn't know it's Android, right */
+                return enyo.bind(thisObj, function(x) { navigator.app.loadUrl({ openexternal:true }) }, url);
+            }
             else
             {
                 /* Fall back to something that could possibly work

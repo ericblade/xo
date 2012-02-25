@@ -1,3 +1,8 @@
+// Add popup that explains Jukebox mode when first entering it
+// Add popup that explains general program operation on first usage?
+// TODO: Switching out of Jukebox mode does not clear the song playing display, if you're not playing something locally
+// TODO: Switching out of Jukebox does not flip the content on the Dashboard (possibly only if not playing locally, not sure)
+// TODO: Pausing jukebox does not flip the Dashboard pause icon on
 // TODO: Save Playlist button doesn't light up after retrieving credentials, only after making a change to the playlist
 // TODO: add all from search tab?
 // TODO: Download statuses are completely fucked up
@@ -24,7 +29,6 @@
 // TODO: half implemented scrolling when dragging music to top or bottom of list ?
 // TODO: volume buttons on device directly controlling the jukebox volume
 // TODO: drag-drop to player (add to playlist, or play now?)
-// TODO: add (optional?) banner notification of new song info when player switches songs, if app is in background, or player view is not visible
 // TODO: if you start typing it should just pop over to the search tab, and focus the search input (see fahhem's blog)
 // TODO: selecting a playlist opens it drawer-fashion like under it, instead of opening it in the Music tab?
 // TODO: Exhibition mode
@@ -73,7 +77,43 @@ enyo.kind({
         this.log(this.$.logControl.content);
         this.render();
     },
-})
+});
+
+enyo.kind({
+	name:"iScroller",
+	kind:"Control",
+	chrome:[
+		{name:"client"}
+	],
+	rendered:function() {
+		this.inherited(arguments);
+        if(!this.scroller)
+		    this.scroller = new iScroll(this.parent.hasNode().id, {useTransform:true, onScrollMove:enyo.bind(this, "scrollStart"), onScrollEnd:enyo.bind(this, "scrollEnd")});
+        setTimeout(500, enyo.bind(this.scroller, this.scroller.refresh));
+	},
+	scrollStart:function() {
+        this.log();
+		this._scrolling = true;
+	},
+	scrollEnd:function() {
+        this.log();
+		this._scrolling = this._down;
+	},
+	captureDomEvent:function(e) {
+		// when useTransform = false, click fires after scrollEnd so watching mouse state as well
+		if(e.type === "mousedown") {
+            enyo.log("mousedown");
+			this._down = true;
+		} else if(e.type === "mouseup" && !this._scrolling) {
+            enyo.log("mouseup");
+			// release "capture" on mouseup if not scrolling
+			this._down = false;
+		} else if(e.type === "click" && (this._down || this._scrolling)) {
+            enyo.log("click");
+			this._down = false;
+		}
+	}
+});
 
 enyo.kind({
     name: "xo",
@@ -1052,7 +1092,7 @@ enyo.kind({
         {
             prefs.set("firstrun", appver);
             enyo.windows.addBannerMessage("XO: What's New", '{}', "images/subsonic16.png", "/media/internal/ringtones/Triangle (short).mp3")
-            Platform.browser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/")();
+            Platform.browser("http://ericbla.de/gvoice-webos/xo/whats-new-in-xo/",this)();
         }
         if(enyo.fetchAppId() == "com.ericblade.xodemo" || firstrun != appver)
             setTimeout(enyo.bind(this.$.IntroPopup, this.$.IntroPopup.openAtCenter), 1000);        
