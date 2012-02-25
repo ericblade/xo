@@ -376,10 +376,10 @@ enyo.kind({
                 this.$.AlbumArt.setSrc("images/noart.png");
             else
             {
-                var arturl = "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS";
+                var arturl = prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform;
                 if(this.$.AlbumArt.src != arturl)
                 {
-                    this.$.AlbumArt.setSrc("http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS");
+                    this.$.AlbumArt.setSrc(prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform);
                 }
             }
             this.$.ArtistNameLabel.setContent(this.song.artist);

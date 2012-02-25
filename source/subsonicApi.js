@@ -72,6 +72,11 @@ enyo.kind({
         "onError": "",
         "onServerActivity": "",
     },
+    apiFailure: function(inSender, inResponse, inRequest)
+    {
+        enyo.log("apiFailure: " + inSender + inResponse + inRequest);
+        enyo.log("request Name: " + inRequest.name);
+    },
     checkError: function(inResp)
     {
         this.doServerActivity(false);
@@ -111,14 +116,14 @@ enyo.kind({
             params = { };
         params.u = userid;
         params.p = password;
-        params.v = "1.6.0";
-        params.c = "XO-webOS";
+        params.v = "1.7.0";
+        params.c = "XO-" + Platform.platform;
         if(!params.f)
             params.f = "json";
         if(!req.getUrl() || req.getUrl() == "")
         {
             var server = prefs.get("serverip");
-            if(server.substr(0, 7) == "http://")
+            /*if(server.substr(0, 7) == "http://")
             {
                 server = server.substr(7, server.length);
                 prefs.set("serverip", server);
@@ -126,7 +131,8 @@ enyo.kind({
                 server = server.substr(8, server.length);
                 prefs.set("serverip", server);
             }
-            req.setUrl("http://" + server + "/rest/" + req.file);
+            req.setUrl("http://" + server + "/rest/" + req.file);*/
+            req.setUrl(server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
         }
         
