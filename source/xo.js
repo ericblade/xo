@@ -1,5 +1,5 @@
 // Add popup that explains general program operation on first usage?
-// TODO: Switching out of Jukebox mode does not clear the song playing display, if you're not playing something locally
+// TODO: store server settings for each song received, so we can playback from multiple servers!!
 // TODO: Switching out of Jukebox does not flip the content on the Dashboard (possibly only if not playing locally, not sure)
 // TODO: Pausing jukebox does not flip the Dashboard pause icon on
 // TODO: Save Playlist button doesn't light up after retrieving credentials, only after making a change to the playlist
@@ -8,7 +8,6 @@
 // TODO: send the command to change the dashboard play button from the main function, not from in the player
 // TODO: test the dashboard in Jukebox mode
 // IDEA: disable subsonic use if received error 60 (not registered), forward user to subsonic.org?, until we get a valid response?
-// TODO: Multiple server configs
 // TODO: Switching to/from Jukebox mode needs to sync the Play/Pause button for the current mode
 // TODO: when tap selecting song, if not already playing, add and start playing
 // TODO: preference for default action when tap selecting a song (Play Now, Add / Play, Add, "Just Select")
@@ -36,7 +35,6 @@
 // TODO: popup a "No results received" toaster, for this and any other situation that gives no results?
 
 // TODO: Have search also send a search query to Amazon, linking for purchasing? hmmm...
-// TODO: Saving of current index in playlist does not appear to be working
 // TODO: font sizing on artist/song title should be based on the lengths of both, not of each
 
 function stripHtml(html)
@@ -166,7 +164,8 @@ enyo.kind({
                                   components:
                                     [
                                         { name: "HomeView", kind: "subsonic.HomeView",
-                                          onServerDialog: "openServerDialog", onFolderClick: "loadIndex",
+                                          onServerDialog: "openServerDialog", onAddServerDialog: "openAddServerDialog",
+                                          onFolderClick: "loadIndex", onServerChanged: "changedServer",
                                           onMusicView: "loadMusicView", onRandomList: "getRandomList" },
                                         { name: "MusicView", kind: "subsonic.NewMusicView",
                                           onEnableSelectButtons: "enableSelectButtons",
@@ -272,6 +271,7 @@ enyo.kind({
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
         { name: "JukeboxDialog", kind: "JukeboxDialog", height: "95%", width: isLargeScreen() ? "25%" : "100%" },
+        { name: "AddServerDialog", kind: "subsonic.AddServerDialog", onAddServer: "addServer", },
         { name: "SavePlaylistPopup", kind: "Dialog", components:
             [
                 { kind: "RowGroup", components:
@@ -983,13 +983,15 @@ enyo.kind({
         //Platform.setup();
 
         if(Platform.isWebOS())
-            enyo.windows.setWindowProperties(window, { setSubtleLightBar: true }); 
+            enyo.windows.setWindowProperties(window, { setSubtleLightBar: true });
+        
+        prefs.def("serverlist", [
+            { "name":"Subsonic Demo", "serverip":"http://www.subsonic.org/demo", "username":"guest4", "password":"guest" },
+        ]);
+        prefs.def("serverName", "Subsonic Demo Server");
         prefs.def("righttabsshowing", true);        
-        //prefs.def("serverip","www.ericbla.de:88");
         prefs.def("serverip", "http://www.subsonic.org/demo");
-        //prefs.def("username","slow");
         prefs.def("username", "guest4");
-        //prefs.def("password","slow");
         prefs.def("password", "guest");
         prefs.def("playlist", []);
         prefs.def("playlistindex", 0);
@@ -1123,6 +1125,13 @@ enyo.kind({
             this.$.demoServerDialog.open();
         else
             this.$.serverDialog.open();
+    },
+    openAddServerDialog: function()
+    {
+        if(enyo.fetchAppId() == "com.ericblade.xodemo")
+            this.$.demoServerDialog.open();
+        else
+            this.$.AddServerDialog.open();
     },
     doBack: function(inSender, inEvent)
     {
@@ -1524,5 +1533,12 @@ enyo.kind({
 [20111201-18:04:45.579501] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"amountReceived":13700846,"e_amountReceived":"13700846","amountTotal":13787624,"e_amountTotal":"13787624"} enyo.PalmService.Request, /usr/palm/frameworks/enyo/1.0/framework/build/enyo-build.js:72
 [20111201-18:04:45.654649] info: xo.downloadFinished():  enyo.PalmService {"ticket":1824,"url":"http://ericbla.de:88/rest/download.view?id=633a5c6d757369635c4d6172696c796e204d616e736f6e5c4d6172696c796e204d616e736f6e202d204c65737420576520466f72676574205468652042657374204f6620283230303429205b4344205269705d2033323020767477696e3838637562655c31372e546865205265666c656374696e6720476f642e6d7033&u=admin&v=1.6.0&p=subgame&c=XO(webOS)(development)","sourceUrl":"http://ericbla.de:88/rest/download.view?id=633a5c6d757369635c4d6172696c796e204d616e736f6e5c4d6172696c796e204d616e736f6e202d204c65737420576520466f72676574205468652042657374204f6620283230303429205b4344205269705d2033323020767477696e3838637562655c31372e546865205265666c656374696e6720476f642e6d7033&u=admin&v=1.6.0&p=subgame&c=XO(webOS)(development)","deviceId":"","authToken":"","destTempPrefix":".","destFile":"download_1.view","destPath":"/media/internal/xo/","mimetype":"application/x-download","amountReceived":13787624,"e_amountReceive
         */
+    },
+    addServer: function(inSender, name, ip, user, pass)
+    {
+        var list = prefs.get("serverlist");
+        list[list.length] = { "name": name, "serverip": ip, "username": user, "password": pass };
+        prefs.set("serverlist", list);
+        this.$.HomeView.$.ServerListRepeater.render();
     }
 })

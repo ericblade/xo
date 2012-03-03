@@ -101,6 +101,8 @@ enyo.kind({
         onMusicView: "",
         onFolderClick: "",
         onRandomList: "",
+        onAddServerDialog: "",
+        onServerChanged: "",
     },
     published: {
         licenseData: "",
@@ -111,7 +113,30 @@ enyo.kind({
             { kind: isLargeScreen() ? "FadeScroller" : "Scroller", flex: 1, accelerated: true, components:
                 [
                     !isLargeScreen() ? { content: "Slide from right edge to access Player views", className: "enyo-item-ternary" } : { },
-                    { name: "serverItem", kind: "Item", onclick: "doServerDialog", layoutKind: "VFlexLayout", components:
+                    { kind: "Item", components:
+                        [
+                            { name: "serverDrawer", open: false, kind: "DividerDrawer", caption: "Server List", components:
+                                [
+                                    { kind: "Button", caption: "Add Server", onclick: "doAddServerDialog" },
+                                    { name: "ServerListRepeater", kind: "VirtualRepeater", onclick: "selectServer", onSetupRow: "serverListItem", components:
+                                        [
+                                            { kind: "SwipeableItem", onConfirm: "deleteServer", onCancel: "render", components:
+                                                [
+                                                    { kind: "VFlexBox", components:
+                                                        [
+                                                            { name: "ServerListNameLabel" },
+                                                            { name: "ServerListAddressLabel", className: "enyo-item-ternary" },
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                        ]
+                    },
+                    { name: "serverItem", kind: "Item", /*onclick: "doServerDialog",*/ layoutKind: "VFlexLayout", components:
                         [
                             { kind: "HFlexBox", components:
                                 [
@@ -157,6 +182,30 @@ enyo.kind({
             }
         ],
         // {"musicFolder":{"id":4,"name":"Music"}
+    deleteServer: function(inSender, inRow)
+    {
+        var list = prefs.get("serverlist");
+        list.remove(inRow);
+        prefs.set("serverlist", list);
+        this.$.ServerListRepeater.render();
+    },
+    selectServer: function(inSender, inEvent) {
+        var server = prefs.get("serverlist")[inEvent.rowIndex];
+        prefs.set("serverName", server.name);
+        prefs.set("serverip", server.serverip);
+        prefs.set("username", server.username);
+        prefs.set("password", server.password);
+        this.doServerChanged();
+    },
+    serverListItem: function(inSender, inRow)
+    {
+        var list = prefs.get("serverlist");
+        if(!list[inRow])
+            return false;
+        this.$.ServerListNameLabel.setContent(list[inRow].name);
+        this.$.ServerListAddressLabel.setContent(list[inRow].serverip);
+        return true;
+    },
     enableControls: function()
     {
         
@@ -217,8 +266,10 @@ enyo.kind({
     licenseDataChanged: function()
     {
         var ld = this.licenseData;
-        this.log(ld);
-        this.$.ServerNameLabel.setContent(prefs.get("serverip"));
+        var sname = prefs.get("serverName");
+        //this.log(ld);
+        if(sname) this.$.ServerNameLabel.setContent(sname);
+        else this.$.ServerNameLabel.setContent(prefs.get("serverip"));
         if(ld && ld.license && ld.license.valid != undefined)
         {
             this.$.ServerVersionLabel.setContent("Version: " + ld.version);

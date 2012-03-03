@@ -222,3 +222,56 @@ enyo.kind({
         },
     ]
 });
+
+enyo.kind({
+    name: "subsonic.AddServerDialog",
+    kind: "Dialog",
+    flyInFrom: "bottom",
+    events: {
+        "onAddServer": "",
+    },
+    components: [
+        { kind: "Group", caption: "Server Settings", components:
+            [
+                { kind: "VFlexBox", components:
+                    [
+                        { content: "Server Name", },
+                        { kind: "Spacer", },
+                        { name: "NameInput", kind: "Input", onchange: "changedName" },
+                    ]
+                },
+                { kind: "VFlexBox", components:
+                    [
+                        { content: "Server Address", },
+                        { kind: "Spacer", },
+                        { name: "ServerInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, onchange: "changedServer", },
+                    ]
+                },
+                { kind: "VFlexBox", components:
+                    [
+                        { content: "Username", },
+                        { kind: "Spacer", },
+                        { name: "UserInput", kind: "Input", autoCapitalize: "lowercase", autocorrect: false, spellcheck: false, autoWordComplete: false, onchange: "changedUsername", },
+                    ]
+                },
+                { kind: "VFlexBox", components:
+                    [
+                        { content: "Password", },
+                        { kind: "Spacer", },
+                        { name: "PassInput", kind: "PasswordInput", onchange: "changedPassword", },
+                    ]
+                },
+                { kind: "HFlexBox", components:
+                    [
+                        { kind: "Button", caption: "OK", className: "enyo-button-affirmative", onclick: "accepted" },
+                        { kind: "Button", caption: "Cancel", className: "enyo-button-negative", onclick: "close" },
+                    ]
+                }
+            ]
+        }
+    ],
+    accepted: function() {
+        this.doAddServer(this.$.NameInput.getValue(), this.$.ServerInput.getValue(), this.$.UserInput.getValue(), this.$.PassInput.getValue());
+        this.close();
+    }
+});
