@@ -198,3 +198,27 @@ enyo.kind({
         this.$.MessageBox.setContent(this.message);
     }
 });
+
+enyo.kind({
+    name: "JukeboxDialog",
+    kind: "Dialog",
+    flyInFrom: "left",
+    components: [
+        { kind: "VFlexBox", height: "100%", components:
+            [
+                //{ kind: "Scroller", height: "95%", width: "100%", components: [
+                    { kind: "HtmlContent", allowHtml: true, content:
+                        "<ul>\
+                        <li>In Jukebox mode, XO controls the music output of your Subsonic server.\
+                        <li>All music will be played from the server's speakers.\
+                        <li>Dragging a song to the Playlist will add it to the bottom instead of inserting it where dropped.\
+                        <li>Video playback is not supported in Jukebox mode\
+                        "
+                    },
+                //]},
+                { kind: "Spacer" },
+                { kind: "Button", caption: "OK", onclick: "close" },
+            ]
+        },
+    ]
+});

@@ -1,4 +1,3 @@
-// Add popup that explains Jukebox mode when first entering it
 // Add popup that explains general program operation on first usage?
 // TODO: Switching out of Jukebox mode does not clear the song playing display, if you're not playing something locally
 // TODO: Switching out of Jukebox does not flip the content on the Dashboard (possibly only if not playing locally, not sure)
@@ -272,6 +271,7 @@ enyo.kind({
           onInsertSong: "menuInsertSong", onAddSong: "menuAddSong", onDownloadSong: "downloadSong" },
         { name: "NowPlayingMenu", kind: "NowPlayingMenu", onRemoveSong: "menuRemoveSongFromPlaylist", },
         { name: "ErrorDialog", kind: "ErrorDialog" },
+        { name: "JukeboxDialog", kind: "JukeboxDialog", height: "95%", width: isLargeScreen() ? "25%" : "100%" },
         { name: "SavePlaylistPopup", kind: "Dialog", components:
             [
                 { kind: "RowGroup", components:
@@ -430,6 +430,10 @@ enyo.kind({
     {
         this.$.MediaPlayer.toggleJukebox(inSender, inStatus);
         this.$.JukeboxMenuItem.setCaption("Jukebox " + (enyo.application.jukeboxMode ? "ON" : "OFF"));
+        if(enyo.application.jukeboxMode && !prefs.get("jukeboxDialogDisplayed")) {
+            this.$.JukeboxDialog.open();
+            prefs.set("jukeboxDialogDisplayed", true);
+        }
     },
     clearPlaylist: function() {
         this.$.PlaylistView.clearPlaylist();
@@ -527,8 +531,10 @@ enyo.kind({
         {
             this.$.api.call("jukeboxControl", { action: "status" });
             this.$.api.call("jukeboxControl", { action: "get" }); // TODO: get implies a status as well, need to extract the status and set it in jukeboxStatus rather than making two calls
+        } else {
+            // Receiving the Jukebox list automatically forces a refresh, SO we only force it if we're switching back to regular
+            this.$.PlaylistView.render(); // switch playlists
         }
-        this.$.PlaylistView.render(); // switch playlists
     },
     getJukeboxStatus: function(inSender)
     {

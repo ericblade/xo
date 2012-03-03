@@ -121,7 +121,7 @@ enyo.kind({
         this.doJukeboxMode();
         if(inState)
         {
-            var player = this.song.isVideo ? this.$.VideoPlayer : this.Player;
+            var player = (this.song && this.song.isVideo) ? this.$.VideoPlayer : this.Player;
             var node = player && player.audio;
             this.localSong = this.song;
             // don't need to set this now that i've got it not pausing
@@ -132,6 +132,8 @@ enyo.kind({
             {
                 this.justToggled = true;
                 this.setSong(this.localSong);
+            } else {
+                this.setSong(undefined);
             }
         }
     },
@@ -396,6 +398,7 @@ enyo.kind({
             {
                 player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 this.log("music playing: ", "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                this.$.ProgressSlider.setPosition(0);
                 this.$.ProgressSlider.setBarPosition(0);
                 this.$.ProgressSlider.setAltBarPosition(0);
             }
@@ -406,7 +409,12 @@ enyo.kind({
 
         } else {
             this.doNotPlaying();
+            this.$.AlbumArt.setSrc("");
+            this.$.AlbumNameLabel.setContent("");
             this.$.SongInfoBox.hide();
+            this.$.ProgressSlider.setPosition(0);
+            this.$.ProgressSlider.setBarPosition(0);
+            this.$.ProgressSlider.setAltBarPosition(0);
             if(player)
                 player.setSrc("");
             this.clearTimer();

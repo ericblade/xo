@@ -12,6 +12,13 @@
  * If you are deploying to iOS, set a new parameter in your appinfo.json called
  * iTunesAppId to your application id as found in the Apple Dev Portal, for the
  * getReviewURL function
+ *
+ * PhoneGap iOS can have "OpenAllWhitelistURLsInWebView" set True in 
+ * PhoneGap.plist to cause a browser window.open() to open in new windows.
+ * 
+ * If you are deploying to BlackBerry's App World, set a new parameter in your 
+ * appinfo.json called "appWorldId" to your application's id as found in the 
+ * App World Dev Portal, for the getReviewURL function.  
  */
 enyo.kind({
     name: "Platform",
@@ -212,7 +219,10 @@ enyo.kind({
                     break;
                 case "blackberry":  // intentional fallthrough
                 case "webworks":
-                    url = "";
+                    var appInfo = enyo.fetchAppInfo();
+                    if(enyo.isString(appInfo))
+                        appInfo = JSON.parse(appInfo);
+                    url = "http://appworld.blackberry.com/webstore/content/" + appInfo.appWorldId + "/?lang=en";
                     break;
                 case "iphone":
                     var appInfo = enyo.fetchAppInfo();

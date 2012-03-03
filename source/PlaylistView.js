@@ -8,7 +8,31 @@ enyo.kind({
         var avgsize = { x: size.x / maxItems, y: size.y / maxItems };
         this.scrollTo(avgsize.x * index, avgsize.y * index);
     }
-}),
+});
+
+enyo.kind({
+    name: "MyFadeScroller",
+    kind: "FadeScroller",
+    scrollToItem: function(index, maxItems)
+    {
+        var bounds = this.getBoundaries();
+        var size = { x: bounds.bottom, y: bounds.left };
+        var avgsize = { x: size.x / maxItems, y: size.y / maxItems };
+        this.scrollTo(avgsize.x * index, avgsize.y * index);
+    }    
+});
+
+enyo.kind({
+    name: "MyRegularScroller",
+    kind: "Scroller",
+    scrollToItem: function(index, maxItems)
+    {
+        var bounds = this.getBoundaries();
+        var size = { x: bounds.bottom, y: bounds.left };
+        var avgsize = { x: size.x / maxItems, y: size.y / maxItems };
+        this.scrollTo(avgsize.x * index, avgsize.y * index);
+    }    
+});
 
 enyo.kind({
     name: "subsonic.PlaylistView",
@@ -41,7 +65,8 @@ enyo.kind({
                 isLargeScreen() ? { content: "Drag songs from Music list and drop them into this list.", className: "enyo-item-ternary" } : {},
                 { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary",  },
                 //{ kind: "Button", caption: "Test", onclick: "test" },
-                { name: "Scroller", kind: /*isLargeScreen() ? "FadeScroller" : "Scroller"*/ "MyScroller", ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
+                /* Using a TransformScroller here causes the entire scroller to stop working on refresh of the view */
+                { name: "Scroller", kind: isLargeScreen() ? "MyFadeScroller" : "MyRegularScroller"/* "MyScroller"*/, ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
                         { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
@@ -62,9 +87,13 @@ enyo.kind({
             ]
         },
     ],
+    refresh: function() {
+        this.$.PlaylistRepeater.render();
+    },
     rendered: function()
     {
         this.inherited(arguments);
+        this.log();
         this.enableControls();
     },
     scrollToCurrentSong: function(inSender, inEvent)
@@ -219,36 +248,6 @@ enyo.kind({
             si.setSongInfo(p);
             this.$.Song.setDraggable(false);
             
-            /*this.log(enyo.application.dragging, enyo.application.dropIndex, inRow, enyo.application.playlist.length);
-            if(enyo.application.dragging && enyo.application.dropIndex != undefined && enyo.application.dropIndex > -1)
-            {
-                if(enyo.application.dropIndex == inRow)
-                {
-                    //this.log("highlighting " + inRow);
-                    this.$.Song.applyStyle("border-top", "thick double blue");
-                    this.$.Song.applyStyle("border-bottom", undefined);
-                    if(this.lastHighlightedIndex != inRow)
-                    {
-                        //this.renderRow(this.lastHighlightedIndex)
-                        this.lastHighlightedIndex = inRow;
-                    }
-                } else {
-                    this.$.Song.applyStyle("border-top", undefined);
-                    this.$.Song.applyStyle("border-bottom", undefined);
-                } 
-            } else if(enyo.application.dragging && inRow == enyo.application.playlist.length-1) {
-                {
-                    if(enyo.application.dropIndex == undefined ) {
-                        this.$.Song.applyStyle("border-bottom", "thick double blue");
-                        this.lastHighlightedIndex = inRow;
-                    } else {
-                        this.$.Song.applyStyle("border-bottom", undefined);
-                    }
-                }
-            } else {
-                this.$.Song.applyStyle("border-bottom", undefined);
-                this.$.Song.applyStyle("border-top", undefined);
-            }*/
             return true;
         }
         return false;

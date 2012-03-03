@@ -6,6 +6,7 @@
 	"main": "index-webos.html",
 	"title": "XO",
 	"icon": "images/subsonic48.png",
+	"appWorldId": "88097",
         "dockMode": false,
 	"noWindow": true,
 	"uiRevision":2
