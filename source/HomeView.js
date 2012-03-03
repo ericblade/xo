@@ -142,8 +142,8 @@ enyo.kind({
                                 [
                                     { content: "Server" },
                                     { name: "ServerNameLabel", style: "padding-left: 10px;" },
-                                    { kind: "Spacer" },
-                                    { name: "ServerSpinner", kind: "Spinner", }
+                                    //{ kind: "Spacer" },
+                                    //{ name: "ServerSpinner", kind: "Spinner", }
                                 ]
                             },
                             { kind: "HFlexBox", components:
@@ -192,7 +192,16 @@ enyo.kind({
     selectServer: function(inSender, inEvent) {
         var server = prefs.get("serverlist")[inEvent.rowIndex];
         prefs.set("serverName", server.name);
-        prefs.set("serverip", server.serverip);
+        
+        var serverip = server.serverip;
+        if(serverip.substr(0, 7) == "http://")
+        {
+            serverip = serverip.substr(7, server.length);
+        } else if(serverip.substr(0, 8) == "https://") {
+            serverip = serverip.substr(8, server.length);
+        }
+        serverip = ("http://" + serverip);
+        prefs.set("serverip", serverip);
         prefs.set("username", server.username);
         prefs.set("password", server.password);
         this.doServerChanged();

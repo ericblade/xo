@@ -57,7 +57,7 @@ enyo.kind({
                         { kind: "VFlexBox", components:
                             [
                                 //{ name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: enyo.Image, height: isLargeScreen() ? "320px" : "240px", src: "http://img91.imageshack.us/img91/3550/nocoverni0.png" },
-                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://img91.imageshack.us/img91/3550/nocoverni0.png"*/ },
+                                { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://www.synoiz.com/images/releases/no-cover-art_400x400.jpg"*/ },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
                                 { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs. Zoom/Pinch to Fullscreen/Restore", className: "enyo-item-ternary", style: "color: white;" },
                                 { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
@@ -354,8 +354,8 @@ enyo.kind({
         }
         if(this.song && this.song.isVideo)
         {
-            var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
-            url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+            var url = prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+            url = prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
             this.log("*** Playing Video URL ", url);
             enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
             this.$.VideoService.request( { itemId: this.song.id });
@@ -378,10 +378,10 @@ enyo.kind({
                 this.$.AlbumArt.setSrc("images/noart.png");
             else
             {
-                var arturl = prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform;
+                var arturl = coverArtUrl(this.song.coverArt, "400");
                 if(this.$.AlbumArt.src != arturl)
                 {
-                    this.$.AlbumArt.setSrc(prefs.get("serverip") + "/rest/getCoverArt.view?id="+this.song.coverArt+"&u="+ prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform);
+                    this.$.AlbumArt.setSrc(arturl);
                 }
             }
             this.$.ArtistNameLabel.setContent(this.song.artist);
@@ -396,8 +396,8 @@ enyo.kind({
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
-                player.setSrc("http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
-                this.log("music playing: ", "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                this.log("music playing: ", prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                player.setSrc(prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 this.$.ProgressSlider.setPosition(0);
                 this.$.ProgressSlider.setBarPosition(0);
                 this.$.ProgressSlider.setAltBarPosition(0);
@@ -509,7 +509,7 @@ enyo.kind({
                     break;
             }
             // we have to wait until readyState >= 1 to restore our current time in the song
-            if(node.readyState >= 1 && enyo.application.playlist[enyo.application.playlist.index].startTime)
+            if(node.readyState >= 1 && enyo.application.playlist[enyo.application.playlist.index] && enyo.application.playlist[enyo.application.playlist.index].startTime)
             {
                 node.currentTime = enyo.application.playlist[enyo.application.playlist.index].startTime;
                 enyo.application.playlist[enyo.application.playlist.index].startTime = 0;

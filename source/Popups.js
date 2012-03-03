@@ -271,7 +271,16 @@ enyo.kind({
         }
     ],
     accepted: function() {
-        this.doAddServer(this.$.NameInput.getValue(), this.$.ServerInput.getValue(), this.$.UserInput.getValue(), this.$.PassInput.getValue());
+            var server = this.$.ServerInput.getValue();
+            if(server.substr(0, 7) == "http://")
+            {
+                server = server.substr(7, server.length);
+            } else if(server.substr(0, 8) == "https://") {
+                server = server.substr(8, server.length);
+            }
+            server = ("http://" + server);
+        
+        this.doAddServer(this.$.NameInput.getValue(), server, this.$.UserInput.getValue(), this.$.PassInput.getValue());
         this.close();
     }
 });

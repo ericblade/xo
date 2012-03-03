@@ -183,7 +183,7 @@ enyo.kind({
         {
             //this.log(" *** NO COVER ART ", song.title);
         }
-        this.$.AlbumArt.setSrc(prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform);
+		this.$.AlbumArt.setSrc(coverArtUrl(song.coverArt));
         this.oldSongId = song.id;
         this.$.TitleLabel.applyStyle("max-width", "75%");
         this.setDraggable(true);
@@ -203,7 +203,7 @@ enyo.kind({
         this.$.SongFileTypeLabel.hide();
         if(album.coverArt)
         {
-            this.$.AlbumArt.setSrc(prefs.get("serverip") + "/rest/getCoverArt.view?id=" + album.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform);
+            this.$.AlbumArt.setSrc(coverArtUrl(song.coverArt));
         }
         this.$.TitleLabel.applyStyle("max-width", "95%");
         this.setDraggable(false);
@@ -218,7 +218,7 @@ enyo.kind({
         {
             var song = this.owner.querySongItem(inEvent.rowIndex);
             inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner,
-                art: prefs.get("serverip") + "/rest/getCoverArt.view?id=" + song.coverArt + "&size=54&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform,
+                art: this.$.AlbumArt.setSrc(coverArtUrl(song.coverArt))
             }
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;

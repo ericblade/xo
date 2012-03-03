@@ -257,6 +257,7 @@ enyo.kind({
             { name: "SaveButton", kind: "ToolButton", /*caption: "Save",*/ icon: "images/playlistsave.png", onclick: "openSavePlaylist", showing: false },
             { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
               onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+            { name: "ServerSpinner", kind: "Spinner", showing: true, },
         ]},
         { kind: "VFlexBox", components:
             [
@@ -956,9 +957,9 @@ enyo.kind({
     serverActivity: function(inSender, bOn)
     {
         if(bOn)
-            this.$.HomeView.$.ServerSpinner.show();
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
         else
-            this.$.HomeView.$.ServerSpinner.hide();
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
     },
     receivedPlaylists: function(inSender, inLists)
     {
@@ -1060,7 +1061,8 @@ enyo.kind({
     {
         this.$.api.serverChanged();
         this.$.HomeView.setLicenseData();
-        this.$.HomeView.$.ServerSpinner.show();
+        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
+
         this.pingServer();
         this.getServerLicense();
         this.$.api.call("getUser", { username: prefs.get("username") });
@@ -1117,6 +1119,8 @@ enyo.kind({
         this.$.MainPane.selectViewByName("slider");
         
         //enyo.nextTick(this, this.delayedStartup);
+        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
+
         enyo.asyncMethod(this, "delayedStartup");
     },
     openServerDialog: function()
@@ -1193,13 +1197,14 @@ enyo.kind({
                 apicall = "getAlbumList";
                 break;
         }
-        this.$.HomeView.$.ServerSpinner.show();
+        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
+
         this.$.MusicView.resetViews();
         this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
-        this.$.HomeView.$.ServerSpinner.hide();
+        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
     },
@@ -1358,7 +1363,7 @@ enyo.kind({
             this.setPlaylistIndex(parseInt(currindex) + 1);
         }
         if(enyo.application.jukeboxMode)
-            this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
+            this.$.api.call("jukeboxControl", { action: "skip", index: parseInt(currindex) + 1 });
         else
             this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
     },
@@ -1384,7 +1389,7 @@ enyo.kind({
             this.setPlaylistIndex(parseInt(currindex) - 1);
         }
         if(enyo.application.jukeboxMode)
-            this.$.api.call("jukeboxControl", { action: "skip", index: playlist.index });
+            this.$.api.call("jukeboxControl", { action: "skip", index: parseInt(currindex) - 1 });
         else
             this.$.MediaPlayer.setSong(enyo.application.playlist[enyo.application.playlist.index]);
     },
@@ -1490,10 +1495,10 @@ enyo.kind({
     },
     downloadSubsonicFile: function(id, filename)
     {
-        // "http://" + prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
+        // prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
         this.log(id, filename);
         this.$.fileDownload.call( {
-            target: "http://" + prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
+            target: prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
             mime: "audio/mpeg3",
             targetDir: "/media/internal/xo/",
             //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,

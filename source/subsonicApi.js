@@ -126,10 +126,8 @@ enyo.kind({
             if(server.substr(0, 7) == "http://")
             {
                 server = server.substr(7, server.length);
-                prefs.set("serverip", server);
             } else if(server.substr(0, 8) == "https://") {
                 server = server.substr(8, server.length);
-                prefs.set("serverip", server);
             }
             req.setUrl("http://" + server + "/rest/" + req.file);
             //req.setUrl(server + "/rest/" + req.file);
@@ -137,7 +135,8 @@ enyo.kind({
         }
         
         req.call(params);
-        this.doServerActivity(true);
+        if(params.action != "status")
+            this.doServerActivity(true);
     },
     createdShare: function(inSender, inResponse, inRequest) {
         if(!this.checkError(inResponse))
