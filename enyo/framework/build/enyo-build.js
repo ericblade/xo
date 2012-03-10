@@ -2887,6 +2887,8 @@ stop: function(a) {
 this.job = enyo.cancelRequestAnimationFrame(this.job), a && this.doScrollStop();
 },
 startDrag: function(a) {
+this.dragT0 = new Date().getTime();
+this.flickx = this.x, this.flicky = this.y;
 this.dragging = !0, this.my = a.pageY, this.py = this.uy = this.y, this.mx = a.pageX, this.px = this.ux = this.x;
 },
 drag: function(a) {
@@ -2894,6 +2896,19 @@ if (this.dragging) {
 var b = this.vertical ? a.pageY - this.my : 0;
 this.uy = b + this.py, this.uy = this.boundaryDamping(this.uy, this.topBoundary, this.bottomBoundary, this.kDragDamping);
 var c = this.horizontal ? a.pageX - this.mx : 0;
+var currentsign = 0;
+if(this.vertical){
+    currentsign = (((b-this.lastb) < 0) ? -1 : 1);
+}else{
+    currentsign = (((c-this.lastc) < 0) ? -1 : 1);
+}
+if( currentsign != this.lastsign  ){
+    this.dragT0 = new Date().getTime();
+    this.flickx = this.x, this.flicky = this.y;
+}
+this.lastsign = currentsign;
+this.lastc = c;
+this.lastb = b;
 return this.ux = c + this.px, this.ux = this.boundaryDamping(this.ux, this.leftBoundary, this.rightBoundary, this.kDragDamping), this.start(), !0;
 }
 },
@@ -2906,6 +2921,14 @@ this.dragging = !1;
 },
 dragFinish: function() {
 this.dragging = !1;
+var dragT1 = new Date().getTime() - this.dragT0;
+var vx = (this.x - this.flickx) / dragT1 * 1200;
+var vy = (this.y - this.flicky) / dragT1 * 1200;
+var v = Math.sqrt(vx*vx + vy*vy);
+
+if (v > 600 && dragT1 < 300) {
+    this.flick({xVel:vx, yVel:vy});
+}
 },
 flick: function(a) {
 this.vertical && (this.y = this.y0 + a.yVel * this.kFlickScalar), this.horizontal && (this.x = this.x0 + a.xVel * this.kFlickScalar), this.start();

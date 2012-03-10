@@ -1008,7 +1008,10 @@ enyo.kind({
             {
                 if(on)
                 {
-                    this.$.avatar.setSrc(inEvent.dragInfo.art);
+                    if(inEvent.dragInfo.art)
+                    {
+                        this.$.avatar.setSrc(inEvent.dragInfo.art);
+                    }  
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
@@ -1035,7 +1038,9 @@ enyo.kind({
             enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {
-        this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
+        if(this.$.avatar.hasNode()) {
+            this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
+        }
     },
     setPlaylistIndex: function(x) {
         enyo.application.jukboxMode ? enyo.application.jukeboxList.index = x : enyo.application.playlist.index = x, prefs.set("playlistindex", x);
