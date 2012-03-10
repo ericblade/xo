@@ -185,6 +185,8 @@ enyo.kind({
         this.log("*** New audio component: ", this.Player);
         if(this.Player.audio)
         {
+            this.Player.audio.setAttribute("x-palm-media-audio-class", "media");
+            
             this.Player.audio.addEventListener('loadstart', e);
             this.Player.audio.addEventListener('onloadstart', enyo.bind(this, this.playerEvent));
             this.Player.audio.addEventListener('canplay', e);
@@ -511,6 +513,7 @@ enyo.kind({
             // we have to wait until readyState >= 1 to restore our current time in the song
             if(node.readyState >= 1 && enyo.application.playlist[enyo.application.playlist.index] && enyo.application.playlist[enyo.application.playlist.index].startTime)
             {
+                this.Player.audio.volume = 100;
                 node.currentTime = enyo.application.playlist[enyo.application.playlist.index].startTime;
                 enyo.application.playlist[enyo.application.playlist.index].startTime = 0;
             }

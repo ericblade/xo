@@ -58,7 +58,7 @@ enyo.kind({
     {
         if(enyo.application.folders) {
             var x = enyo.application.folders[this.folder.id];
-            if(x[inRow]) {
+            if(x && x[inRow]) {
                 //this.log(x[inRow]);
                 /* {
                       "artist":

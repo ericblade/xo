@@ -1,6 +1,6 @@
 {
 	"id": "com.ericblade.xo",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"vendor": "Eric Blade",
 	"type": "web",
 	"main": "index-webos.html",

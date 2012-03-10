@@ -203,7 +203,7 @@ enyo.kind({
         this.$.SongFileTypeLabel.hide();
         if(album.coverArt)
         {
-            this.$.AlbumArt.setSrc(coverArtUrl(song.coverArt));
+            this.$.AlbumArt.setSrc(coverArtUrl(album.coverArt));
         }
         this.$.TitleLabel.applyStyle("max-width", "95%");
         this.setDraggable(false);

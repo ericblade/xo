@@ -7,7 +7,7 @@ enyo.kind({
     ],
     call: function()
     {        
-        var url = "http://" + prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
+        var url = prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
         if(typeof blackberry != "undefined")
         {
@@ -28,7 +28,7 @@ enyo.kind({
     touchPlayerFailed: function(inSender, inResponse)
     {
         this.log(inResponse);
-        var url = "http://" + prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+        var url = prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
         this.log("*** Playing Video URL ", url);
         if(window.PalmSystem)
         {
