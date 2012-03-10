@@ -2932,7 +2932,6 @@ if (v > 600 && dragT1 < 300) {
 },
 flick: function(a) {
 this.vertical && (this.y = this.y0 + a.yVel * this.kFlickScalar), this.horizontal && (this.x = this.x0 + a.xVel * this.kFlickScalar), this.start();
-a.preventDefault();
 },
 mousewheel: function(a) {
 this.stop();
