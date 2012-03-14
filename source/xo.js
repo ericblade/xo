@@ -1,4 +1,6 @@
 // Add popup that explains general program operation on first usage?
+// TODO: MediaPlayerView large spinner always shows in Jukebox mode?
+// TODO: Media list items that are in the local playlist are highlighted even when we're in Jukebox mode?
 // TODO: store server settings for each song received, so we can playback from multiple servers!!
 // TODO: Switching out of Jukebox does not flip the content on the Dashboard (possibly only if not playing locally, not sure)
 // TODO: Pausing jukebox does not flip the Dashboard pause icon on
