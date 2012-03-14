@@ -18,7 +18,12 @@
  * 
  * If you are deploying to BlackBerry's App World, set a new parameter in your 
  * appinfo.json called "appWorldId" to your application's id as found in the 
- * App World Dev Portal, for the getReviewURL function.  
+ * App World Dev Portal, for the getReviewURL function.
+ *
+ * To make your browser work in BlackBerry, you'll need to add to config.xml:
+ *   <feature id="blackberry.invoke"/>
+ *   <feature id="blackberry.invoke.BrowserArguments"/>
+ *
  */
 enyo.kind({
     name: "Platform",
@@ -53,7 +58,7 @@ enyo.kind({
             {
                 var deviceInfo = enyo.fetchDeviceInfo();
                 this.platform = "webos";
-                this.platformVersion = deviceInfo ? deviceInfo.platformVersion : "unknown";
+                this.platformVersion = deviceInfo ? parseFloat(deviceInfo.platformVersion) : "unknown";
             }
             else if(typeof blackberry !== "undefined")
             {
@@ -77,7 +82,7 @@ enyo.kind({
                  * pitfalls.
                  */
                 this.platform = device.platform.toLowerCase();
-                this.platformVersion = device.version;
+                this.platformVersion = parseFloat(device.version);
             }
             else
             {
@@ -101,10 +106,16 @@ enyo.kind({
         isWebWorks: function() { this.platform || this.setup(); return this.platform == "webworks"; },
         isiOS: function() { this.platform || this.setup(); return this.platform == "iphone"; },
         isMobile: function() { this.platform || this.setup(); return this.platform != "web"; },
+        hasFlash: function() {
+            this.platform || this.setup();
+            return (this.platform == "webos" && this.platformVersion >= 2) ||
+                    (this.isBlackBerry()) || // TODO: Version check?
+                    (this.platform == "android");
+        },
         
         /* General screen size functions -- tablet vs phone, landscape vs portrait */
-        isLargeScreen: function() { this.platform || this.setup(); return window.innerWidth > 480; },
-        isWideScreen: function() { this.platform || this.setup(); return window.innerWidth > window.innerHeight; },
+        isLargeScreen: function() { return window.innerWidth > 480; },
+        isWideScreen: function() { return window.innerWidth > window.innerHeight; },
         
         /* Platform-supplied UI concerns */
         hasBack: function()
@@ -169,6 +180,7 @@ enyo.kind({
             else if(typeof PhoneGap !== "undefined" && window.plugins && window.plugins.childBrowser)
             {
                 /* If you have the popular childBrowser plugin for PhoneGap */
+				/* If you're using iOS, make sure you've called the childBrowser.init first somewhere!! */
                 return enyo.bind(thisObj, window.plugins.childBrowser.openExternal, url);
             }
             else if(this.platform == "android" && navigator.app && navigator.app.loadUrl)
@@ -208,26 +220,27 @@ enyo.kind({
         },
         getReviewURL: function()
         {
-            this.platform || this.setup(); 
+            var appInfo;
             var url = "";
+            
+            appInfo = enyo.fetchAppInfo();
+            if(enyo.isString(appInfo))
+                appInfo = JSON.parse(appInfo);
+                
+            this.platform || this.setup(); 
             switch(Platform.platform) {
                 case "webos":
-                    url = "http://developer.palm.com/appredirect/?packageid=" + enyo.fetchAppId();
+                    url = "http://developer.palm.com/appredirect/?packageid=" + appInfo.id;
                     break;
                 case "android":
-                    url = "market://details?id=" + enyo.fetchAppId();
+                    /* enyo.fetchAppId() appears unreliable here? */
+                    url = "market://details?id=" + appInfo.id;
                     break;
                 case "blackberry":  // intentional fallthrough
                 case "webworks":
-                    var appInfo = enyo.fetchAppInfo();
-                    if(enyo.isString(appInfo))
-                        appInfo = JSON.parse(appInfo);
-                    url = "http://appworld.blackberry.com/webstore/content/" + appInfo.appWorldId + "/?lang=en";
+                    url = "http://appworld.blackberry.com/webstore/content/" + appInfo.appWorldId;
                     break;
                 case "iphone":
-                    var appInfo = enyo.fetchAppInfo();
-                    if(enyo.isString(appInfo))
-                        appInfo = JSON.parse(appInfo);
                     url = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id="+appInfo.iTunesAppId;
                     break;
             }
@@ -236,139 +249,21 @@ enyo.kind({
     }
 });
 
-/* PlatformSound is an encapsulation for both the HTML5 audio support within
- * webOS and WebWorks, and an extension of some of the abilities of the stock
- * Enyo 1.0 Sound kind.
- */
-enyo.kind({
-    name: "PlatformSound",
-    kind: "Sound",
-    position: -1,
-    /* Play our sound. If our sound is already playing, restart it */
-    play: function() {
-        if(!Platform.useHTMLAudio()) {
-            if(window.PhoneGap)
-                this.media.play();
-        } else {
-            if (!this.audio.paused) {
-                this.audio.currentTime = 0;
-            } else {
-                this.audio.play();
-            }
-        }
-        this.Paused = false;
-        if(!Platform.useHTMLAudio())
-        {
-            /* The PhoneGap media API does not document it's "MediaProgress"
-             * callback, nor does it seem to be supported universally, at least
-             * with PhoneGap 1.4.1, so, i'm going to just run a timer to the
-             * getCurrentPosition() asynch method, and record it regularly.
-             */
-            this.Timer = setInterval(enyo.bind(this, this.getMediaPos), 100);
-        }
-    },
-    /* Override the function from the base Enyo 1.0 kind, to add support for
-     * the PhoneGap Media callbacks that they provide now
-     */
-    srcChanged: function() {
-        var path = enyo.path.rewrite(this.src);
-        if(!Platform.useHTMLAudio()) {
-            if(window.PhoneGap)
-                this.media = new Media(path, this.MediaSuccess, this.mediaFail, this.mediaStatus, this.mediaProgress);
-            else
-                enyo.log("*** Don't know how to play media without HTML5 or PhoneGap!", Platform.platform);
-        } else {
-            this.audio = new Audio();
-            this.audio.src = path;
-        }
-    },
-    /* Internal callback functions */
-    getMediaPos: function(x, y, z) {
-        this.media.getCurrentPosition(enyo.bind(this, this.posReceived));
-    },
-    posReceived: function(x, y, z) {
-        this.position = x;
-    },
-    mediaSuccess: function(x, y, z) {
-        enyo.log("mediaSuccess "+ x+ y+ z);
-    },
-    mediaFail: function(x, y, z) {
-        enyo.log("mediaFail "+ x+ y+ z);
-    },
-    mediaStatus: function(x, y, z) {
-        /* Possible Media States, taken from PhoneGap 1.4.1 Android source:
-         *  Media.MEDIA_NONE = 0;
-         *  Media.MEDIA_STARTING = 1;
-         *  Media.MEDIA_RUNNING = 2;
-         *  Media.MEDIA_PAUSED = 3;
-         *  Media.MEDIA_STOPPED = 4;
-         * not really sure what to make of them, so I just note Paused for now.
-         */
-        if(x == Media.MEDIA_Paused)
-            this.Paused = true;
-        else
-            this.Paused = false;
-        enyo.log("mediaStatus"+ x+ y+ z);
-    },
-    mediaProgress: function(x, y, z) {
-        /* This callback specified in the Media constructor doesn't seem to
-         * work on Android at the moment?  If you see it working somewhere, you
-         * could kill the setInterval in Play on that platform, and record the
-         * progress here instead.
-         */
-        enyo.log("mediaProgress "+ x+ y+ z);
-    },
-    /* Return the current position of audio playback, HTML5 and PhoneGap both
-     * seem to like it as a float down to millisecond resolution
-     */
-    getCurrentPosition: function() {
-        /* I wasn't able to get PhoneGap's media._position to give me a valid
-         * location reliably, so we record it from the callback
-         */
-        return Platform.useHTMLAudio() ? this.audio.currentTime : this.position; /* PhoneGap's media._position doesn't seem to load? */
-    },
-    /* Returns the duration of the loaded media */
-    getDuration: function() {
-        return !Platform.useHTMLAudio() ? this.media.getDuration() : this.audio.duration;
-    },
-    /* Pause playback - calling play should resume */
-    pause: function() {
-        this.Paused = true;
-        clearInterval(this.Timer);
-        !Platform.useHTMLAudio() ? this.media.pause() : this.audio.pause();
-    },
-    /* Forces PhoneGap to release media handles in the OS, they recommend that
-     * you call this whenever you stop playback on Android.  Also destroys
-     * the component, so you can create a new one when you need more playback.
-     */
-    release: function() {
-        this.pause();
-        if(!Platform.useHTMLAudio()) {
-            this.media.release();
-        }
-        this.destroy();
-    },
-    /* Reposition the media playback from the given location.  HTML5 apparently
-     * uses a float with seconds, whereas PhoneGap is looking for an int in
-     * milliseconds
-     */
-    seekTo: function(loc) {
-        if(!Platform.useHTMLAudio() ) {
-            this.media.seekTo(loc * 1000);
-        } else {
-            this.audio.currentTime = loc;
-        }
-    },
-    /* Stop playback.  Do not destroy anything.  Next call to play will restart
-     * playback from the beginning.
-     */
-    stop: function() {
-        clearInterval(this.Timer);
-        if(!Platform.useHTMLAudio() ) {
-            this.media.stop();
-        } else {
-            this.audio.pause();
-            this.audio.currentTime = 0;
-        }
-    }
-});
+// experimental code that MIGHT work on an implementation where createHTMLNotification actually works.
+// PlayBook 2.0, however, is not that place.
+
+/* if(window.webkitNotifications)
+{
+    enyo.windows.openDashboard = (function(path, name, params, attributes) {
+        enyo.log("openDashboard", path);
+        if(window.webkitNotifications.checkPermission() == 0) {
+	    enyo.log("opening dashboard");
+	    var note = window.webkitNotifications.createHTMLNotification(path);
+	    attributes = attributes || {};
+	    attributes.window = "dashboard";
+	    note.enyo = note.enyo || {};
+	    note.enyo.windowParams = params || {};
+	    note.show();
+	}
+    });
+}*/
