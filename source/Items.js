@@ -217,8 +217,10 @@ enyo.kind({
         if(inEvent.horizontal)
         {
             var song = this.owner.querySongItem(inEvent.rowIndex);
-            inEvent.dragInfo = { index: inEvent.rowIndex, list: this.owner,
-                art: this.$.AlbumArt.setSrc(coverArtUrl(song.coverArt))
+            inEvent.dragInfo = {
+				index: inEvent.rowIndex,
+				list: this.owner,
+                art: coverArtUrl(song.coverArt)
             }
             enyo.application.dragging = true;
             enyo.application.dropIndex = -1;
