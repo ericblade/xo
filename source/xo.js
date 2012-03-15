@@ -536,7 +536,8 @@ enyo.kind({
             this.$.api.call("jukeboxControl", { action: "get" }); // TODO: get implies a status as well, need to extract the status and set it in jukeboxStatus rather than making two calls
         } else {
             // Receiving the Jukebox list automatically forces a refresh, SO we only force it if we're switching back to regular
-            this.$.PlaylistView.render(); // switch playlists
+            enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+            //this.$.PlaylistView.$.PlaylistRepeater.render(); // switch playlists
         }
     },
     getJukeboxStatus: function(inSender)
@@ -693,7 +694,8 @@ enyo.kind({
             enyo.application.jukeboxList = new Array();
         enyo.application.jukeboxList.index = inPlaylist.currentIndex;
         enyo.application.jukeboxList.lastIndex = inPlaylist.currentIndex; // we're re-rendering the entire list, anyway, so just set it
-        this.$.PlaylistView.render();
+        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        //this.$.PlaylistView.$.PlaylistRepeater.render();
     },
     receivedJukeboxStatus: function(inSender, inStatus)
     {
@@ -1010,7 +1012,7 @@ enyo.kind({
             {
                 if(on)
                 {
-                    this.$.avatar.setSrc(inEvent.dragInfo.art);
+                    this.$.avatar.setSrc(inEvent.dragInfo.art || "images/noart48.png");
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
@@ -1417,7 +1419,8 @@ enyo.kind({
         }
         //this.$.PlaylistView.render();
         //enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
-        this.$.PlaylistView.scrollToCurrentSong();        
+        this.$.PlaylistView.songChange();
+        //this.$.PlaylistView.scrollToCurrentSong();        
     },
     findItemInPlaylist: function(itemID)
     {

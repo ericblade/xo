@@ -66,7 +66,7 @@ enyo.kind({
                 { content: "Tap here to change view - Swipe to FullScreen / Dismiss - Hold to toggle Tabs - Swipe an item to delete.", className: "enyo-item-ternary",  },
                 //{ kind: "Button", caption: "Test", onclick: "test" },
                 /* Using a TransformScroller here causes the entire scroller to stop working on refresh of the view */
-                { name: "Scroller", kind: isLargeScreen() ? "MyFadeScroller" : "MyRegularScroller"/* "MyScroller"*/, ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
+                { name: "Scroller", kind: isLargeScreen() ? "MyFadeScroller" : "MyRegularScroller"/* "MyScroller"*/, vertical: true, autoVertical: true, ondragover: "dragOver", horizontal: false, autoHorizontal: false, flex: 1, accelerated: true, components:
                     [
                         { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
@@ -88,6 +88,7 @@ enyo.kind({
         },
     ],
     refresh: function() {
+        enyo.log("playlist repeater refresh");
         this.$.PlaylistRepeater.render();
     },
     rendered: function()
@@ -95,6 +96,7 @@ enyo.kind({
         this.inherited(arguments);
         this.log();
         this.enableControls();
+        this.$.Scroller.stabilize();
     },
     scrollToCurrentSong: function(inSender, inEvent)
     {
@@ -268,6 +270,8 @@ enyo.kind({
         this.enableControls();
     },
     songChange: function() {
-        this.scrollToCurrentSong();
+        setTimeout(enyo.bind(this, this.scrollToCurrentSong), 500);
+        //enyo.nextTick(this, this.scrollToCurrentSong);
+        //this.scrollToCurrentSong();
     }
 });
