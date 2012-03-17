@@ -87,3 +87,5 @@ function useCssTransitions() {
        return false;
    return true;
 }
+
+var alicejs = alice.init();
