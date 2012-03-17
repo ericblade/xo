@@ -156,7 +156,7 @@ enyo.kind({
                                 { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
                                     [
                                         { caption: "Home", },
-                                        { caption: "Music", },
+                                        { caption: "Media", },
                                         { caption: "Search", },
                                         { caption: "Playlists", },
                                     ]
