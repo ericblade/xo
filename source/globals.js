@@ -83,7 +83,7 @@ function coverArtUrl(item, size)
 }
 
 function useCssTransitions() {
-   if((Platform.isWebOS() && Platform.platformVersion < 2.2) )
+   if(Platform.isBlackBerry() || (Platform.isWebOS() && Platform.platformVersion < 2.2) )
        return false;
    return true;
 }
