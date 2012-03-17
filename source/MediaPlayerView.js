@@ -472,7 +472,7 @@ enyo.kind({
     },
     playing: function()
     {
-        var node = this.Player && this.Player.audio && this.Player.audio.hasNode();
+        var node = this.Player && this.Player.audio && this.Player.audio.hasNode && this.Player.audio.hasNode();
         return !enyo.application.jukeboxMode && this.song && node && !node.ended;
     },
     checkStatus: function()
