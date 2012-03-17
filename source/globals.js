@@ -81,3 +81,9 @@ function coverArtUrl(item, size)
     enyo.log("coverArt: ", url);
     return url;
 }
+
+function useCssTransitions() {
+   if((Platform.isWebOS() && Platform.platformVersion < 2.2) )
+       return false;
+   return true;
+}

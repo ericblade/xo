@@ -46,12 +46,6 @@ function stripHtml(html)
    return tmp.textContent||tmp.innerText;
 }
 
-function useCssTransitions() {
-   if(Platform.isBlackBerry() || (Platform.isWebOS() && !isLargeScreen()) )
-       return false;
-   return true;
-}
-
 enyo.kind({
     name: "LogView",
     kind: "VFlexBox",
@@ -76,42 +70,6 @@ enyo.kind({
         this.log(this.$.logControl.content);
         this.render();
     },
-});
-
-enyo.kind({
-	name:"iScroller",
-	kind:"Control",
-	chrome:[
-		{name:"client"}
-	],
-	rendered:function() {
-		this.inherited(arguments);
-        if(!this.scroller)
-		    this.scroller = new iScroll(this.parent.hasNode().id, {useTransform:true, onScrollMove:enyo.bind(this, "scrollStart"), onScrollEnd:enyo.bind(this, "scrollEnd")});
-        setTimeout(500, enyo.bind(this.scroller, this.scroller.refresh));
-	},
-	scrollStart:function() {
-        this.log();
-		this._scrolling = true;
-	},
-	scrollEnd:function() {
-        this.log();
-		this._scrolling = this._down;
-	},
-	captureDomEvent:function(e) {
-		// when useTransform = false, click fires after scrollEnd so watching mouse state as well
-		if(e.type === "mousedown") {
-            enyo.log("mousedown");
-			this._down = true;
-		} else if(e.type === "mouseup" && !this._scrolling) {
-            enyo.log("mouseup");
-			// release "capture" on mouseup if not scrolling
-			this._down = false;
-		} else if(e.type === "click" && (this._down || this._scrolling)) {
-            enyo.log("click");
-			this._down = false;
-		}
-	}
 });
 
 enyo.kind({
