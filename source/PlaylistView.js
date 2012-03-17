@@ -96,7 +96,8 @@ enyo.kind({
         this.inherited(arguments);
         this.log();
         this.enableControls();
-        this.$.Scroller.stabilize();
+        if(this.$.Scroller.stabilize)
+            this.$.Scroller.stabilize();
     },
     scrollToCurrentSong: function(inSender, inEvent)
     {
