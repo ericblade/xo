@@ -423,7 +423,8 @@ enyo.kind({
             delete this.timer;
             this.checkStatus();
         }
-        this.doSongChanged(this.song);
+        enyo.nextTick(this, this.doSongChanged, this.song);
+        //this.doSongChanged(this.song);
     },
     playPauseClicked: function(inSender, inEvent)
     {
@@ -471,7 +472,7 @@ enyo.kind({
     },
     playing: function()
     {
-        var node = this.Player && !this.Player.hasNode();
+        var node = this.Player && this.Player.audio && this.Player.audio.hasNode();
         return !enyo.application.jukeboxMode && this.song && node && !node.ended;
     },
     checkStatus: function()
