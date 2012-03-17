@@ -3,7 +3,6 @@ enyo.kind( {
     kind: enyo.transitions.Simple,
     begin: function()
     {
-        var a = alice.init();
         this.log();
         var c = this.pane.transitioneeForView(this.fromView).hasNode();
 
@@ -24,7 +23,7 @@ enyo.kind( {
                             });*/
             t2.show();
         }
-        a.slide(c.id, { direction: "down", start: 1, end: window.screen.availHeight }, "0", "500ms", "easeOutCirc", "0ms", "1", "normal", "running");
+        alicejs.slide(c.id, { direction: "down", start: 1, end: window.screen.availHeight }, "0", "500ms", "easeOutCirc", "0ms", "1", "normal", "running");
         this.timeout = setTimeout(enyo.bind(this, this.done), 510);
         /*Morf.transition(c, { "-webkit-transform": "translate3d("+window.screen.availWidth+"px, 0, 0)" },
                         {
@@ -33,7 +32,7 @@ enyo.kind( {
                             callback: enyo.bind(this, this.done)
                         });*/
         c = this.pane.transitioneeForView(this.toView).hasNode();
-        a.slide(c.id, "left", "0", "500ms", "ease-in", "0ms", "1", "easeInCirc", "running");
+        alicejs.slide(c.id, "left", "0", "500ms", "ease-in", "0ms", "1", "easeInCirc", "running");
         /*Morf.transition(c, { "-webkit-transform": "translate3d(0px, 0, 0)" },
                         {
                             duration: "700ms",
