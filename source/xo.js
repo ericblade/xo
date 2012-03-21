@@ -203,22 +203,33 @@ enyo.kind({
                 },
             ]
         },
-        { name: "BottomToolbar", kind: "Toolbar", components: [
-            { name: "BackButton", icon: "images/back.png", kind: "ToolButton", onclick: "doBack", showing: !Platform.hasBack() },
-            { name: "SelectAllButton", kind: "ToolButton", /*caption: "+ All",*/ icon: "images/playlistadd.png", onclick: "selectAll", showing: false, },
-            { name: "UnselectAllButton", kind: "ToolButton", /*caption: "- All",*/ icon: "images/playlistremove.png", onclick: "unselectAll", showing: false, },
-            { kind: "Spacer" },
-            { name: "PrevButton", /*caption: "<<",*/ kind: "ToolButton", icon: "images/prev.png", onclick: "playPrev", },
-            { name: "PlayButton", /*caption: ">",*/ kind: "ToolButton", icon: "images/play.png", onclick: "playOrPause" },
-            { name: "NextButton", /*caption: ">>",*/ kind: "ToolButton", icon: "images/next.png", onclick: "playNext", },
-            { kind: "Spacer" },
-            { name: "ClearButton",  kind: "ToolButton", /*caption: "Clear",*/ icon: "images/playlistclear.png", onclick: "clearPlaylist", showing: false, },
-            { name: "ShuffleButton", kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
-            { name: "SaveButton", kind: "ToolButton", /*caption: "Save",*/ icon: "images/playlistsave.png", onclick: "openSavePlaylist", showing: false },
-            { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
-              onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
-            { name: "ServerSpinner", kind: "Spinner", showing: true, },
-        ]},
+        { name: "BottomToolbar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
+            [
+                { defaultKind: "ToolButton", pack: "start", align: "center", components:
+                    [
+                        { name: "BackButton",           icon: "images/back.png",            onclick: "doBack", showing: !Platform.hasBack() },
+                        { name: "SelectAllButton",      icon: "images/playlistadd.png",     onclick: "selectAll", showing: false },
+                        { name: "UnselectAllButton",    icon: "images/playlistremove.png",  onclick: "unselectAll", showing: false },
+                    ]
+                },
+                { defaultKind: "ToolButton", pack: "center", align: "center", components:
+                    [
+                        { name: "PrevButton",           icon: "images/prev.png",            onclick: "playPrev", showing: false },
+                        { name: "PlayButton",           icon: "images/play.png",            onclick: "playOrPause", showing: false },
+                        { name: "NextButton",           icon: "images/next.png",            onclick: "playNext", showing: false },
+                    ]
+                },
+                { defaultKind: "ToolButton", pack: "center", align: "center", components:
+                    [
+                        { name: "ClearButton",          icon: "images/playlistclear.png",   onclick: "clearPlaylist", showing: false },
+                        { name: "ShuffleButton",        icon: "images/shuffle.png",         onclick: "shufflePlaylist", showing: false },
+                        { name: "SaveButton",           icon: "images/playlistsave.png",    onclick: "openSavePlaylist", showing: false },
+                        { name: "JukeboxToggle", king: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+                        { name: "ServerSpinner", kind: "Spinner", showing: true }                        
+                    ]
+                },
+            ]
+        },
         { kind: "VFlexBox", components:
             [
                 { name: "serverDialog", kind: "subsonic.ServerDialog",
@@ -305,7 +316,7 @@ enyo.kind({
     },
     onLoad: function(x, y, z)
     {
-        this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
+        //this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
         
     },
     onUnload: function(x, y, z)
@@ -993,7 +1004,7 @@ enyo.kind({
         //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
         
-        if(Platform.isWebOS() && Platform.isLargeScreen()) // TODO: Dashboard doesn't work on phones
+        if(Platform.isWebOS() /*&& Platform.isLargeScreen()*/) // TODO: Dashboard doesn't work on phones
             enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {

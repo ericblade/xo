@@ -78,7 +78,6 @@ function coverArtUrl(item, size)
 {
     if(!size) size="54";
     var url = prefs.get("serverip") + "/rest/getCoverArt.view?id=" + item + "&size="+size+"&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform;
-    enyo.log("coverArt: ", url);
     return url;
 }
 

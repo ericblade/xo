@@ -23,16 +23,19 @@ enyo.kind( {
                             });*/
             t2.show();
         }
-        alicejs.slide(c.id, { direction: "down", start: 1, end: window.screen.availHeight }, "0", "500ms", "easeOutCirc", "0ms", "1", "normal", "running");
-        this.timeout = setTimeout(enyo.bind(this, this.done), 510);
+        //alicejs.slide(c.id, { direction: "down", start: 1, end: window.screen.availHeight }, "0", "3000ms", "easeOutCirc", "0ms", "1", "normal", "running");
+        c = this.pane.transitioneeForView(this.toView).hasNode();
+        if(c)
+        {
+            alicejs.slide(c.id, "left", "1", "500ms", "easeInCirc", "0ms", "1", "", "running");
+            this.timeout = setTimeout(enyo.bind(this, this.done), 510);
+        }
         /*Morf.transition(c, { "-webkit-transform": "translate3d("+window.screen.availWidth+"px, 0, 0)" },
                         {
                             duration: "700ms",
                             timingFunction: "spring",
                             callback: enyo.bind(this, this.done)
                         });*/
-        c = this.pane.transitioneeForView(this.toView).hasNode();
-        alicejs.slide(c.id, "left", "0", "500ms", "ease-in", "0ms", "1", "easeInCirc", "running");
         /*Morf.transition(c, { "-webkit-transform": "translate3d(0px, 0, 0)" },
                         {
                             duration: "700ms",
