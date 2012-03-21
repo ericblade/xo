@@ -70,7 +70,7 @@ enyo.kind({
                     [
                         { name: "PlaylistRepeater", flex: 1, kind: "VirtualRepeater", onclick: "songClicked",onmousehold: "songHeld", accelerated: true, onSetupRow: "getListItem", components:
                             [
-                                { name: "Song", kind: "subsonic.AlbumOrSongItem",  onConfirm: "removeSong", swipeable: true, draggable: false, },
+                                { name: "Song", kind: "subsonic.AlbumOrSongItem",  className: "listSong", onConfirm: "removeSong", swipeable: true, draggable: false, },
                             ]
                         },
                     ]

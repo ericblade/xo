@@ -432,6 +432,8 @@ enyo.kind({
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         if(!this.song)
         {
+            if(!enyo.application.playlist)
+                return false;
             if(isNaN(playlist.index) || playlist.index > playlist.length)
                 playlist.index = 0;
             else

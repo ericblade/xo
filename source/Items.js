@@ -142,31 +142,28 @@ enyo.kind({
     },
     confirmRequired: false,
     components: [
-        //{ kind: "ProgressButton", flex: 1, layoutKind: "HFlexLayout", pack: "center", position: 50, ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
-        { kind: "HFlexBox", flex: 1, pack: "center", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
+        { kind: "HFlexBox", ondragstart: "dragStart", ondrag: "dragged", ondragfinish: "dragFinish", components:
             [
-                { name: "AlbumArt", kind: "ImageFallback", defaultclass: "albumimagenoanim", loadedclass: "albumimagenoanim", height: "48px", width: "48px", fallbackSrc: "images/noart48.png" },
-                { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", pack: "center", components:
+                { name: "AlbumArt", kind: "ImageFallback", defaultclass: "albumimagenoanim",
+				  loadedclass: "albumimagenoanim", height: "48px", width: "48px", fallbackSrc: "images/noart48.png" },
+                { name: "Info", kind: "VFlexBox", flex: 1, style: "padding-left: 5px;", components:
                     [
-                        { kind: "HFlexBox", components:
-                            [
-                                { name: "TitleLabel", style: "max-width: 75%", content: "Album or Song Title" },
-                                { kind: "Spacer" },
-                                { name: "SongLengthLabel", kind: "Control", className: "enyo-item-ternary", content: "5:42" },
-                            ]
-                        },
+						{ kind: "HFlexBox", pack: "justify", components:
+							[
+								{ name: "TitleLabel", style: "max-width: 75%", content: "Album or Song Title" },
+								{ name: "SongLengthLabel", className: "enyo-item-ternary", content: "5:42" },
+							]
+						},
+						{ kind: "HFlexBox", pack: "justify", components:
+							[
+								{ name: "ArtistLabel", className: "enyo-item-ternary", content: "Artist Name" },
+								{ name: "AlbumNameLabel", style: "padding-left: 10px; max-width: 60%", className: "enyo-item-ternary", content: "AlbumName" },
+								{ name: "SongFileTypeLabel", className: "enyo-item-ternary", content: "mp3" },								
+							]
+						},
                         { name: "DownloadProgress", kind: "ProgressBarItem", showing: false, position: 10, },
-                        { kind: "HFlexBox", components:
-                            [
-                                { name: "ArtistLabel", kind: "Control", className: "enyo-item-ternary", content: "Artist Name" },
-                                //{ kind: "Spacer" },
-                                { name: "AlbumNameLabel", kind: "Control", style: "padding-left: 10px; max-width: 60%", className: "enyo-item-ternary", content: "AlbumName" },
-                                { kind: "Spacer" },
-                                { name: "SongFileTypeLabel", kind: "Control", className: "enyo-item-ternary", content: "mp3" },
-                            ]
-                        },
                     ]
-                }
+                },
             ]
         },
     ],
