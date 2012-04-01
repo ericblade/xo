@@ -123,13 +123,21 @@ enyo.kind({
         if(!req.getUrl() || req.getUrl() == "")
         {
             var server = prefs.get("serverip");
-            if(server.substr(0, 7) == "http://")
+            if(Platform.isWebOS())
             {
-                server = server.substr(7, server.length);
-            } else if(server.substr(0, 8) == "https://") {
-                server = server.substr(8, server.length);
+                if(server.substr(0, 7) == "http://")
+                {
+                    server = server.substr(7, server.length);
+                } else if(server.substr(0, 8) == "https://") {
+                    server = server.substr(8, server.length);
+                }
+                req.setUrl("http://" + server + "/rest/" + req.file);
+            } else {
+                if(server.substr(0,4) != "http")
+                {
+                    req.setUrl("http://" + server + "/rest/" + req.file);
+                }
             }
-            req.setUrl("http://" + server + "/rest/" + req.file);
             //req.setUrl(server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
         }
