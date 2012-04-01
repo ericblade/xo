@@ -983,14 +983,10 @@ enyo.kind({
             {
                 if(on)
                 {
-<<<<<<< HEAD
                     if(inEvent.dragInfo.art)
                     {
                         this.$.avatar.setSrc(inEvent.dragInfo.art);
                     }  
-=======
-                    this.$.avatar.setSrc(inEvent.dragInfo.art || "images/noart48.png");
->>>>>>> ffb2ff2d09454216d2f11b6b2be4e3dc82c1ea5a
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
