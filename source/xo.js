@@ -1,3 +1,4 @@
+// tap any where on album toggles pause play, also swipe left and right to got back and forward. 
 // Add popup that explains general program operation on first usage?
 // TODO: MediaPlayerView large spinner always shows in Jukebox mode?
 // TODO: Media list items that are in the local playlist are highlighted even when we're in Jukebox mode?

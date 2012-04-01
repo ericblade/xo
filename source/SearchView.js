@@ -2,22 +2,22 @@ enyo.kind({
     name: "subsonic.SearchView",
     kind: "VFlexBox", components: [
         { name: "SearchText", kind: "SearchInput", onchange: "performSearch" },
-        { kind: "FadeScroller", flex: 1, accelerated: true, onchange: "performSearch", components:
+        { kind: Platform.isLargeScreen() ? "FadeScroller" : "TransformScroller", flex: 1, accelerated: true, onchange: "performSearch", components:
             [
                 { kind: "Divider", caption: "Artists" },
-                { name: "ArtistList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getArtistSearchItem", components:
+                { name: "ArtistList", kind: "VirtualRepeater", stripSize: 20, accelerated: !Platform.isLargeScreen(), onSetupRow: "getArtistSearchItem", components:
                     [
                         { name: "ArtistItem", kind: "subsonic.ArtistItem", onclick: "clickArtist", },
                     ]
                 },
                 { kind: "Divider", caption: "Albums" },
-                { name: "AlbumList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getAlbumSearchItem", components:
+                { name: "AlbumList", kind: "VirtualRepeater", stripSize: 20, accelerated: !Platform.isLargeScreen(), onSetupRow: "getAlbumSearchItem", components:
                     [
                         { name: "AlbumItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickAlbum", },
                     ]
                 },
                 { kind: "Divider", caption: "Songs", },
-                { name: "SongList", kind: "VirtualRepeater", accelerated: true, onSetupRow: "getSongSearchItem", components:
+                { name: "SongList", kind: "VirtualRepeater", stripSize: 20, accelerated: !Platform.isLargeScreen(), onSetupRow: "getSongSearchItem", components:
                     [
                         { name: "SongItem", kind: "subsonic.AlbumOrSongItem", onclick: "clickSong", onmousehold: "holdSong"}, // TODO: AlbumItem has a SongItem inside it already .. sigh
                     ]
