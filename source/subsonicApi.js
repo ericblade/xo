@@ -123,6 +123,8 @@ enyo.kind({
         if(!req.getUrl() || req.getUrl() == "")
         {
             var server = prefs.get("serverip");
+            if(server.substr(server.length, 1) == "/")
+                server = server.substr(0, server.length-1);
             if(Platform.isWebOS())
             {
                 if(server.substr(0, 7) == "http://")
@@ -136,6 +138,8 @@ enyo.kind({
                 if(server.substr(0,4) != "http")
                 {
                     req.setUrl("http://" + server + "/rest/" + req.file);
+                } else {
+                    req.setUrl(server + "/rest/");
                 }
             }
             //req.setUrl(server + "/rest/" + req.file);
