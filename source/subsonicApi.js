@@ -135,6 +135,7 @@ enyo.kind({
                 }
                 req.setUrl("http://" + server + "/rest/" + req.file);
             } else {
+                enyo.log("************* SUBSTR *********** ", server.substr(0,4));
                 if(server.substr(0,4) != "http")
                 {
                     req.setUrl("http://" + server + "/rest/" + req.file);
