@@ -139,7 +139,7 @@ enyo.kind({
                 {
                     req.setUrl("http://" + server + "/rest/" + req.file);
                 } else {
-                    req.setUrl(server + "/rest/");
+                    req.setUrl(server + "/rest/" + req.file);
                 }
             }
             //req.setUrl(server + "/rest/" + req.file);
