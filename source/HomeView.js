@@ -194,13 +194,13 @@ enyo.kind({
         prefs.set("serverName", server.name);
         
         var serverip = server.serverip;
-        if(serverip.substr(0, 7) == "http://")
+        /*if(serverip.substr(0, 7) == "http://")
         {
             serverip = serverip.substr(7, server.length);
         } else if(serverip.substr(0, 8) == "https://") {
             serverip = serverip.substr(8, server.length);
         }
-        serverip = ("http://" + serverip);
+        serverip = ("http://" + serverip);*/
         prefs.set("serverip", serverip);
         prefs.set("username", server.username);
         prefs.set("password", server.password);
