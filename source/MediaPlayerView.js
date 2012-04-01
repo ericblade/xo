@@ -423,7 +423,8 @@ enyo.kind({
             delete this.timer;
             this.checkStatus();
         }
-        this.doSongChanged(this.song);
+        enyo.nextTick(this, this.doSongChanged, this.song);
+        //this.doSongChanged(this.song);
     },
     playPauseClicked: function(inSender, inEvent)
     {
@@ -431,10 +432,15 @@ enyo.kind({
         var playlist = enyo.application.jukeboxMode ? enyo.application.jukeboxList : enyo.application.playlist;
         if(!this.song)
         {
+            if(!enyo.application.playlist)
+                return false;
             if(isNaN(playlist.index) || playlist.index > playlist.length)
                 playlist.index = 0;
             else
-                enyo.application.playlist[playlist.index].startTime = prefs.get("savedtime");
+            {
+                if(enyo.application.playlist[playlist.index])
+                    enyo.application.playlist[playlist.index].startTime = prefs.get("savedtime");
+            }
             this.log("starting song ", playlist.index);
             this.setSong(playlist[playlist.index]);
             return true;
@@ -471,7 +477,7 @@ enyo.kind({
     },
     playing: function()
     {
-        var node = this.Player && !this.Player.hasNode();
+        var node = this.Player && this.Player.audio && this.Player.audio.hasNode && this.Player.audio.hasNode();
         return !enyo.application.jukeboxMode && this.song && node && !node.ended;
     },
     checkStatus: function()

@@ -3,6 +3,7 @@ enyo.kind({
         name: "DashControlsApp",
         kind: "HFlexBox",
         align:"center",
+        style: "background: black;",
         className: "music-notification",
         components: [
                 { name: "appEvent", kind: "ApplicationEvents", onWindowParamsChange: "windowParamsChangeHandler"},

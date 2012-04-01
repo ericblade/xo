@@ -18,7 +18,12 @@
  * 
  * If you are deploying to BlackBerry's App World, set a new parameter in your 
  * appinfo.json called "appWorldId" to your application's id as found in the 
- * App World Dev Portal, for the getReviewURL function.  
+ * App World Dev Portal, for the getReviewURL function.
+ *
+ * To make your browser work in BlackBerry, you'll need to add to config.xml:
+ *   <feature id="blackberry.invoke"/>
+ *   <feature id="blackberry.invoke.BrowserArguments"/>
+ *
  */
 enyo.kind({
     name: "Platform",
@@ -53,7 +58,7 @@ enyo.kind({
             {
                 var deviceInfo = enyo.fetchDeviceInfo();
                 this.platform = "webos";
-                this.platformVersion = deviceInfo ? deviceInfo.platformVersion : "unknown";
+                this.platformVersion = deviceInfo ? parseFloat(deviceInfo.platformVersion) : "unknown";
             }
             else if(typeof blackberry !== "undefined")
             {
@@ -77,7 +82,7 @@ enyo.kind({
                  * pitfalls.
                  */
                 this.platform = device.platform.toLowerCase();
-                this.platformVersion = device.version;
+                this.platformVersion = parseFloat(device.version);
             }
             else
             {
@@ -101,10 +106,16 @@ enyo.kind({
         isWebWorks: function() { this.platform || this.setup(); return this.platform == "webworks"; },
         isiOS: function() { this.platform || this.setup(); return this.platform == "iphone"; },
         isMobile: function() { this.platform || this.setup(); return this.platform != "web"; },
+        hasFlash: function() {
+            this.platform || this.setup();
+            return (this.platform == "webos" && this.platformVersion >= 2) ||
+                    (this.isBlackBerry()) || // TODO: Version check?
+                    (this.platform == "android");
+        },
         
         /* General screen size functions -- tablet vs phone, landscape vs portrait */
-        isLargeScreen: function() { this.platform || this.setup(); return window.innerWidth > 480; },
-        isWideScreen: function() { this.platform || this.setup(); return window.innerWidth > window.innerHeight; },
+        isLargeScreen: function() { return window.innerWidth > 480; },
+        isWideScreen: function() { return window.innerWidth > window.innerHeight; },
         
         /* Platform-supplied UI concerns */
         hasBack: function()
@@ -169,6 +180,7 @@ enyo.kind({
             else if(typeof PhoneGap !== "undefined" && window.plugins && window.plugins.childBrowser)
             {
                 /* If you have the popular childBrowser plugin for PhoneGap */
+				/* If you're using iOS, make sure you've called the childBrowser.init first somewhere!! */
                 return enyo.bind(thisObj, window.plugins.childBrowser.openExternal, url);
             }
             else if(this.platform == "android" && navigator.app && navigator.app.loadUrl)
@@ -208,26 +220,27 @@ enyo.kind({
         },
         getReviewURL: function()
         {
-            this.platform || this.setup(); 
+            var appInfo;
             var url = "";
+            
+            appInfo = enyo.fetchAppInfo();
+            if(enyo.isString(appInfo))
+                appInfo = JSON.parse(appInfo);
+                
+            this.platform || this.setup(); 
             switch(Platform.platform) {
                 case "webos":
-                    url = "http://developer.palm.com/appredirect/?packageid=" + enyo.fetchAppId();
+                    url = "http://developer.palm.com/appredirect/?packageid=" + appInfo.id;
                     break;
                 case "android":
-                    url = "market://details?id=" + enyo.fetchAppId();
+                    /* enyo.fetchAppId() appears unreliable here? */
+                    url = "market://details?id=" + appInfo.id;
                     break;
                 case "blackberry":  // intentional fallthrough
                 case "webworks":
-                    var appInfo = enyo.fetchAppInfo();
-                    if(enyo.isString(appInfo))
-                        appInfo = JSON.parse(appInfo);
-                    url = "http://appworld.blackberry.com/webstore/content/" + appInfo.appWorldId + "/?lang=en";
+                    url = "http://appworld.blackberry.com/webstore/content/" + appInfo.appWorldId;
                     break;
                 case "iphone":
-                    var appInfo = enyo.fetchAppInfo();
-                    if(enyo.isString(appInfo))
-                        appInfo = JSON.parse(appInfo);
                     url = "itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id="+appInfo.iTunesAppId;
                     break;
             }
@@ -235,6 +248,25 @@ enyo.kind({
         }
     }
 });
+
+// experimental code that MIGHT work on an implementation where createHTMLNotification actually works.
+// PlayBook 2.0, however, is not that place.
+
+/* if(window.webkitNotifications)
+{
+    enyo.windows.openDashboard = (function(path, name, params, attributes) {
+        enyo.log("openDashboard", path);
+        if(window.webkitNotifications.checkPermission() == 0) {
+	    enyo.log("opening dashboard");
+	    var note = window.webkitNotifications.createHTMLNotification(path);
+	    attributes = attributes || {};
+	    attributes.window = "dashboard";
+	    note.enyo = note.enyo || {};
+	    note.enyo.windowParams = params || {};
+	    note.show();
+	}
+    });
+}*/
 
 /* PlatformSound is an encapsulation for both the HTML5 audio support within
  * webOS and WebWorks, and an extension of some of the abilities of the stock
@@ -245,6 +277,19 @@ enyo.kind({
     kind: "Sound",
     position: -1,
     /* Play our sound. If our sound is already playing, restart it */
+    published: {
+        audioClass: "",
+    },
+	audioClassChanged: function() {
+		if (this.audio) {
+			if (this.audioClass) {
+				this.audio.setAttribute("x-palm-media-audio-class", this.audioClass);
+			}
+			else {
+				this.audio.removeAttribute("x-palm-media-audio-class");
+			}
+		}
+	},     
     play: function() {
         if(!Platform.useHTMLAudio()) {
             if(window.PhoneGap)
@@ -280,6 +325,12 @@ enyo.kind({
         } else {
             this.audio = new Audio();
             this.audio.src = path;
+            /* We need to reset the preloadChanged and audioClassChanged attributes
+             * as they are only propagated to the underlying audio tag at creation
+             * in the original Enyo code
+             */
+            this.preloadChanged();
+            this.audioClassChanged();
         }
     },
     /* Internal callback functions */
@@ -372,3 +423,17 @@ enyo.kind({
         }
     }
 });
+
+(function() {
+	if(window.PalmSystem)
+	{
+		var deviceInfo = enyo.fetchDeviceInfo();
+		if(parseFloat(deviceInfo.platformVersion) <= 2.2)
+		{
+			enyo.Dashboard.prototype.dbActivated = function() {
+				this.$.dashboardContent.$.topSwipeable.addClass("enyo-toolbar");
+				this.doDashboardActivated();
+			};
+		}
+	}
+})();

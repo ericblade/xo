@@ -1,4 +1,7 @@
+// tap any where on album toggles pause play, also swipe left and right to got back and forward. 
 // Add popup that explains general program operation on first usage?
+// TODO: MediaPlayerView large spinner always shows in Jukebox mode?
+// TODO: Media list items that are in the local playlist are highlighted even when we're in Jukebox mode?
 // TODO: store server settings for each song received, so we can playback from multiple servers!!
 // TODO: Switching out of Jukebox does not flip the content on the Dashboard (possibly only if not playing locally, not sure)
 // TODO: Pausing jukebox does not flip the Dashboard pause icon on
@@ -44,12 +47,6 @@ function stripHtml(html)
    return tmp.textContent||tmp.innerText;
 }
 
-function useCssTransitions() {
-   if(Platform.isBlackBerry() || (Platform.isWebOS() && !isLargeScreen()) )
-       return false;
-   return true;
-}
-
 enyo.kind({
     name: "LogView",
     kind: "VFlexBox",
@@ -74,42 +71,6 @@ enyo.kind({
         this.log(this.$.logControl.content);
         this.render();
     },
-});
-
-enyo.kind({
-	name:"iScroller",
-	kind:"Control",
-	chrome:[
-		{name:"client"}
-	],
-	rendered:function() {
-		this.inherited(arguments);
-        if(!this.scroller)
-		    this.scroller = new iScroll(this.parent.hasNode().id, {useTransform:true, onScrollMove:enyo.bind(this, "scrollStart"), onScrollEnd:enyo.bind(this, "scrollEnd")});
-        setTimeout(500, enyo.bind(this.scroller, this.scroller.refresh));
-	},
-	scrollStart:function() {
-        this.log();
-		this._scrolling = true;
-	},
-	scrollEnd:function() {
-        this.log();
-		this._scrolling = this._down;
-	},
-	captureDomEvent:function(e) {
-		// when useTransform = false, click fires after scrollEnd so watching mouse state as well
-		if(e.type === "mousedown") {
-            enyo.log("mousedown");
-			this._down = true;
-		} else if(e.type === "mouseup" && !this._scrolling) {
-            enyo.log("mouseup");
-			// release "capture" on mouseup if not scrolling
-			this._down = false;
-		} else if(e.type === "click" && (this._down || this._scrolling)) {
-            enyo.log("click");
-			this._down = false;
-		}
-	}
 });
 
 enyo.kind({
@@ -154,7 +115,7 @@ enyo.kind({
                                 { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
                                     [
                                         { caption: "Home", },
-                                        { caption: "Music", },
+                                        { caption: "Media", },
                                         { caption: "Search", },
                                         { caption: "Playlists", },
                                     ]
@@ -243,22 +204,33 @@ enyo.kind({
                 },
             ]
         },
-        { name: "BottomToolbar", kind: "Toolbar", components: [
-            { name: "BackButton", icon: "images/back.png", kind: "ToolButton", onclick: "doBack", showing: !Platform.hasBack() },
-            { name: "SelectAllButton", kind: "ToolButton", /*caption: "+ All",*/ icon: "images/playlistadd.png", onclick: "selectAll", showing: false, },
-            { name: "UnselectAllButton", kind: "ToolButton", /*caption: "- All",*/ icon: "images/playlistremove.png", onclick: "unselectAll", showing: false, },
-            { kind: "Spacer" },
-            { name: "PrevButton", /*caption: "<<",*/ kind: "ToolButton", icon: "images/prev.png", onclick: "playPrev", },
-            { name: "PlayButton", /*caption: ">",*/ kind: "ToolButton", icon: "images/play.png", onclick: "playOrPause" },
-            { name: "NextButton", /*caption: ">>",*/ kind: "ToolButton", icon: "images/next.png", onclick: "playNext", },
-            { kind: "Spacer" },
-            { name: "ClearButton",  kind: "ToolButton", /*caption: "Clear",*/ icon: "images/playlistclear.png", onclick: "clearPlaylist", showing: false, },
-            { name: "ShuffleButton", kind: "ToolButton", /*caption: "Shuffle",*/ icon: "images/shuffle.png", onclick: "shufflePlaylist" },
-            { name: "SaveButton", kind: "ToolButton", /*caption: "Save",*/ icon: "images/playlistsave.png", onclick: "openSavePlaylist", showing: false },
-            { name: "JukeboxToggle", kind: "ToggleButton", showing: false,
-              onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
-            { name: "ServerSpinner", kind: "Spinner", showing: true, },
-        ]},
+        { name: "BottomToolbar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
+            [
+                { defaultKind: "ToolButton", pack: "start", align: "center", components:
+                    [
+                        { name: "BackButton",           icon: "images/back.png",            onclick: "doBack", showing: !Platform.hasBack() },
+                        { name: "SelectAllButton",      icon: "images/playlistadd.png",     onclick: "selectAll", showing: false },
+                        { name: "UnselectAllButton",    icon: "images/playlistremove.png",  onclick: "unselectAll", showing: false },
+                    ]
+                },
+                { defaultKind: "ToolButton", pack: "center", align: "center", components:
+                    [
+                        { name: "PrevButton",           icon: "images/prev.png",            onclick: "playPrev", showing: false },
+                        { name: "PlayButton",           icon: "images/play.png",            onclick: "playOrPause", showing: false },
+                        { name: "NextButton",           icon: "images/next.png",            onclick: "playNext", showing: false },
+                    ]
+                },
+                { defaultKind: "ToolButton", pack: "center", align: "center", components:
+                    [
+                        { name: "ClearButton",          icon: "images/playlistclear.png",   onclick: "clearPlaylist", showing: false },
+                        { name: "ShuffleButton",        icon: "images/shuffle.png",         onclick: "shufflePlaylist", showing: false },
+                        { name: "SaveButton",           icon: "images/playlistsave.png",    onclick: "openSavePlaylist", showing: false },
+                        { name: "JukeboxToggle", king: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+                        { name: "ServerSpinner", kind: "Spinner", showing: true }                        
+                    ]
+                },
+            ]
+        },
         { kind: "VFlexBox", components:
             [
                 { name: "serverDialog", kind: "subsonic.ServerDialog",
@@ -345,7 +317,7 @@ enyo.kind({
     },
     onLoad: function(x, y, z)
     {
-        this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
+        //this.log(x, y, z, "windowType=", enyo.windowParams.windowType);
         
     },
     onUnload: function(x, y, z)
@@ -371,6 +343,7 @@ enyo.kind({
     },
     ready: function() {
         this.inherited(arguments);
+        //window.document.html.style = "";
         this.$.PlaylistView.enableControls();
     },
     enablePrev: function() { this.$.PrevButton.show(); },
@@ -534,7 +507,8 @@ enyo.kind({
             this.$.api.call("jukeboxControl", { action: "get" }); // TODO: get implies a status as well, need to extract the status and set it in jukeboxStatus rather than making two calls
         } else {
             // Receiving the Jukebox list automatically forces a refresh, SO we only force it if we're switching back to regular
-            this.$.PlaylistView.render(); // switch playlists
+            enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+            //this.$.PlaylistView.$.PlaylistRepeater.render(); // switch playlists
         }
     },
     getJukeboxStatus: function(inSender)
@@ -691,7 +665,8 @@ enyo.kind({
             enyo.application.jukeboxList = new Array();
         enyo.application.jukeboxList.index = inPlaylist.currentIndex;
         enyo.application.jukeboxList.lastIndex = inPlaylist.currentIndex; // we're re-rendering the entire list, anyway, so just set it
-        this.$.PlaylistView.render();
+        enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
+        //this.$.PlaylistView.$.PlaylistRepeater.render();
     },
     receivedJukeboxStatus: function(inSender, inStatus)
     {
@@ -1008,10 +983,14 @@ enyo.kind({
             {
                 if(on)
                 {
+<<<<<<< HEAD
                     if(inEvent.dragInfo.art)
                     {
                         this.$.avatar.setSrc(inEvent.dragInfo.art);
                     }  
+=======
+                    this.$.avatar.setSrc(inEvent.dragInfo.art || "images/noart48.png");
+>>>>>>> ffb2ff2d09454216d2f11b6b2be4e3dc82c1ea5a
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
@@ -1034,7 +1013,7 @@ enyo.kind({
         //document.addEventListener('shakeend', enyo.bind(this, this.endShakeNotify));
         enyo.application.downloads = new Array();
         
-        if(Platform.isWebOS() && Platform.isLargeScreen()) // TODO: Dashboard doesn't work on phones
+        if(Platform.isWebOS() /*&& Platform.isLargeScreen()*/) // TODO: Dashboard doesn't work on phones
             enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
     },
     avatarTrack: function(inEvent) {
@@ -1420,7 +1399,8 @@ enyo.kind({
         }
         //this.$.PlaylistView.render();
         //enyo.nextTick(this.$.PlaylistView, this.$.PlaylistView.render);
-        this.$.PlaylistView.scrollToCurrentSong();        
+        this.$.PlaylistView.songChange();
+        //this.$.PlaylistView.scrollToCurrentSong();        
     },
     findItemInPlaylist: function(itemID)
     {

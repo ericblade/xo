@@ -98,7 +98,7 @@ enyo.kind({
         "onDisableSelectButtons": "",
     },
     components: [
-        { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: isLargeScreen() && window.PalmSystem ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
+        { name: "ViewPane", flex: 1, kind: "Pane", onSelectView: "viewSelected", transitionKind: useCssTransitions() ? "TestTransition" : "enyo.transitions.LeftRightFlyin", components:
             [
                 { content: "Select something in Home, Search, or Playlists first." }, // apparently have to have a view in it to begin with, otherwise the Pane doesn't work right
             ]
