@@ -1,5 +1,9 @@
 /*Your CSS here*/
 
+.xospinner {
+    -webkit-transform: translate3d(0,0,0);
+}
+
 .app-avatar {
 	pointer-events: none;
 	position: absolute;
