@@ -226,7 +226,7 @@ enyo.kind({
                         { name: "ShuffleButton",        icon: "images/shuffle.png",         onclick: "shufflePlaylist", showing: false },
                         { name: "SaveButton",           icon: "images/playlistsave.png",    onclick: "openSavePlaylist", showing: false },
                         { name: "JukeboxToggle", king: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
-                        { name: "ServerSpinner", kind: "Spinner", showing: true }                        
+                        { name: "ServerSpinner", kind: "Spinner", className: "xospinner", showing: true }                        
                     ]
                 },
             ]

@@ -60,7 +60,7 @@ enyo.kind({
                                 { name: "AlbumArt", onmousehold: "doHideTabs", onclick: "doCycleTab", kind: "ImageFallback", height: isLargeScreen() ? "320px" : "240px", fallbackSrc: ""/*"http://www.synoiz.com/images/releases/no-cover-art_400x400.jpg"*/ },
                                 // TODO: adjust albumart height when rotating to landscape on telephones
                                 { name: "PlayerTips", content: "Tap to change display, hold to toggle tabs. Zoom/Pinch to Fullscreen/Restore", className: "enyo-item-ternary", style: "color: white;" },
-                                { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner" },
+                                { name: "PlayerSpinner", kind: isLargeScreen() ? "SpinnerLarge" : "Spinner", className: "xospinner" },
                             ]
                         },
                         { kind: "Spacer", },
