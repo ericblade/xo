@@ -437,7 +437,10 @@ enyo.kind({
             if(isNaN(playlist.index) || playlist.index > playlist.length)
                 playlist.index = 0;
             else
-                enyo.application.playlist[playlist.index].startTime = prefs.get("savedtime");
+            {
+                if(enyo.application.playlist[playlist.index])
+                    enyo.application.playlist[playlist.index].startTime = prefs.get("savedtime");
+            }
             this.log("starting song ", playlist.index);
             this.setSong(playlist[playlist.index]);
             return true;
