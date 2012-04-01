@@ -343,7 +343,7 @@ enyo.kind({
     },
     ready: function() {
         this.inherited(arguments);
-        document.html.style = "";
+        window.document.html.style = "";
         this.$.PlaylistView.enableControls();
     },
     enablePrev: function() { this.$.PrevButton.show(); },
