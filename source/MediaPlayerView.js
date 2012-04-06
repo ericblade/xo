@@ -356,8 +356,9 @@ enyo.kind({
         }
         if(this.song && this.song.isVideo)
         {
-            var url = prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
-            url = prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+            // TODO: if we ever get video streaming straight to app, use this line not the one under it ..
+            var url = sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+            url = sanitizeServer(prefs.get("serverip")) + "/rest/videoPlayer.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
             this.log("*** Playing Video URL ", url);
             enyo.windows.addBannerMessage("Launching Video Player...", '{}', "", "")
             this.$.VideoService.request( { itemId: this.song.id });
@@ -398,8 +399,8 @@ enyo.kind({
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
-                this.log("music playing: ", prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
-                player.setSrc(prefs.get("serverip") + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                this.log("music playing: ", sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                player.setSrc(sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 this.$.ProgressSlider.setPosition(0);
                 this.$.ProgressSlider.setBarPosition(0);
                 this.$.ProgressSlider.setAltBarPosition(0);

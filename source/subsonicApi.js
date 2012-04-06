@@ -180,15 +180,7 @@ enyo.kind({
 
         if(!req.getUrl() || req.getUrl() == "")
         {
-            if(server.substr(server.length, 1) == "/")
-                server = server.substr(0, server.length-1);
-            if(Platform.isMobile())
-            {
-                if(server.indexOf("http://") != 0 && server.indexOf("https://") != 0)
-                {
-                    server = "http://" + server;
-                }
-            }
+            server = sanitizeServer(server);
             req.setUrl(server + "/rest/" + req.file);
             req.setHandleAs(params.f == "json" ? "json" : "xml");
         }

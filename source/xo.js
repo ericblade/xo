@@ -1,5 +1,7 @@
 // tap any where on album toggles pause play, also swipe left and right to got back and forward. 
 // Add popup that explains general program operation on first usage?
+// TODO: Bitrate menu option somewhere
+// TODO: I added -way- too many calls to sanitizeServer.  Might want to weed some of them out someday.
 // TODO: MediaPlayerView large spinner always shows in Jukebox mode?
 // TODO: Media list items that are in the local playlist are highlighted even when we're in Jukebox mode?
 // TODO: store server settings for each song received, so we can playback from multiple servers!!
@@ -1474,7 +1476,7 @@ enyo.kind({
         // prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
         this.log(id, filename);
         this.$.fileDownload.call( {
-            target: prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
+            target: sanitizeServer(prefs.get("serverip")) + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
             mime: "audio/mpeg3",
             targetDir: "/media/internal/xo/",
             //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,
@@ -1518,7 +1520,7 @@ enyo.kind({
     addServer: function(inSender, name, ip, user, pass)
     {
         var list = prefs.get("serverlist");
-        list[list.length] = { "name": name, "serverip": ip, "username": user, "password": pass };
+        list[list.length] = { "name": name, "serverip": sanitizeServer(ip), "username": user, "password": pass };
         prefs.set("serverlist", list);
         this.$.HomeView.$.ServerListRepeater.render();
     }

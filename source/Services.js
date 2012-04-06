@@ -6,7 +6,7 @@ enyo.kind({
     ],
     call: function()
     {        
-        var url = prefs.get("serverip") + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
+        var url = sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";        
         this.log("*** Playing Video URL ", url);
 		/* At this time, we only know how to launch an external player on webOS */
 		if(!window.PalmSystem)
@@ -28,7 +28,7 @@ enyo.kind({
     touchPlayerFailed: function(inSender, inResponse)
     {
         this.log(inResponse);
-        var url = prefs.get("serverip") + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+        var url = sanitizeServer(prefs.get("serverip")) + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
         this.log("*** Playing Video URL ", url);
 		Platform.browser(url, this)();
         this.receive({ result: "ok" }); // null response == failure
