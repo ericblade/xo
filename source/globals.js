@@ -77,7 +77,7 @@ Array.prototype.insert = function(index, item)
 function coverArtUrl(item, size)
 {
     if(!size) size="54";
-    var url = prefs.get("serverip") + "/rest/getCoverArt.view?id=" + item + "&size="+size+"&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform;
+    var url = sanitizeServer(prefs.get("serverip")) + "/rest/getCoverArt.view?id=" + item + "&size="+size+"&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-" + Platform.platform;
     return url;
 }
 
@@ -87,4 +87,21 @@ function useCssTransitions() {
    return true;
 }
 
+function sanitizeServer(server)
+{
+    server = server.toLowerCase();
+    console.log("sanitizeServer " + server)
+    if(server.substr(server.length, 1) == "/")
+    {
+        server = server.substr(0, server.length - 1);
+    }
+    console.log("1 " + server);
+    console.log(server.indexOf("http"));
+    if(server.indexOf("http") !== 0)
+    {
+        server = "http://" + server;
+    }
+    console.log("2 " + server);
+    return server;
+}
 var alicejs = alice.init();
