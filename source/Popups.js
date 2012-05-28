@@ -2,13 +2,16 @@ enyo.kind({
     name: "IntroPopup",
     kind: "Popup",
     components: [
-        { name: "WebLauncher", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },
-        //{ kind: "Item", content: "XOlabel", name: "Label" },
-        { kind: "Item", content: "What is XO?", onclick: "clickwhat" },
-        { kind: "Item", content: "Help", onclick: "clickhelp" },
-        { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
-        { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
-        { kind: "Item", content: "Continue :-)", onclick: "close" },
+        { kind: "Scroller", width: "300px", height: window.innerHeight > 400 ? "420px" : "380px", components:
+            [
+                //{ kind: "Item", content: "XOlabel", name: "Label" },
+                { kind: "Item", content: "What is XO?", onclick: "clickwhat" },
+                { kind: "Item", content: "Help", onclick: "clickhelp" },
+                { kind: "Item", content: "If you like XO, please leave a review", onclick: "clickreview" },
+                { kind: "Item", content: "If you don't, please let me know why.", onclick: "clickemail" },
+                { kind: "Item", content: "Continue :-)", onclick: "close" },
+            ]
+        }
     ],
     rendered: function() {
         this.inherited(arguments);
@@ -130,8 +133,9 @@ enyo.kind({
         this.close();
     },
     close: function() {
+        if(this.isOpen)
+            this.doServerChanged();
         this.inherited(arguments);
-        this.doServerChanged();
     }
 });
 

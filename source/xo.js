@@ -1,5 +1,12 @@
+// TODO: we need to be able to access the Server API version from anywhere, and
+// be able to tell the server that we support 1.8 in subsonicApi, when we're talking
+// to a 1.8 server, and fall back to 1.7 when we're not.
+// TODO: make use of https://developer.palm.com/content/api/reference/services/audio.html#volume-key-lock
 // tap any where on album toggles pause play, also swipe left and right to got back and forward. 
 // Add popup that explains general program operation on first usage?
+// Just Type app keywords (doh)
+// (7:47:23 PM) Brett Carlock: could you have it change scenes by swiping across the bottom tool bar?
+// TODO: add Video Player selection option - TouchPlayer, Kalem, Flash/Browser
 // TODO: Bitrate menu option somewhere
 // TODO: I added -way- too many calls to sanitizeServer.  Might want to weed some of them out someday.
 // TODO: MediaPlayerView large spinner always shows in Jukebox mode?
@@ -99,9 +106,14 @@ enyo.kind({
           onError: "serverError",
         },
         { name: "AppManService", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },
-        { name: "AppMenu", kind: "AppMenu", lazy: false, components:
+        { name: "AppMenu", kind: "AppMenu", defaultKind: "MenuCheckItem", lazy: false, components:
             [
-                { caption: "Help/About", onclick: "openIntroPopup" },
+                { caption: "Help/About", onclick: "openIntroPopup", },
+                { name: "HomeMenu", caption: "Home", onclick: "homeTab", showing: window.innerHeight < 401, checked: true },
+                { name: "MediaMenu", caption: "Media", showing: window.innerHeight < 401, onclick: "mediaTab" },
+                { name: "SearchMenu", caption: "Search", showing: window.innerHeight < 401, onclick: "searchTab" },
+                { name: "PlaylistsMenu", caption: "Playlists", showing: window.innerHeight < 401, onclick: "playlistsTab" },
+                { caption: "Open Dashboard", onclick: "popDashboard" },
             ]
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
@@ -114,7 +126,7 @@ enyo.kind({
                             [
                                 { name: "IntroPopup", kind: "IntroPopup", autoClose: false, dismissWithClick: false, scrim: true },
 
-                                { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
+                                { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", showing: window.innerHeight > 400, components:
                                     [
                                         { caption: "Home", },
                                         { caption: "Media", },
@@ -206,7 +218,7 @@ enyo.kind({
                 },
             ]
         },
-        { name: "BottomToolbar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
+        { name: "BottomToolbar", className: "controlBar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
             [
                 { defaultKind: "ToolButton", pack: "start", align: "center", components:
                     [
@@ -1009,7 +1021,10 @@ enyo.kind({
         enyo.application.downloads = new Array();
         
         if(Platform.isWebOS() /*&& Platform.isLargeScreen()*/) // TODO: Dashboard doesn't work on phones
-            enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
+            this.popDashboard();
+    },
+    popDashboard: function() {
+        enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });        
     },
     avatarTrack: function(inEvent) {
         this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
@@ -1034,8 +1049,9 @@ enyo.kind({
             inEvent.stopPropagation();
         return true;
     },
-    changedServer: function()
+    changedServer: function(inSender)
     {
+        console.log("changedServer?! sender:", inSender);
         this.$.api.serverChanged();
         this.$.HomeView.setLicenseData();
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
@@ -1097,7 +1113,7 @@ enyo.kind({
         
         //enyo.nextTick(this, this.delayedStartup);
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
-
+        this.started = true;
         enyo.asyncMethod(this, "delayedStartup");
     },
     openServerDialog: function()
@@ -1172,6 +1188,17 @@ enyo.kind({
             case "mostplayed":
                 type = "frequent";
                 apicall = "getAlbumList";
+                break;
+            /*case "all":
+                type = "alphabetical";
+                apicall = "getAlbumList";
+                break;*/
+            case "starred":
+                type = "starred";
+                apicall = "getAlbumList";
+                break;
+            default:
+                enyo.error("**** loadMusicView() called with unknown view");
                 break;
         }
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
@@ -1433,6 +1460,32 @@ enyo.kind({
         this.$.RightPane.selectViewByName("MediaPlayerView");
         this.$.RightTabs.setValue(1);*/
         setTimeout(enyo.bind(this, this.$.MediaPlayer.hideTips), 5000);
+    },
+    resetMenuChecks: function() {
+        this.$.HomeMenu.setChecked(false);
+        this.$.MediaMenu.setChecked(false);
+        this.$.SearchMenu.setChecked(false);
+        this.$.PlaylistsMenu.setChecked(false);        
+    },
+    homeTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(0);
+        this.resetMenuChecks();
+        this.$.HomeMenu.setChecked(true);
+    },
+    mediaTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(1);
+        this.resetMenuChecks();
+        this.$.MediaMenu.setChecked(true);
+    },
+    searchTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(2);
+        this.resetMenuChecks();
+        this.$.SearchMenu.setChecked(true);
+    },
+    playlistsTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(3);
+        this.resetMenuChecks();
+        this.$.PlaylistsMenu.setChecked(true);
     },
     leftTabChange: function(inSender)
     {
