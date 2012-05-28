@@ -63,3 +63,16 @@
     -webkit-transition-timing-function: linear;
     -webkit-transition-duration: 0ms;*/
 }
+
+.controlBar {
+	height: 32px;
+}
+
+.controlBar .enyo-button-icon {
+	display: block;
+	vertical-align: middle;
+	margin: 0px;
+	padding: 0px;
+	width: 32px;
+	height: 26px;
+}

@@ -259,12 +259,10 @@ enyo.kind({
             case "error":
                 this.$.PlayerStatus.setContent("ERROR LOADING MEDIA");
                 this.$.PlayerSpinner.hide();
-                this.log(inEvent, x, y);
                 break;
             case "stalled":
                 this.$.PlayerStatus.setContent("CONNECTION STALLED");
                 this.$.PlayerSpinner.hide();
-                this.log(inEvent, x, y);
                 break;
             case "ended":
                 this.log(inEvent, "*************************** SONG ENDED **********************");
@@ -399,7 +397,7 @@ enyo.kind({
             this.$.MediaLengthLabel.setContent(secondsToTime(this.song.duration));
             if(!enyo.application.jukeboxMode && !this.justToggled)
             {
-                this.log("music playing: ", sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
+                this.log("music playing:", sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 player.setSrc(sanitizeServer(prefs.get("serverip")) + "/rest/stream.view?id=" + this.song.id + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS");
                 this.$.ProgressSlider.setPosition(0);
                 this.$.ProgressSlider.setBarPosition(0);

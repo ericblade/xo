@@ -1,5 +1,125 @@
-/* This kind contains two images, and starts off showing the "DummyImage".  When the "MainImage" loads, it switches to that one. */
+enyo.kind({
+	name: "subsonic.Server",
+	kind: "Object",
+	published: {
+		protocol: "http",
+		ipaddress: "",
+		username: "",
+		password: "",
+		version: "",
+		registered: false,
+	},
+	setupRow: function(inObj) {
+		if(inObj.$.protocol) inObj.$.protocol.setContent(this.protocol);
+		if(inObj.$.ipaddress) inObj.$.ipaddress.setContent(this.ipaddress);
+		if(inObj.$.username) inObj.$.username.setContent(this.username);
+		if(inObj.$.version) inObj.$.version.setContent(this.version);
+		if(inObj.$.registered) inObj.$.version.setContent(this.registered ? "Registered" : "NOT Registered");
+	}
+});
 
+enyo.kind({
+	name: "subsonic.MusicFolder",
+	kind: "Object",
+	published: {
+		id: "",
+		name: "",
+	}
+});
+
+enyo.kind({
+	name: "subsonic.NowPlaying",
+	kind: "Object",
+	published: {
+		username: "",
+		minutesAgo: "",
+		playerId: "",
+		id: "",
+		parent: "",
+		title: "",
+		isDir: "",
+		album: "",
+		artist: "",
+		track: "",
+		year: "",
+		genre: "",
+		coverArt: "",
+		size: "",
+		contentType: "",
+		suffix: "",
+		path: "",
+	}
+});
+
+enyo.kind({
+	name: "subsonic.User",
+	kind: "Object",
+	published: {
+		username: "",
+		email: "",
+		scrobblingEnabled: false,
+		adminRole: false,
+		settingsRole: false,
+		downloadRole: false,
+		uploadRole: false,
+		playlistRole: true,
+		coverArtRole: true,
+		commentRole: false,
+		podcastRole: false,
+		streamRole: true,
+		jukeboxRole: true,
+		shareRole: false,
+	}
+});
+
+enyo.kind({
+	name: "subsonic.ChatMessage",
+	kind: "Object",
+	published: {
+		username: "",
+		time: "",
+		message: "",
+	}
+});
+
+enyo.kind({
+	name: "subsonic.Album",
+	kind: "Object",
+	published: {
+		id: "",
+		parent: "",
+		title: "",
+		artist: "",
+		coverArt: "",
+		userRating: "",
+		averageRating: "",
+	}
+});
+
+enyo.kind({
+	name: "subsonic.Song",
+	kind: "Object",
+	published: {
+		id: "",
+		parent: "",
+		title: "",
+		album: "",
+		artist: "",
+		track: "",
+		year: "",
+		genre: "",
+		coverArt: "",
+		size: "",
+		contentType: "",
+		suffix: "",
+		duration: "",
+		bitRate: "",
+		path: "",
+	}
+});
+
+
+/* This kind contains two images, and starts off showing the "DummyImage".  When the "MainImage" loads, it switches to that one. */
 enyo.kind({
     name: "ImageFallback",
     kind: enyo.Control,

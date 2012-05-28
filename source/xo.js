@@ -1,5 +1,14 @@
+// TODO: we need to be able to access the Server API version from anywhere, and
+// be able to tell the server that we support 1.8 in subsonicApi, when we're talking
+// to a 1.8 server, and fall back to 1.7 when we're not.
+// TODO: make use of https://developer.palm.com/content/api/reference/services/audio.html#volume-key-lock
 // tap any where on album toggles pause play, also swipe left and right to got back and forward. 
 // Add popup that explains general program operation on first usage?
+// Just Type app keywords (doh)
+// (7:47:23 PM) Brett Carlock: could you have it change scenes by swiping across the bottom tool bar?
+// TODO: add Video Player selection option - TouchPlayer, Kalem, Flash/Browser
+// TODO: Bitrate menu option somewhere
+// TODO: I added -way- too many calls to sanitizeServer.  Might want to weed some of them out someday.
 // TODO: MediaPlayerView large spinner always shows in Jukebox mode?
 // TODO: Media list items that are in the local playlist are highlighted even when we're in Jukebox mode?
 // TODO: store server settings for each song received, so we can playback from multiple servers!!
@@ -97,9 +106,14 @@ enyo.kind({
           onError: "serverError",
         },
         { name: "AppManService", kind: "PalmService", service: "palm://com.palm.applicationManager/", method: "open", },
-        { name: "AppMenu", kind: "AppMenu", lazy: false, components:
+        { name: "AppMenu", kind: "AppMenu", defaultKind: "MenuCheckItem", lazy: false, components:
             [
-                { caption: "Help/About", onclick: "openIntroPopup" },
+                { caption: "Help/About", onclick: "openIntroPopup", },
+                { name: "HomeMenu", caption: "Home", onclick: "homeTab", showing: window.innerHeight < 401, checked: true },
+                { name: "MediaMenu", caption: "Media", showing: window.innerHeight < 401, onclick: "mediaTab" },
+                { name: "SearchMenu", caption: "Search", showing: window.innerHeight < 401, onclick: "searchTab" },
+                { name: "PlaylistsMenu", caption: "Playlists", showing: window.innerHeight < 401, onclick: "playlistsTab" },
+                { caption: "Open Dashboard", onclick: "popDashboard" },
             ]
         },
         { name: "MainPane", flex: 1, kind: "Pane", components:
@@ -112,7 +126,7 @@ enyo.kind({
                             [
                                 { name: "IntroPopup", kind: "IntroPopup", autoClose: false, dismissWithClick: false, scrim: true },
 
-                                { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", components:
+                                { name: "TabBar", kind: "TabGroup", onChange: "leftTabChange", showing: window.innerHeight > 400, components:
                                     [
                                         { caption: "Home", },
                                         { caption: "Media", },
@@ -204,7 +218,7 @@ enyo.kind({
                 },
             ]
         },
-        { name: "BottomToolbar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
+        { name: "BottomToolbar", className: "controlBar", kind: "Toolbar", pack: "justify", defaultKind: "HFlexBox", components:
             [
                 { defaultKind: "ToolButton", pack: "start", align: "center", components:
                     [
@@ -983,10 +997,7 @@ enyo.kind({
             {
                 if(on)
                 {
-                    if(inEvent.dragInfo.art)
-                    {
-                        this.$.avatar.setSrc(inEvent.dragInfo.art);
-                    }  
+                    this.$.avatar.setSrc(inEvent.dragInfo.art || "images/noart48.png");
                     this.$.avatar.show();
                     this.avatarTrack(inEvent);
                 } else {
@@ -1010,12 +1021,13 @@ enyo.kind({
         enyo.application.downloads = new Array();
         
         if(Platform.isWebOS() /*&& Platform.isLargeScreen()*/) // TODO: Dashboard doesn't work on phones
-            enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });
+            this.popDashboard();
+    },
+    popDashboard: function() {
+        enyo.application.dash = enyo.windows.openDashboard("dashboard.html", "xodash", {}, { clickableWhenLocked: true });        
     },
     avatarTrack: function(inEvent) {
-        if(this.$.avatar.hasNode()) {
-            this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
-        }
+        this.$.avatar.boxToNode({l: inEvent.pageX+20, t: inEvent.pageY - 50});
     },
     setPlaylistIndex: function(x) {
         enyo.application.jukboxMode ? enyo.application.jukeboxList.index = x : enyo.application.playlist.index = x, prefs.set("playlistindex", x);
@@ -1037,8 +1049,9 @@ enyo.kind({
             inEvent.stopPropagation();
         return true;
     },
-    changedServer: function()
+    changedServer: function(inSender)
     {
+        console.log("changedServer?! sender:", inSender);
         this.$.api.serverChanged();
         this.$.HomeView.setLicenseData();
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
@@ -1100,7 +1113,7 @@ enyo.kind({
         
         //enyo.nextTick(this, this.delayedStartup);
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
-
+        this.started = true;
         enyo.asyncMethod(this, "delayedStartup");
     },
     openServerDialog: function()
@@ -1175,6 +1188,17 @@ enyo.kind({
             case "mostplayed":
                 type = "frequent";
                 apicall = "getAlbumList";
+                break;
+            /*case "all":
+                type = "alphabetical";
+                apicall = "getAlbumList";
+                break;*/
+            case "starred":
+                type = "starred";
+                apicall = "getAlbumList";
+                break;
+            default:
+                enyo.error("**** loadMusicView() called with unknown view");
                 break;
         }
         this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
@@ -1437,6 +1461,32 @@ enyo.kind({
         this.$.RightTabs.setValue(1);*/
         setTimeout(enyo.bind(this, this.$.MediaPlayer.hideTips), 5000);
     },
+    resetMenuChecks: function() {
+        this.$.HomeMenu.setChecked(false);
+        this.$.MediaMenu.setChecked(false);
+        this.$.SearchMenu.setChecked(false);
+        this.$.PlaylistsMenu.setChecked(false);        
+    },
+    homeTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(0);
+        this.resetMenuChecks();
+        this.$.HomeMenu.setChecked(true);
+    },
+    mediaTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(1);
+        this.resetMenuChecks();
+        this.$.MediaMenu.setChecked(true);
+    },
+    searchTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(2);
+        this.resetMenuChecks();
+        this.$.SearchMenu.setChecked(true);
+    },
+    playlistsTab: function(inSender) {
+        this.$.LeftPane.selectViewByIndex(3);
+        this.resetMenuChecks();
+        this.$.PlaylistsMenu.setChecked(true);
+    },
     leftTabChange: function(inSender)
     {
         this.$.LeftPane.selectViewByIndex(inSender.getValue());
@@ -1479,7 +1529,7 @@ enyo.kind({
         // prefs.get("serverip") + "/rest/getCoverArt.view?id="+a.coverArt+"&u="+ prefs.get("username") + "&v=1.6.0&p=" + prefs.get("password") + "&c=XO(webOS)(development)"
         this.log(id, filename);
         this.$.fileDownload.call( {
-            target: prefs.get("serverip") + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
+            target: sanitizeServer(prefs.get("serverip")) + "/rest/download.view?id=" + id + "&u=" + prefs.get("username") + "&v=1.7.0&p=" + prefs.get("password") + "&c=XO-webOS",
             mime: "audio/mpeg3",
             targetDir: "/media/internal/xo/",
             //cookieHeader: "GALX=" + this.GALX + ";SID="+this.SID+";LSID=grandcentral:"+this.LSID+"gv="+this.LSID,
@@ -1523,7 +1573,7 @@ enyo.kind({
     addServer: function(inSender, name, ip, user, pass)
     {
         var list = prefs.get("serverlist");
-        list[list.length] = { "name": name, "serverip": ip, "username": user, "password": pass };
+        list[list.length] = { "name": name, "serverip": sanitizeServer(ip), "username": user, "password": pass };
         prefs.set("serverlist", list);
         this.$.HomeView.$.ServerListRepeater.render();
     }

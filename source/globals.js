@@ -90,18 +90,14 @@ function useCssTransitions() {
 function sanitizeServer(server)
 {
     server = server.toLowerCase();
-    console.log("sanitizeServer " + server)
     if(server.substr(server.length, 1) == "/")
     {
         server = server.substr(0, server.length - 1);
     }
-    console.log("1 " + server);
-    console.log(server.indexOf("http"));
     if(server.indexOf("http") !== 0)
     {
         server = "http://" + server;
     }
-    console.log("2 " + server);
     return server;
 }
 var alicejs = alice.init();

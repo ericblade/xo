@@ -156,6 +156,8 @@ enyo.kind({
                         ]
                     },
                     { kind: "Divider", caption: "Albums" },
+                    { name: "AllAlbumsItem", kind: "Item", content: "All Albums", onclick: "clickAll", },
+                    { name: "StarredItem", kind: "Item", content: "Starred", onclick: "clickStarred", },
                     { kind: "Item", content: "Recently added", onclick: "clickRecentlyAdded", },
                     { kind: "Item", content: "Random", onclick: "clickRandom" },
                     { kind: "Item", content: "Top Rated", onclick: "clickTopRated" },
@@ -197,7 +199,7 @@ enyo.kind({
         prefs.set("serverip", serverip);
         prefs.set("username", server.username);
         prefs.set("password", server.password);
-        this.doServerChanged();
+        this.doServerChanged("this had better be something");
     },
     serverListItem: function(inSender, inRow)
     {
@@ -282,6 +284,9 @@ enyo.kind({
             this.$.ServerVersionLabel.setContent("");
             this.$.ServerLicenseLabel.setContent("");
         }
+        //this.$.AllAlbumsItem.setShowing(ld && ld.version > "1.7.0");
+        this.$.AllAlbumsItem.setShowing(false);
+        this.$.StarredItem.setShowing(ld && ld.version > "1.7.0");
     },
     opened: function()
     {
@@ -308,4 +313,10 @@ enyo.kind({
     {
         this.doMusicView("mostplayed");
     },
+    clickAll: function() {
+        this.doMusicView("all");
+    },
+    clickStarred: function() {
+        this.doMusicView("starred");
+    }
 });
