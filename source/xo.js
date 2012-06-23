@@ -397,13 +397,11 @@ enyo.kind({
         }
     },
     enableJukebox: function() {
-        enyo.log("enableJukebox, largescreen=", Platform.isLargeScreen());
         if(Platform.isLargeScreen())
             this.$.JukeboxToggle.show();
         this.$.JukeboxMenuItem.setDisabled(false);
     },
     disableJukebox: function() {
-        enyo.log("disableJukebox");
         if(Platform.isLargeScreen())
             this.$.JukeboxToggle.hide();
         this.$.JukeboxMenuItem.setDisabled(true);
