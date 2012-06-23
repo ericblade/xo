@@ -1,3 +1,5 @@
+// TODO: pause when unplugging headphones, unpause when plugging in?  
+// TODO: auto playback when bluetooth connected to something?
 // TODO: we need to be able to access the Server API version from anywhere, and
 // be able to tell the server that we support 1.8 in subsonicApi, when we're talking
 // to a 1.8 server, and fall back to 1.7 when we're not.
@@ -109,6 +111,7 @@ enyo.kind({
         { name: "AppMenu", kind: "AppMenu", defaultKind: "MenuCheckItem", lazy: false, components:
             [
                 { caption: "Help/About", onclick: "openIntroPopup", },
+                { name: "JukeboxMenuItem", caption: "Jukebox OFF", onclick: "menuToggleJukebox" },
                 { name: "HomeMenu", caption: "Home", onclick: "homeTab", showing: window.innerHeight < 401, checked: true },
                 { name: "MediaMenu", caption: "Media", showing: window.innerHeight < 401, onclick: "mediaTab" },
                 { name: "SearchMenu", caption: "Search", showing: window.innerHeight < 401, onclick: "searchTab" },
@@ -239,8 +242,8 @@ enyo.kind({
                         { name: "ClearButton",          icon: "images/playlistclear.png",   onclick: "clearPlaylist", showing: false },
                         { name: "ShuffleButton",        icon: "images/shuffle.png",         onclick: "shufflePlaylist", showing: false },
                         { name: "SaveButton",           icon: "images/playlistsave.png",    onclick: "openSavePlaylist", showing: false },
-                        { name: "JukeboxToggle", king: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
-                        { name: "ServerSpinner", kind: "Spinner", className: "xospinner", showing: true }                        
+                        { name: "JukeboxToggle", kind: "ToggleButton", showing: false, onLabel: "Jukebox", offLabel: "Jukebox", onChange: "toggleJukebox" },
+                        { name: "ServerSpinner", kind: "Spinner", className: "xospinner", showing: true },
                     ]
                 },
             ]
@@ -268,11 +271,6 @@ enyo.kind({
                     ]
                 },
                 { kind: "Button", caption: "OK", onclick: "savePlaylist" },
-            ]
-        },
-        { kind: "AppMenu", lazy: false, components:
-            [
-                { name: "JukeboxMenuItem", caption: "Jukebox OFF", onclick: "menuToggleJukebox" }
             ]
         },
     ],
@@ -545,12 +543,14 @@ enyo.kind({
         /* {"adminRole":true,"commentRole":true,"coverArtRole":true,"downloadRole":true,"email":"blade.eric@gmail.com","jukeboxRole":true,"playlistRole":true,
           "podcastRole":true,"scrobblingEnabled":false,"settingsRole":true,"shareRole":true,"streamRole":true,"uploadRole":true,"username":"admin"}
         */
+        enyo.log("receivedUserInfo", inUser);
         enyo.application.subsonicUser = inUser;
         this.user = enyo.application.subsonicUser;
         this.$.PlaylistView.receivedUser(); // need to notify the playlist view so it can update it's buttons
         this.$.MediaPlayer.receivedUser(); // also need to notify media player so it can update it's buttons
-        this.$.JukeboxToggle.setShowing(Platform.isLargeScreen() && inUser.jukeboxRole);
-        this.$.JukeboxMenuItem.setDisabled(!inUser.jukeboxRole);
+        inUser.jukeboxRole ? this.enableJukebox() : this.disableJukebox();
+        //this.$.JukeboxToggle.setShowing(Platform.isLargeScreen() && inUser.jukeboxRole);
+        //this.$.JukeboxMenuItem.setDisabled(!inUser.jukeboxRole);
     },
     videoError: function(inSender, x, y, z)
     {
@@ -945,9 +945,9 @@ enyo.kind({
     },
     serverActivity: function(inSender, bOn)
     {
-        if(bOn)
+        if(bOn && this.$.ServerSpinner)
             this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
-        else
+        else if(this.$.ServerSpinner)
             this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
     },
     receivedPlaylists: function(inSender, inLists)
@@ -1054,7 +1054,8 @@ enyo.kind({
         console.log("changedServer?! sender:", inSender);
         this.$.api.serverChanged();
         this.$.HomeView.setLicenseData();
-        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
+        if(this.$.ServerSpinner)
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
 
         this.pingServer();
         this.getServerLicense();
@@ -1112,7 +1113,8 @@ enyo.kind({
         this.$.MainPane.selectViewByName("slider");
         
         //enyo.nextTick(this, this.delayedStartup);
-        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
+        if(this.$.ServerSpinner)
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
         this.started = true;
         enyo.asyncMethod(this, "delayedStartup");
     },
@@ -1189,10 +1191,14 @@ enyo.kind({
                 type = "frequent";
                 apicall = "getAlbumList";
                 break;
-            /*case "all":
-                type = "alphabetical";
+            case "all":
+                type = "alphabeticalByName";
                 apicall = "getAlbumList";
-                break;*/
+                break;
+            case "allartists":
+                type = "alphabeticalByArtist";
+                apicall = "getAlbumList";
+                break;
             case "starred":
                 type = "starred";
                 apicall = "getAlbumList";
@@ -1201,14 +1207,16 @@ enyo.kind({
                 enyo.error("**** loadMusicView() called with unknown view");
                 break;
         }
-        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
+        if(this.$.ServerSpinner)
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(true) : this.$.ServerSpinner.start();
 
         this.$.MusicView.resetViews();
         this.$.api.call(apicall, { type: type, size: 100 }); // TODO: Must support loading pages, using the offset parameter!
     },
     receivedAlbumList: function(inSender, inAlbumList)
     {
-        this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
+        if(this.$.ServerSpinner)
+            this.$.ServerSpinner.disEnableAnimation ? this.$.ServerSpinner.disEnableAnimation(false) : this.$.ServerSpinner.stop();
         this.$.MusicView.setMusic(inAlbumList);
         this.selectMusicView();
     },

@@ -156,7 +156,8 @@ enyo.kind({
                         ]
                     },
                     { kind: "Divider", caption: "Albums" },
-                    { name: "AllAlbumsItem", kind: "Item", content: "All Albums", onclick: "clickAll", },
+                    { name: "AllAlbumsItem", kind: "Item", content: "All - By Album", onclick: "clickAll", },
+                    { name: "AllArtistsItem", kind: "Item", content: "All - By Artist", onclick: "clickAllArtists", },
                     { name: "StarredItem", kind: "Item", content: "Starred", onclick: "clickStarred", },
                     { kind: "Item", content: "Recently added", onclick: "clickRecentlyAdded", },
                     { kind: "Item", content: "Random", onclick: "clickRandom" },
@@ -285,7 +286,8 @@ enyo.kind({
             this.$.ServerLicenseLabel.setContent("");
         }
         //this.$.AllAlbumsItem.setShowing(ld && ld.version > "1.7.0");
-        this.$.AllAlbumsItem.setShowing(false);
+        this.$.AllAlbumsItem.setShowing(ld && ld.version > "1.7.0");
+        this.$.AllArtistsItem.setShowing(ld && ld.version > "1.7.0");
         this.$.StarredItem.setShowing(ld && ld.version > "1.7.0");
     },
     opened: function()
@@ -315,6 +317,9 @@ enyo.kind({
     },
     clickAll: function() {
         this.doMusicView("all");
+    },
+    clickAllArtists: function() {
+        this.doMusicView("allartists");
     },
     clickStarred: function() {
         this.doMusicView("starred");
