@@ -10,9 +10,6 @@ Original XO code through the initial commit to this repository is Copyright 2011
 The XO icon is copyright Sindre Mehus, from Subsonic.
 Additional graphics and Icons are copyright Asle Hoeg-Mikkelsen.
 
-*** THIS REPOSITORY CONTAINS SUBMODULES.
-*** MAKE SURE YOU INIT ALL SUBMODULES, OR THAT YOU HAVE DONE A RECURSIVE CHECKOUT.
-
 === To run in Chrome ===
 
 (Windows) Create a new shortcut on your desktop to Chrome.  Edit that shortcut, and add "--disable-web-security" to the Target.
