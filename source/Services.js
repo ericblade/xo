@@ -16,8 +16,12 @@ enyo.kind({
         }
         else 
         {
-            this.log("Playing video on Palm");
-            this.$.TouchPlayer.call( { source: url } );
+			if(Platform.platformVersion >= 3) { // TODO: we need to be able to check the Subsonic version here to make sure IT can support HTTPLS before going to it!
+				this.touchPlayerFailed(); // let's try HTTPLS if we're on TouchPad!
+			} else {
+				this.log("Playing video on Palm");
+				this.$.TouchPlayer.call( { source: url } );
+			}
         }
     },
     touchPlayerLaunched: function(inSender, inResponse)
@@ -28,7 +32,10 @@ enyo.kind({
     touchPlayerFailed: function(inSender, inResponse)
     {
         this.log(inResponse);
-        var url = sanitizeServer(prefs.get("serverip")) + "/rest/videoPlayer.view?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.7.0" + "&c=XO-webOS";
+		var page = "/rest/videoPlayer.view";
+		if(window.PalmSystem && Platform.platformVersion >= 3) // TODO: and if Subsonic version supports it
+			page = "/rest/hls.view";
+        var url = sanitizeServer(prefs.get("serverip")) + page +"?id=" + this.itemId + "&u=" + prefs.get("username") + "&p=" + prefs.get("password") + "&v=1.8.0" + "&c=XO-webOS";
         this.log("*** Playing Video URL ", url);
 		Platform.browser(url, this)();
         this.receive({ result: "ok" }); // null response == failure
