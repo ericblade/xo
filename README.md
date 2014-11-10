@@ -23,11 +23,15 @@ This might work in Opera, if Opera 20+ supports the --disable-web-security comma
 
 Do NOT use the disable-web-security switch for active browsing!!! Only use it when working with known good files.
 
-Use that shortcut, and load the "index-normal.html" in the repo into your Chrome window, such as:
-file:///D:/src/synergv1/app/index-chrome.html
+Use that shortcut, and load the "index-webworks.html" in the repo into your Chrome window, such as:
+file:///D:/src/xo/app/index-webworks.html
+
+*** MAKE SURE YOU CHECKOUT RECURSIVELY, SOME BRANCHES MAY CONTAIN SUBMODULES
 
 === Deploying to various platforms ===
 
 Need to spend some time remembering how this works.  I think the "dist.bat" will simply install it
 directly to a webOS phone or tablet, I am not sure exactly how packaging for other platforms worked at
 this time.
+
+**** Official forums are available at http://www.ericbla.de/
